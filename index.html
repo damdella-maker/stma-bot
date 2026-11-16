@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#08080a" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v18.6</title>
+<title>STMA Bot · v18.7</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -123,6 +123,15 @@
   .seg-btn:active{ transform:scale(.96); }
   .seg-btn.on{ background:linear-gradient(180deg,var(--seg-c,#22c55e),var(--seg-c,#22c55e)); color:#04140b; border-color:rgba(255,255,255,.18); box-shadow:0 6px 18px -8px var(--seg-c,#22c55e), inset 0 1px 0 rgba(255,255,255,.3); }
   .seg-btn.on .seg-sub{ opacity:.9; color:rgba(0,0,0,.65); }
+  /* v18.7 : copie memecoins (néon cyan) */
+  .cp-badge{font-size:9px;font-weight:800;letter-spacing:.06em;padding:2px 6px;border-radius:6px;background:rgba(250,204,21,.12);color:#facc15;border:1px solid rgba(250,204,21,.3)}
+  .cp-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:11.5px}
+  .cp-row:last-child{border-bottom:none}
+  .cp-tag{font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:5px}
+  .cp-buy{background:rgba(34,197,94,.14);color:#4ade80}.cp-sell{background:rgba(239,68,68,.14);color:#f87171}.cp-skip{background:rgba(113,113,122,.18);color:#a1a1aa}
+  .cp-act{background:rgba(34,211,238,.14);color:#22d3ee}.cp-obs{background:rgba(113,113,122,.18);color:#a1a1aa}
+  .cp-new{animation:cpIn .6s ease-out}@keyframes cpIn{from{background:rgba(34,211,238,.18)}to{background:transparent}}
+  .big-bubble.copy{box-shadow:0 0 60px rgba(34,211,238,.55)}
   /* v18.6 : levier ×5 (néon fuchsia) */
   .seg-btn.seg-lev{ grid-column:1/-1; flex-direction:row; justify-content:center; gap:8px; color:#f0abfc; border-color:rgba(232,121,249,.35); background:linear-gradient(90deg,rgba(232,121,249,.08),rgba(168,85,247,.08)); }
   .seg-btn.seg-lev.on{ background:linear-gradient(90deg,#e879f9,#a855f7); color:#1a0420; box-shadow:0 0 18px -4px #e879f9, inset 0 1px 0 rgba(255,255,255,.35); }
@@ -163,7 +172,7 @@
   .pbar{ position:relative; height:5px; border-radius:99px; background:linear-gradient(90deg, rgba(239,68,68,.32), rgba(113,113,122,.18) 50%, rgba(34,197,94,.32)); margin:9px 0 6px; }
   .pbar > i{ position:absolute; top:50%; width:9px; height:9px; margin-top:-4.5px; border-radius:50%; background:#fff; transform:translateX(-50%); box-shadow:0 0 0 3px rgba(255,255,255,.2), 0 0 14px rgba(255,255,255,.5); transition:left .8s; }
   .mini-chart{ width:100%; height:26px; margin-top:6px; }
-  .tabbar{ position:fixed; left:0; right:0; bottom:0; z-index:50; display:grid; grid-template-columns:repeat(7,1fr); background:rgba(12,12,15,.92); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px); border-top:1px solid rgba(255,255,255,.06); padding-bottom:env(safe-area-inset-bottom); }
+  .tabbar{ position:fixed; left:0; right:0; bottom:0; z-index:50; display:grid; grid-template-columns:repeat(8,1fr); background:rgba(12,12,15,.92); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px); border-top:1px solid rgba(255,255,255,.06); padding-bottom:env(safe-area-inset-bottom); }
   .tab-btn{ display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 0 10px; font-size:9px; font-weight:700; color:#5c5c66; background:none; border:none; cursor:pointer; transition:.2s; position:relative; }
   .tab-btn svg{ width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
   .tab-btn.on{ color:#4ade80; }
@@ -364,7 +373,7 @@
     <div class="logo">S</div>
     <div>
       <div class="text-[15px] font-extrabold leading-tight tracking-tight">STMA Bot</div>
-      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v18.6</div>
+      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v18.7</div>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -533,6 +542,36 @@
     <div class="card p-4 mt-3"><div class="text-[13px] font-extrabold mb-1">Réglages appris par le bot</div><div class="text-[10.5px] text-zinc-500 mb-2">Ajustés automatiquement à chaque audit (tous les 20 trades).</div><div id="adaptBox" class="text-[11.5px]"></div><div id="learnBox" class="learn-box"></div></div>
   </section>
 
+  <section id="tab-copy" class="hidden-tab">
+    <div class="card neo-card p-4 mb-3">
+      <div class="flex items-center justify-between">
+        <div><div class="text-[15px] font-extrabold">🎯 Copie memecoins <span class="cp-badge">EXPÉRIMENTAL</span></div>
+          <div class="text-[10.5px] text-zinc-500 mt-0.5">Solana · copie automatique des meilleurs traders · argent fictif</div></div>
+        <label class="sw" aria-label="Activer la copie"><input type="checkbox" id="cpOn" checked><span></span></label>
+      </div>
+      <div id="cpStatus" class="text-[11px] text-zinc-400 mt-2.5 leading-snug">—</div>
+    </div>
+    <div class="card p-4 mb-3">
+      <div class="flex items-end justify-between"><div><div class="text-[10.5px] text-zinc-500 font-semibold">Portefeuille copie (séparé du bot)</div><div id="cpEq" class="text-[26px] font-extrabold num">—</div></div><div class="text-right"><div id="cpPnl" class="text-[14px] font-extrabold num">—</div><div id="cpWin" class="text-[10.5px] text-zinc-500">—</div></div></div>
+      <svg id="cpSpark" viewBox="0 0 300 50" preserveAspectRatio="none" class="w-full h-[50px] mt-2"></svg>
+      <div class="grid grid-cols-3 gap-2 mt-2 text-center text-[10.5px]"><div><div class="text-zinc-500">Latence (médiane)</div><div id="cpLat" class="font-extrabold num">—</div></div><div><div class="text-zinc-500">Trades copiés</div><div id="cpN" class="font-extrabold num">—</div></div><div><div class="text-zinc-500">Liquidités</div><div id="cpCash" class="font-extrabold num">—</div></div></div>
+    </div>
+    <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-1">Positions copiées</div><div id="cpPos" class="text-[11.5px] text-zinc-500">—</div></div>
+    <div class="card p-4 mb-3"><div class="flex items-center justify-between mb-1"><div class="text-[13px] font-extrabold">Journal en direct</div><span class="text-[10px] text-zinc-500" id="cpJAge">—</span></div><div id="cpJournal" class="text-[11.5px] text-zinc-500">—</div></div>
+    <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-0.5">Portefeuilles suivis</div><div class="text-[10.5px] text-zinc-500 mb-1 leading-snug">Choisis automatiquement chaque jour : PnL réalisé ≥ 1 SOL et ROI ≥ 5 % sur 7 jours, au moins 5 trades bouclés, pas de robot. Les 10 meilleurs sont copiés, les autres observés (copie fantôme de 100 $ pour les noter).</div><div id="cpWallets" class="text-[11.5px] text-zinc-500">—</div></div>
+    <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-2">Réglages de la copie</div>
+      <div class="grid grid-cols-3 gap-2 text-[11px]">
+        <label>Taille / trade<select id="cpSize" class="inp mt-1"><option value="1">1 %</option><option value="2">2 %</option><option value="5">5 %</option><option value="10">10 %</option></select></label>
+        <label>Stop de protection<select id="cpStop" class="inp mt-1"><option value="15">−15 %</option><option value="25">−25 %</option><option value="40">−40 %</option><option value="60">−60 %</option></select></label>
+        <label>Capi minimale<select id="cpMcap" class="inp mt-1"><option value="0">aucune</option><option value="50000">50 k$</option><option value="100000">100 k$</option><option value="500000">500 k$</option></select></label>
+      </div>
+      <div class="text-[10.5px] text-zinc-500 mt-2 leading-snug">Aucune limite de nombre de trades. Si le capital manque, la position est plus petite. Un trade n'est refusé que si le prix est périmé.</div>
+      <button id="cpReset" class="btn btn-ghost w-full mt-3">Remettre le portefeuille copie à 10 000 $</button>
+    </div>
+    <div class="card p-4 mb-3 border border-amber-500/20"><div class="text-[12.5px] font-extrabold text-amber-300 mb-1">⚠️ À savoir (backtests honnêtes)</div>
+      <div class="text-[11px] text-zinc-400 leading-relaxed">Sur Solana, copier ces traders avec 1 minute de retard a perdu en moyenne <b>−17 % par trade</b> (16 % de gagnants, 97 trades, semaine du 9 au 16 novembre), car ils revendent souvent en moins de 2 minutes. Sur Hyperliquid, la copie des 10 « meilleurs » a perdu <b>−5 % à −13 %</b> par mois hors échantillon. Ici la copie se fait en quelques secondes grâce au webhook Helius, ce qui n'a pas encore d'historique : les résultats en direct ci-dessus sont la vraie mesure. Argent fictif uniquement, aucune clé, aucun ordre réel.</div></div>
+  </section>
+
   <section id="tab-trades" class="hidden-tab">
     <div id="srvTradesCard" class="card p-3.5 mb-3 hidden-tab"></div>
     <div class="grid grid-cols-2 gap-2 mb-3">
@@ -629,7 +668,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v18.6</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v18.7</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -643,6 +682,7 @@
   <button class="tab-btn" data-tab="inst"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Inst.</span></button>
   <button class="tab-btn" data-tab="analyse"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg><span>Analyse</span></button>
   <button class="tab-btn" data-tab="agents"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Agents</span></button>
+  <button class="tab-btn" data-tab="copy"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg><span>Copie</span></button>
   <button class="tab-btn" data-tab="trades"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Trades</span></button>
   <button class="tab-btn" data-tab="backtest"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><path d="M3.05 11a9 9 0 1 1 .5 4"/><path d="M3 4v7h7"/></svg><span>Backtest</span></button>
   <button class="tab-btn" data-tab="settings"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></svg><span>Réglages</span></button>
@@ -1414,7 +1454,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='18.6',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='18.7',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1503,7 +1543,7 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:18.6,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
+  const st={v:18.7,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
     opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true,learnV2:true},huntDone:{},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
@@ -2014,12 +2054,12 @@ function screenShake(){for(const el of [document.querySelector('main'),document.
 function animateProfitToWallet(amount,startRect,onDone,n=1,meta=null){
   const eqEl=$('equity'),isLoss=amount<0,win=!isLoss;
   const label=`${isLoss?'-':'+'}$${Math.abs(amount).toFixed(2)}`;
-  const flashEq=()=>{eqEl.classList.remove('flash','flash-loss');void eqEl.offsetWidth;eqEl.classList.add(isLoss?'flash-loss':'flash');
+  const flashEq=meta&&meta.copy?()=>{}:()=>{eqEl.classList.remove('flash','flash-loss');void eqEl.offsetWidth;eqEl.classList.add(isLoss?'flash-loss':'flash');
     if(win){const wi=$('walletIcon');if(wi){wi.classList.remove('bounce');void wi.offsetWidth;wi.classList.add('bounce');}}};
   if(reduceMotion()){bubbleSound(isLoss);flashEq();onDone&&onDone();return;}   // version allégée : flash du solde + son
-  const b=document.createElement('div');b.className='big-bubble '+(win?'win':'loss')+(meta&&meta.hunter?' hunter':'');
+  const b=document.createElement('div');b.className='big-bubble '+(win?'win':'loss')+(meta&&meta.hunter?' hunter':'')+(meta&&meta.copy?' copy':'');
   if(meta&&meta.liq)b.classList.add('liq');
-  const sub=n>1?n+' trades clôturés':meta&&meta.liq?'💥 Liquidée ×'+meta.lev+' · '+meta.sym:meta&&meta.hunter?(win?'🎯 Chasseur a attrapé '+meta.sym:'🎯 Chasseur · '+meta.sym):win?'Gain':'Perte';
+  const sub=meta&&meta.copy?(n>1?'🎯 Copie · '+n+' ventes':'🎯 Copie · '+meta.sym):n>1?n+' trades clôturés':meta&&meta.liq?'💥 Liquidée ×'+meta.lev+' · '+meta.sym:meta&&meta.hunter?(win?'🎯 Chasseur a attrapé '+meta.sym:'🎯 Chasseur · '+meta.sym):win?'Gain':'Perte';
   b.innerHTML=`<div class="bb-amt">${escH(label)}</div><div class="bb-sub">${escH(sub)}</div>`;
   document.body.appendChild(b);
   const popAt=win?820:620;
@@ -2030,7 +2070,7 @@ function animateProfitToWallet(amount,startRect,onDone,n=1,meta=null){
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:18.6,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:18.7,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
     cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen}));}catch(x){}
@@ -2040,7 +2080,7 @@ function loadState(){
   try{for(const k of [STORE_KEY,...LEGACY_KEYS]){const raw=localStorage.getItem(k);if(raw){saved=JSON.parse(raw);from=k;break;}}}catch(x){}
   S=freshState();if(!saved)return;
   // Migration v11/v12 → v13 : on reprend tout ce qui est compatible, les nouveaux champs prennent leur valeur par défaut
-  if(![11,12,13,14,15,16,17,18,18.1,18.2,18.3,18.4,18.5,18.6].includes(saved.v))return;
+  if(![11,12,13,14,15,16,17,18,18.1,18.2,18.3,18.4,18.5,18.6,18.7].includes(saved.v))return;
   try{
     for(const k of ['start','capital','closed','lessons','equityHist','peakEquity','maxDD','streak','seq','killed','dayKey','dayStart','dayHalt','lossRun','pauseUntil','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen'])if(saved[k]!=null)S[k]=saved[k];
     if(saved.closedCount==null)S.closedCount=Array.isArray(S.closed)?S.closed.length:0;
@@ -3120,7 +3160,7 @@ function exportCSV(){
   toast('Export CSV téléchargé','info');
 }
 function showTab(name){
-  ['bot','inst','analyse','agents','trades','backtest','settings'].forEach(t=>{
+  ['bot','inst','analyse','agents','copy','trades','backtest','settings'].forEach(t=>{
     const el=$('tab-'+t);if(!el)return;
     el.classList.toggle('hidden-tab',t!==name);
     if(t===name){el.classList.remove('tab-fade');void el.offsetWidth;el.classList.add('tab-fade');}
@@ -3131,6 +3171,7 @@ function showTab(name){
   if(name==='inst'){renderInstitutional();renderFng();renderDepth();renderSMC();}
   if(name==='settings'){renderNotifStatus();renderStrategyBox();renderServer();}
   if(name==='trades')srvRefresh(true);
+  if(name==='copy'){renderCopy();cpFetch(true);}
   if(name==='backtest')btBuildUI();
   scheduleRender();
 }
@@ -3382,6 +3423,73 @@ async function srvTestPush(){
   try{const r=await srvFetch('/api/test-push',{method:'POST'});toast(r.sent?'Notification envoyée par le serveur : ferme l\'appli pour la voir arriver':'Aucun appareil abonné'+(r.errors&&r.errors[0]?' · '+r.errors[0]:''),'info');}
   catch(x){toast('Serveur : '+(x.message||x),'info');}
 }
+/* ═══════════ v18.7 · COPIE MEMECOINS (serveur : webhook Helius → D1 ; appli : affichage + réglages) ═══════════
+   L'appli ne fait qu'un petit appel réseau toutes les 5 s quand l'onglet est ouvert (20 s sinon, appli visible),
+   et ne redessine que si les données ont changé : aucun calcul ajouté au bot. */
+let cpData=null,cpErr='',cpLastFetch=0,cpBusy=false,cpSeen=null,cpTimer=0,cpSig='';
+const cpShort=a=>a?a.slice(0,4)+'…'+a.slice(-4):'';
+const cpMoney=v=>(v<0?'-':'')+'$'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const cpSecs=ms=>ms==null?'—':ms<1000?ms+' ms':(ms/1000).toFixed(1)+' s';
+function cpAgo(t){const s=Math.max(0,Math.round((Date.now()-t)/1000));return s<60?s+' s':s<3600?Math.round(s/60)+' min':Math.round(s/3600)+' h';}
+async function cpFetch(force){
+  if(!srvOn()||document.hidden||cpBusy)return;
+  const onTab=document.querySelector('.tab-btn.on')?.dataset.tab==='copy';
+  if(!force&&Date.now()-cpLastFetch<(onTab?4500:19500))return;
+  cpBusy=true;cpLastFetch=Date.now();
+  try{cpData=await srvFetch('/api/copy/state',{timeout:8000});cpErr='';cpAnimate();}
+  catch(x){cpErr=x.status===401?'jeton refusé':x.status===404?'serveur pas encore à jour (v18.7)':String(x.message||x);}
+  finally{cpBusy=false;}
+  if(document.querySelector('.tab-btn.on')?.dataset.tab==='copy')renderCopy();
+}
+function cpAnimate(){   // grosses animations pour chaque vente copiée depuis le dernier passage
+  const J=cpData&&cpData.journal||[];const newest=J.reduce((m,e)=>Math.max(m,e.t||0),0);
+  if(cpSeen==null){cpSeen=newest;return;}
+  const fresh=J.filter(e=>e.t>cpSeen).reverse();cpSeen=Math.max(cpSeen,newest);
+  for(const e of fresh.slice(-6)){
+    if(e.k==='sell')queueMoneyBubble(+e.tot||0,null,{copy:true,sym:e.sym});
+    else if(e.k==='buy')toast('🎯 Copie · ACHAT '+e.sym+' · '+cpMoney(e.usd)+' · '+cpSecs(e.lat)+' après le trader','info');
+  }
+}
+function renderCopy(){
+  const st=$('cpStatus');if(!st)return;
+  if(!srvOn()){st.innerHTML='Connecte le serveur dans <b>Réglages › Serveur 24h/24</b> (adresse + jeton) : la copie tourne sur le serveur, même appli fermée.';return;}
+  if(!cpData){st.textContent=cpErr?'Serveur : '+cpErr:'Chargement…';return;}
+  const d=cpData,sig=JSON.stringify([d.now&&Math.floor(d.now/5000),d.journal[0]&&d.journal[0].t,d.equity,d.on,cpErr]);
+  if(sig===cpSig)return;cpSig=sig;
+  $('cpOn').checked=!!d.on;
+  const act=d.wallets.filter(w=>w.act).length;
+  st.innerHTML=`${d.on?'<b class="green">Active</b>':'<b class="text-zinc-400">En pause</b>'} · ${act} trader(s) copié(s), ${d.wallets.length-act} observé(s) · dernier signal Helius ${d.hook.last?'il y a '+cpAgo(d.hook.last):'—'} · ${d.hook.today} transaction(s) reçue(s) aujourd'hui${cpErr?' · <span class="red">'+escH(cpErr)+'</span>':''}`;
+  $('cpEq').textContent=cpMoney(d.equity);
+  const pnl=d.equity-d.start;$('cpPnl').textContent=(pnl>=0?'+':'')+cpMoney(pnl);$('cpPnl').className='text-[14px] font-extrabold num '+(pnl>=0?'green':'red');
+  $('cpWin').textContent=d.stats.closed?`${Math.round(100*d.stats.wins/d.stats.closed)} % gagnants · frais ${cpMoney(d.stats.fees)}`:'aucune vente encore';
+  $('cpLat').textContent=d.lat.fillMed!=null?cpSecs(d.lat.fillMed):d.lat.delivMed!=null?'signal '+cpSecs(d.lat.delivMed):'—';
+  $('cpN').textContent=d.stats.opened+' / '+d.stats.closed;$('cpCash').textContent=cpMoney(d.cash);
+  const h=d.eqHist||[];if(h.length>1){const v=h.map(x=>x[1]),lo=Math.min(...v),hi=Math.max(...v),r=hi-lo||1;$('cpSpark').innerHTML=`<polyline fill="none" stroke="${pnl>=0?'#22d3ee':'#f87171'}" stroke-width="2" points="${v.map((y,i)=>(i*300/(v.length-1)).toFixed(1)+','+(46-(y-lo)/r*42).toFixed(1)).join(' ')}"/>`;}
+  memoEl($('cpPos')).innerHTML=d.positions.length?d.positions.map(p=>{const r=p.val/p.cost-1;return `<div class="cp-row"><span class="cp-tag cp-buy">LONG</span><b class="text-zinc-200">${escH(p.sym)}</b><span class="text-zinc-500">${cpShort(p.w)}</span><span class="ml-auto num">${cpMoney(p.cost)}</span><b class="num ${r>=0?'green':'red'}">${r>=0?'+':''}${(r*100).toFixed(1)} %</b></div>`;}).join(''):'Aucune position ouverte. Elles s\'ouvrent dès qu\'un trader copié achète un memecoin.';
+  $('cpJAge').textContent=d.journal[0]?'dernier il y a '+cpAgo(d.journal[0].t):'';
+  memoEl($('cpJournal')).innerHTML=d.journal.length?d.journal.slice(0,40).map(e=>{
+    const nm=escH((d.wallets.find(w=>w.w===e.w)||{}).n||cpShort(e.w));
+    if(e.k==='skip')return `<div class="cp-row"><span class="cp-tag cp-skip">IGNORÉ</span><b class="text-zinc-300">${escH(e.sym)}</b><span class="text-zinc-500 truncate">${nm} · ${escH(e.why)}</span><span class="ml-auto text-zinc-600">${cpAgo(e.t)}</span></div>`;
+    if(e.k==='buy')return `<div class="cp-row"><span class="cp-tag cp-buy">BUY</span><b class="text-zinc-200">${escH(e.sym)}</b><span class="text-zinc-500 truncate">${nm} · ${cpMoney(e.usd)}${e.small?' (réduit)':''} · ${cpSecs(e.lat)}</span><span class="ml-auto text-zinc-600">${cpAgo(e.t)}</span></div>`;
+    const v=e.k==='sell'?e.tot:e.pnl;return `<div class="cp-row"><span class="cp-tag cp-sell">SELL${e.k==='part'?' '+e.pct+'%':''}</span><b class="text-zinc-200">${escH(e.sym)}</b><span class="text-zinc-500 truncate">${nm} · ${escH(e.why)}</span><b class="ml-auto num ${v>=0?'green':'red'}">${v>=0?'+':''}${cpMoney(v)}</b></div>`;}).join(''):'Le journal se remplit dès le premier signal.';
+  memoEl($('cpWallets')).innerHTML=d.wallets.map(w=>{const o=w.own||{},s=w.sh||{};return `<div class="cp-row"><span class="cp-tag ${w.act?'cp-act':'cp-obs'}">${w.act?'COPIÉ':'OBSERVÉ'}</span><div class="min-w-0"><div class="font-bold text-zinc-200 truncate">${escH(w.n||cpShort(w.w))} <span class="text-zinc-600 font-normal">${cpShort(w.w)}</span></div><div class="text-[10px] text-zinc-500">7 j : ${(o.pnl||0)>=0?'+':''}${(o.pnl||0).toFixed(1)} SOL · ROI ${Math.round((o.roi||0)*100)} % · ${Math.round((o.win||0)*100)} % gagnants · ${o.n||0} trades${s.n?' · copie fantôme '+(s.pnl>=0?'+':'')+cpMoney(s.pnl)+' ('+s.n+')':''}</div></div><span class="ml-auto font-extrabold num ${w.ok?'text-cyan-300':'text-zinc-600'}">${w.score}</span></div>`;}).join('');
+  const c=d.cfg;$('cpSize').value=String(c.sizePct);$('cpStop').value=String(c.stopPct);$('cpMcap').value=String(c.minMcap);
+}
+async function cpConfig(body,msg){
+  if(!srvOn()){toast('Connecte d\'abord le serveur dans Réglages','info');return;}
+  try{await srvFetch('/api/copy/config',{method:'POST',body});toast(msg,'info');cpSig='';cpFetch(true);}
+  catch(x){toast('Copie : réglage non envoyé ('+(x.message||x)+')','info');}
+}
+function cpInit(){
+  $('cpOn').onchange=e=>cpConfig({on:e.target.checked},e.target.checked?'Copie memecoins activée':'Copie memecoins en pause');
+  $('cpSize').onchange=e=>cpConfig({sizePct:+e.target.value},'Taille par trade : '+e.target.value+' %');
+  $('cpStop').onchange=e=>cpConfig({stopPct:+e.target.value},'Stop de protection : −'+e.target.value+' %');
+  $('cpMcap').onchange=e=>cpConfig({minMcap:+e.target.value},'Capitalisation minimale mise à jour');
+  $('cpReset').onclick=()=>{if(confirm('Remettre le portefeuille copie à 10 000 $ ? Les portefeuilles suivis sont gardés.'))cpConfig({reset:true,start:10000},'Portefeuille copie remis à 10 000 $');};
+  clearInterval(cpTimer);cpTimer=setInterval(()=>cpFetch(false),5000);
+  setTimeout(()=>cpFetch(true),3000);
+  if(new URLSearchParams(location.search).get('tab')==='copy')showTab('copy');
+}
 function srvStratLabel(d){return (STRATS[d.stratMode]?STRATS[d.stratMode].label:'Agents 15 min')+' (code v'+(d.strategy&&d.strategy.appVersion)+')';}
 function srvDailyLine(d){
   if(d.stratMode!=='daily')return '';
@@ -3468,6 +3576,7 @@ function initApp(){
   $('srvUrl').value=SRV.url||SRV_DEFAULT;$('srvToken').value=SRV.token;
   $('btnSrvSave').onclick=srvSave;$('btnSrvForget').onclick=srvForget;$('btnSrvPush').onclick=srvEnablePush;
   $('btnSrvTest').onclick=srvTestPush;$('btnSrvSync').onclick=srvSyncSettings;
+  try{cpInit();}catch(x){console.warn('copie',x);}
   $('btnNotifTest').onclick=()=>{initAudio();signalAlert('Test · Signal ACHAT · BTC','Exemple d\'alerte : prix, stop et objectif s\'affichent ici.','BTC','buy');};
   $('sigClose').onclick=hideBanner;
   $('sigView').onclick=()=>{hideBanner();if(bannerSym){showTab('bot');openSymbol(bannerSym);}};
