@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#08080a" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v19.3</title>
+<title>STMA Bot · v19.4</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -401,7 +401,7 @@
     <div class="logo">S</div>
     <div>
       <div class="text-[15px] font-extrabold leading-tight tracking-tight">STMA Bot</div>
-      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v19.3</div>
+      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v19.4</div>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -712,7 +712,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v19.3</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v19.4</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -1535,7 +1535,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='19.3',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='19.4',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1624,7 +1624,7 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:19.3,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
+  const st={v:19.4,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
     opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true,learnV2:true},huntDone:{},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
@@ -2151,7 +2151,7 @@ function animateProfitToWallet(amount,startRect,onDone,n=1,meta=null){
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.3,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.4,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
     cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR,platform:S.platform,hiddenAt:S.hiddenAt,relayOut:S.relayOut}));}catch(x){}
@@ -3618,13 +3618,13 @@ async function srvCheckSub(){
 /* ═══ v19.2 · RELAIS SERVEUR : iOS suspend l'appli en arrière-plan ; le serveur gère alors ses positions crypto/memecoins
    (mêmes stops, objectifs, stop suiveur, liquidation, avec le noyau partagé) et l'appli rejoue ses sorties au retour, une seule fois. ═══ */
 let relayLock=false,relayTry=0,relayTimer=0;
-function relayEligible(p){const q=S.prices[p.sym];return !!(q&&q.binanceSymbol&&(q.market==='crypto'||q.market==='meme'));}
+function relayEligible(p){const q=S.prices[p.sym];return !!(q&&((q.binanceSymbol&&(q.market==='crypto'||q.market==='meme'))||(q.yahooSymbol&&!CRYPTO_MKTS[q.market])));}   // v19.3 : actions/forex/matières via Yahoo côté serveur
 function relayHandoff(){
   const now=Date.now();if(!(S.relayOut&&now-S.relayOut.at<5000))S.hiddenAt=now;
   if(!srvOn())return;
   if(S.relayOut&&now-S.relayOut.at<5000)return;   // visibilitychange + pagehide : un seul envoi
   const o=S.opts,pos=S.positions.filter(relayEligible).map(p=>({id:p.id,sym:p.sym,dir:p.dir,entry:p.entry,qty:p.qty,qty0:p.qty0,notional:p.notional,sl:p.sl,R:p.R,peak:p.peak,partial:!!p.partial,
-    tp1:p.tp1,tp:p.tp,openedAt:p.openedAt,sniper:!!p.sniper,dt:!!p.dt,pf:p.pf||S.platform,bnb:!!(p.pf?p.bnb:o.bnb),lev:p.lev,bk:p.bk,liq:p.liq,margin:p.margin,realized:p.realized,trailed:!!p.trailed}));
+    tp1:p.tp1,tp:p.tp,openedAt:p.openedAt,sniper:!!p.sniper,dt:!!p.dt,pf:p.pf||S.platform,bnb:!!(p.pf?p.bnb:o.bnb),lev:p.lev,bk:p.bk,liq:p.liq,margin:p.margin,realized:p.realized,trailed:!!p.trailed,ysym:S.prices[p.sym].binanceSymbol?undefined:S.prices[p.sym].yahooSymbol,mk:S.prices[p.sym].market}));
   const body={op:'handoff',sess:String(now),positions:pos,opts:{trailing:o.trailing,sniper:o.sniper,shorts:o.shorts},
     config:{strategy:S.strategy,risk:S.risk,mode:S.mode,platform:S.platform,opts:{sniper:o.sniper,devil:o.devil,trailing:o.trailing,learning:o.learning,instfilter:o.instfilter,shorts:o.shorts,htf:o.htf,noLimit:o.noLimit!==false,bnb:!!o.bnb}}};
   S.relayOut={at:now,n:pos.length,ids:pos.map(p=>p.id)};
@@ -3658,7 +3658,7 @@ function awaySummary(out,done){
   const sc=(srvData&&Array.isArray(srvData.closed)?srvData.closed:[]).filter(c=>(c.at||0)>S.hiddenAt);
   const left=S.positions.filter(p=>!relayEligible(p)).length,tot=done.reduce((a,b)=>a+(+b.pnl||0),0);
   card.innerHTML=`<div class="flex items-center justify-between"><div class="text-[13px] font-extrabold">🌙 Pendant ton absence · ${dur}</div><button class="text-zinc-500 text-[15px] px-1" data-away-x aria-label="Fermer">✕</button></div>
-    <div class="text-[11px] text-zinc-400 mt-1 leading-snug">${out.n?`Le serveur a surveillé tes ${out.n} position(s) crypto/memecoins : ${done.length?done.length+' sortie(s), '+signedMoney(tot):'aucune sortie'}.`:'Aucune position à surveiller.'}${left?` ${left} position(s) actions/forex/matières n'ont pas pu être surveillées (pas de prix côté serveur).`:''}</div>
+    <div class="text-[11px] text-zinc-400 mt-1 leading-snug">${out.n?`Le serveur a surveillé tes ${out.n} position(s) : ${done.length?done.length+' sortie(s), '+signedMoney(tot):'aucune sortie'}.`:'Aucune position à surveiller.'}${left?` ${left} position(s) n'ont pas pu être surveillées (pas de prix côté serveur).`:''}</div>
     ${done.map(d=>`<div class="flex justify-between text-[11.5px] mt-1"><span>${escH(d.kind)} ${escH(d.sym)} <span class="text-zinc-500">· ${escH(d.reason)}</span></span><span class="num font-bold ${d.pnl>=0?'text-emerald-300':'text-rose-300'}">${signedMoney(d.pnl)}</span></div>`).join('')}
     <div class="text-[11px] text-zinc-400 mt-1.5">Bot serveur (son propre portefeuille) : ${srvData?(sc.length?sc.length+' trade(s) clôturé(s), '+signedMoney(sc.reduce((a,c)=>a+(+c.pnl||0),0)):'aucun trade clôturé'):'données en cours de chargement'}.</div>`;
   card.classList.remove('hidden-tab');
