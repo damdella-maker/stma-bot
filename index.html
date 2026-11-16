@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#08080a" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v15</title>
+<title>STMA Bot · v16</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -246,7 +246,7 @@
     <div class="logo">S</div>
     <div>
       <div class="text-[15px] font-extrabold leading-tight tracking-tight">STMA Bot</div>
-      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v15</div>
+      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v16</div>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -318,6 +318,7 @@
       <span id="statusScan" class="text-[10px] text-zinc-600 num">Idle</span>
     </div>
 
+    <div class="mb-3"><div class="sect-title mb-1.5">Stratégie</div><div class="seg" id="stratSeg"></div><div class="text-[10.5px] text-zinc-500 mt-1.5" id="stratNote"></div></div>
     <div class="mb-3"><div class="sect-title mb-1.5">Niveau de risque</div><div class="seg" id="riskSeg"></div></div>
     <div class="mb-3"><div class="sect-title mb-1.5">Fréquence de trading</div><div class="seg" id="modeSeg"></div></div>
     <div class="mb-3"><div class="sect-title mb-1.5">Marchés actifs</div><div class="flex flex-wrap gap-1.5" id="marketChips"></div></div>
@@ -417,7 +418,7 @@
 
   <section id="tab-backtest" class="hidden-tab">
     <div class="card p-4 mb-3">
-      <div class="flex items-center justify-between mb-1"><div class="text-[14px] font-extrabold">Backtest de la stratégie</div><span class="src-badge connect">v15</span></div>
+      <div class="flex items-center justify-between mb-1"><div class="text-[14px] font-extrabold">Backtest de la stratégie</div><span class="src-badge connect">v16</span></div>
       <div class="text-[11.5px] text-zinc-400 leading-relaxed mb-3">Rejoue exactement les règles du bot (même code) sur l'historique Binance en bougies 15 min, avec la confirmation 1h, les frais et le glissement. Niveau de risque et fréquence : ceux choisis dans l'onglet Bot.</div>
       <div class="sect-title mb-1.5">Actifs crypto</div>
       <div id="btSyms" class="flex flex-wrap gap-1.5 mb-3"></div>
@@ -475,7 +476,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v15.0</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v16.0</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -669,6 +670,25 @@ const MARKET_REF={crypto:'BTC',meme:'BTC'};
 const STRAT={thrBase:2.6,cooldown:24*3600e3,tp1R:3,tpR:6,trailAct:2,trailAtr:4,htfStrict:true,refStrict:true};
 const STRAT_V14={thrBase:1.1,cooldown:0,tp1R:2,tpR:5,trailAct:1,trailAtr:2.5,htfStrict:false,refStrict:false};
 function cooldownOf(mode){return Math.max(MODES[mode]?.cooldown||5*60e3,STRAT.cooldown);}
+// v16 — « Tendance 1 jour » : croisement EMA 10/30 sur bougies journalières CLOSES, stop fixe 3 ATR(14) journalier,
+// achats seulement si BTC est au-dessus de son EMA50 journalière, ventes seulement en dessous. Sortie au croisement inverse ou au stop.
+// Validé hors échantillon (6 cryptos, 6 fenêtres de 90 jours) ; même code pour le direct et le backtest.
+const DTREND={f:10,s:30,k:3,ref:50,syms:['BTC','ETH','SOL','BNB','XRP','ADA']};
+const DAY=86400000;
+function atrWilder(d,n=14){let a=0;for(let i=0;i<d.length;i++){const b=d[i],pc=i?d[i-1].c:b.c,tr=i?Math.max(b.h-b.l,Math.abs(b.h-pc),Math.abs(b.l-pc)):b.h-b.l;a=i<n?(a*i+tr)/(i+1):(a*(n-1)+tr)/n;}return a;}
+function dtEval(d,btcD,P){
+  P=P||DTREND;const n=d.length;if(n<P.s+5)return null;
+  const c=d.map(x=>x.c),F=emaSeries(c,P.f),L=emaSeries(c,P.s),st=Math.sign(F[n-1]-L[n-1]),pst=Math.sign(F[n-2]-L[n-2]);
+  let refUp=P.ref?true:null;if(P.ref&&btcD&&btcD.length>P.ref){const bc=btcD.map(x=>x.c),E=emaSeries(bc,P.ref);refUp=bc[bc.length-1]>E[E.length-1];}
+  const atr=atrWilder(d);
+  return {t:d[n-1].t,st,cross:st!==pst?st:0,atr,close:c[n-1],refUp,stopDist:P.k*atr,emaF:F[n-1],emaS:L[n-1]};
+}
+function dtDecide(sig,posDir){
+  const close=!!posDir&&sig.st!==posDir,flat=!posDir||close;let open=0;
+  if(flat&&sig.cross>0&&sig.refUp!==false)open=1;else if(flat&&sig.cross<0&&sig.refUp!==true)open=-1;   // refUp null = sans filtre BTC
+  return {close,open};
+}
+
 function maxPosOf(risk,mode){const base=RISK[risk].maxPos,mult=MODES[mode]?.maxPosMult||1;return Math.min(20,Math.round(base*mult));}
 function paramsFor(mode,adapt,trailing){const M=MODES[mode]||MODES.normal;return {thr:STRAT.thrBase+(adapt.thrAdd||0)+M.thrAdd,stopMult:adapt.stopMult||2,erMin:M.erMin,allowCounter:M.allowCounter,tp1R:STRAT.tp1R,tpR:trailing?STRAT.tpR:3};}
 // Taille réduite : -30 % en volatile, -15 % en range, puis drawdown, série de pertes, memecoins, positions corrélées
@@ -811,20 +831,61 @@ function btRun(D,prep,cfg){
   return {label:cfg.label,key:cfg.key,n,winrate:n?wins.length/n*100:0,pnl:finalEq-start,pnlPct:(finalEq-start)/start*100,sumR,pf:gl>0?gw/gl:(gw>0?Infinity:0),
     maxDD:maxDD*100,expectancy:n?(finalEq-start)/n:0,expR:n?sumR/n:0,fees,killed,curve,trades:cfg.keepTrades?trades:[],longs:trades.filter(x=>x.side==='LONG').length};
 }
+/* ── Backtest « Tendance 1 jour » : bougies journalières, décision à la clôture, exécution à l'ouverture du jour suivant,
+   stop vérifié avec le plus bas/plus haut du jour (ouverture au-delà du stop → sortie à l'ouverture) ── */
+function btRunDaily(D,cfg){
+  const P=Object.assign({},DTREND,cfg.dt||{}),R=RISK[D.risk],A=D.daily,btc=D.btcDaily;
+  for(const a of A){a.idx=new Map();a.d.forEach((k,i)=>a.idx.set(k.t,i));}
+  const bIdx=new Map();btc.forEach((k,i)=>bIdx.set(k.t,i));
+  const days=btc.filter(k=>k.t>=D.startT&&k.t<D.endT).map(k=>k.t);
+  let capital=D.start,peak=capital,maxDD=0,fees=0,killed=false;const pos=new Array(A.length).fill(null),trades=[],curve=[],last=new Array(A.length).fill(0);let pending=[];
+  const mtm=()=>{let u=0;pos.forEach((p,ai)=>{if(p)u+=(last[ai]-p.entry)*p.qty*p.dir;});return capital+u;};
+  const expo=()=>{let s=0;pos.forEach((p,ai)=>{if(p)s+=p.qty*last[ai];});return s;};
+  const close=(ai,raw,reason,t)=>{const p=pos[ai],cost=COSTS[A[ai].market],px=raw*(1-p.dir*cost.slip),fee=p.qty*px*cost.fee,pnl=(px-p.entry)*p.qty*p.dir-fee;
+    capital+=pnl;fees+=fee;const total=p.realized+pnl;pos[ai]=null;
+    trades.push({sym:A[ai].sym,side:p.dir>0?'LONG':'SHORT',entry:p.entry,exit:px,pnl:total,R:total/(p.risk0||1),reason,openT:p.openT,closeT:t,lead:'Tendance 1 j'});};
+  for(const t of days){
+    for(const o of pending){const a=A[o.ai],i=a.idx.get(t);if(i==null)continue;const k=a.d[i],cost=COSTS[a.market];
+      if(o.t==='c'){if(pos[o.ai])close(o.ai,k.o,o.reason,t);continue;}
+      if(pos[o.ai]||killed)continue;
+      const eq=mtm(),fill=k.o*(1+o.dir*cost.slip),per=o.stopDist+2*(cost.fee+cost.slip)*fill;
+      const qty=Math.min(eq*R.risk/per,eq*R.posCap/fill,Math.max(0,eq*R.expo-expo())/fill);if(!(qty*fill>=10))continue;
+      const fee=qty*fill*cost.fee;capital-=fee;fees+=fee;
+      pos[o.ai]={dir:o.dir,qty,entry:fill,sl:fill-o.dir*o.stopDist,realized:-fee,risk0:qty*per,openT:t};}
+    pending=[];
+    pos.forEach((p,ai)=>{if(!p)return;const a=A[ai],i=a.idx.get(t);if(i==null)return;const k=a.d[i],adv=p.dir>0?k.l:k.h;
+      if((k.o-p.sl)*p.dir<=0)close(ai,k.o,'Stop ATR',t+DAY);else if((adv-p.sl)*p.dir<=0)close(ai,p.sl,'Stop ATR',t+DAY);});
+    A.forEach((a,ai)=>{const i=a.idx.get(t);if(i!=null)last[ai]=a.d[i].c;});
+    const eq=mtm();peak=Math.max(peak,eq);const dd=peak>0?(peak-eq)/peak:0;maxDD=Math.max(maxDD,dd);curve.push([t+DAY,eq]);
+    if(!killed&&dd>=R.dd){killed=true;pos.forEach((p,ai)=>{if(p)close(ai,last[ai],'Arrêt de sécurité',t+DAY);});}
+    if(killed)continue;
+    const bi=bIdx.get(t);if(bi==null)continue;const bD=btc.slice(Math.max(0,bi-399),bi+1);
+    A.forEach((a,ai)=>{const i=a.idx.get(t);if(i==null)return;const sig=dtEval(a.d.slice(Math.max(0,i-399),i+1),bD,P);if(!sig)return;
+      const dec=dtDecide(sig,pos[ai]?pos[ai].dir:0);
+      if(dec.close)pending.push({t:'c',ai,reason:'Croisement inverse'});
+      if(dec.open)pending.push({t:'o',ai,dir:dec.open,stopDist:sig.stopDist});});
+  }
+  const endTime=days.length?days[days.length-1]+DAY:D.endT;
+  pos.forEach((p,ai)=>{if(p)close(ai,last[ai],'Fin du test',endTime);});
+  curve.push([endTime,capital]);
+  const n=trades.length,wins=trades.filter(x=>x.pnl>0),gw=wins.reduce((s,x)=>s+x.pnl,0),gl=Math.abs(trades.filter(x=>x.pnl<=0).reduce((s,x)=>s+x.pnl,0)),sumR=trades.reduce((s,x)=>s+x.R,0);
+  return {label:cfg.label,key:cfg.key,n,winrate:n?wins.length/n*100:0,pnl:capital-D.start,pnlPct:(capital-D.start)/D.start*100,sumR,pf:gl>0?gw/gl:(gw>0?Infinity:0),
+    maxDD:maxDD*100,expectancy:n?(capital-D.start)/n:0,expR:n?sumR/n:0,fees,killed,curve,trades:cfg.keepTrades?trades:[],longs:trades.filter(x=>x.side==='LONG').length};
+}
 self.onmessage=ev=>{
   const m=ev.data;if(m.type!=='run')return;
   try{
     const post=x=>self.postMessage(x);
     post({type:'progress',pct:8,msg:'Calcul des indicateurs…'});
-    const prep=btPrepare(m.data.assets,m.data.btc,m.data.startT,post);
+    const prep=m.configs.some(c=>c.kind!=='daily')?btPrepare(m.data.assets,m.data.btc,m.data.startT,post):null;
     const out=[];
     m.configs.forEach((cfg,i)=>{
       post({type:'progress',pct:50+45*i/m.configs.length,msg:`Simulation · ${cfg.label}`});
       const keep=Object.assign({},STRAT);Object.assign(STRAT,cfg.strat||{});
-      try{out.push(btRun(m.data,prep,cfg));}finally{Object.assign(STRAT,keep);}
+      try{out.push(cfg.kind==='daily'?btRunDaily(m.data,cfg):btRun(m.data,prep,cfg));}finally{Object.assign(STRAT,keep);}
     });
     // repère : acheter et garder (moyenne des actifs, même capital réparti)
-    const bh=m.data.assets.map(a=>{const s=a.cs.find(k=>k.t>=m.data.startT),e=a.cs[a.cs.length-1];return s&&e?{sym:a.sym,pct:(e.c/s.o-1)*100}:null;}).filter(Boolean);
+    const bh=(m.data.assets||m.data.daily.map(a=>({sym:a.sym,cs:a.d}))).map(a=>{const s=a.cs.find(k=>k.t>=m.data.startT),e=a.cs[a.cs.length-1];return s&&e?{sym:a.sym,pct:(e.c/s.o-1)*100}:null;}).filter(Boolean);
     post({type:'result',results:out,bh});
   }catch(err){self.postMessage({type:'error',msg:String(err&&err.message||err)});}
 };
@@ -860,7 +921,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='15.0',STORE_KEY='stma.bot.v15',LEGACY_KEYS=['stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='16.0',STORE_KEY='stma.bot.v16',LEGACY_KEYS=['stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -893,7 +954,7 @@ function flushRender(){
 }
 
 function freshState(){
-  const st={v:15,running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
+  const st={v:16,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
     markets:['crypto','meme'],
     opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
@@ -1389,7 +1450,7 @@ function animateProfitToWallet(amount,startRect,onDone){
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:15,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:16,strategy:S.strategy,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
     cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen}));}catch(x){}
@@ -1399,7 +1460,7 @@ function loadState(){
   try{for(const k of [STORE_KEY,...LEGACY_KEYS]){const raw=localStorage.getItem(k);if(raw){saved=JSON.parse(raw);from=k;break;}}}catch(x){}
   S=freshState();if(!saved)return;
   // Migration v11/v12 → v13 : on reprend tout ce qui est compatible, les nouveaux champs prennent leur valeur par défaut
-  if(![11,12,13,14,15].includes(saved.v))return;
+  if(![11,12,13,14,15,16].includes(saved.v))return;
   try{
     for(const k of ['start','capital','closed','lessons','equityHist','peakEquity','maxDD','streak','seq','killed','dayKey','dayStart','dayHalt','lossRun','pauseUntil','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen'])if(saved[k]!=null)S[k]=saved[k];
     if(saved.closedCount==null)S.closedCount=Array.isArray(S.closed)?S.closed.length:0;
@@ -1411,6 +1472,8 @@ function loadState(){
     Object.assign(S.opts,saved.opts||{});Object.assign(S.adapt,saved.adapt||{});S.adapt.sideOff=Object.assign({long:0,short:0},S.adapt.sideOff||{});
     S.learn=saved.learn||{};S.cooldown=saved.cooldown||{};
     if(saved.bt&&Array.isArray(saved.bt.syms))S.bt=Object.assign(S.bt,saved.bt);
+    if(saved.v>=16&&(saved.strategy==='daily'||saved.strategy==='agents'))S.strategy=saved.strategy;   // v15 et avant : passe à la stratégie validée v16
+    if(saved.dtDone&&typeof saved.dtDone==='object')S.dtDone=saved.dtDone;
     if(S.cooldown.MATIC){S.cooldown.POL=S.cooldown.MATIC;delete S.cooldown.MATIC;}
     if(saved.agents)for(const id in S.agents)if(saved.agents[id])Object.assign(S.agents[id],saved.agents[id]);
     if(Array.isArray(saved.positions)){
@@ -1419,6 +1482,7 @@ function loadState(){
         .filter(p=>p&&S.prices[p.sym]&&p.qty>0&&Number.isFinite(p.entry)&&Number.isFinite(p.sl));
       for(const p of S.positions){
         if(!(p.R>0))p.R=Math.abs(p.entry-p.sl)||p.entry*0.004;
+        if(p.dt)continue;   // positions « Tendance 1 jour » : pas d'objectif, sortie au stop ou au croisement inverse
         if(p.tp1==null)p.tp1=p.entry+p.dir*p.R*(p.sniper?1.5:2);
         if(p.tp==null)p.tp=p.entry+p.dir*p.R*(S.opts.trailing?5:3);
       }
@@ -1442,17 +1506,17 @@ function openPosition(sym,dir,ev,manual){
   if(!isFresh(q)){toast('Prix indisponible pour '+sym,'info');return false;}
   const eq=equity();
   // Sizing adapté au régime : -30% en volatile, -15% en range
-  const regimeMult=riskMult(S.regime,0,0,'',false);
+  const dt=!!(ev&&ev.dt),regimeMult=dt?1:riskMult(S.regime,0,0,'',false);
   const stopDist=ev?ev.stopDist:Math.max(2*(ind?ind.atr:q.price*0.004),q.price*0.0015);
   let mult=regimeMult;
-  if(!manual){
+  if(!manual&&!dt){
     const dd=S.peakEquity>0?(S.peakEquity-eq)/S.peakEquity:0;
     const mine=candles.get(sym)?.cs;
     const correlated=S.positions.some(p=>p.dir===dir&&corrRet(mine,candles.get(p.sym)?.cs)>0.7);
     mult=riskMult(S.regime,dd,S.lossRun,q.market,correlated);
   }
   const fill=q.price*(1+dir*cost.slip);
-  const qty=sizeQty(eq,fill,stopDist,cost,R,mult,Math.max(0,eq*R.heat*(manual?10:1)-heat()),exposure());
+  const qty=sizeQty(eq,fill,stopDist,cost,R,mult,dt?Infinity:Math.max(0,eq*R.heat*(manual?10:1)-heat()),exposure());
   if(!qty){
     pushDecision('SKIP '+sym,'taille nulle · heat ou exposition saturés');
     if(manual)toast('Taille trop petite ou limite d\'exposition atteinte','info');
@@ -1460,11 +1524,11 @@ function openPosition(sym,dir,ev,manual){
   }
   const fee=qty*fill*cost.fee;S.capital-=fee;S.feesPaid+=fee+qty*q.price*cost.slip;
   const p={id:S.seq++,sym,dir,entry:fill,qty,qty0:qty,notional:qty*fill,feeIn:fee,sl:fill-dir*stopDist,R:stopDist,peak:fill,partial:false,realized:-fee,
-    sniper:!!(ev&&ev.isSniper),agentId:manual?'manual':ev.lead,agent:manual?'Manuel':(AGENTS.find(a=>a.id===ev.lead)?.name||'—'),
+    dt,sniper:!!(ev&&ev.isSniper),agentId:manual?'manual':ev.lead,agent:manual?'Manuel':dt?'Tendance 1 jour':(AGENTS.find(a=>a.id===ev.lead)?.name||'—'),
     supporters:manual?[]:ev.supporters,risk0:qty*(stopDist+2*(cost.fee+cost.slip)*fill),openedAt:Date.now(),regime:S.regime,hist:[fill],
-    tp1:fill+dir*stopDist*(ev?ev.tp1R:2),tp:fill+dir*stopDist*(ev?ev.tpR:(S.opts.trailing?5:3)),candleT:ind?ind.t:0};
+    tp1:dt?null:fill+dir*stopDist*(ev?ev.tp1R:2),tp:dt?null:fill+dir*stopDist*(ev?ev.tpR:(S.opts.trailing?5:3)),candleT:ind?ind.t:0};
   S.positions.push(p);saveState();vibrate(12);beep(dir>0?880:660,0.1,0.05);
-  pushDecision((dir>0?'BUY ':'SELL ')+sym,manual?'manuel':`${p.agent} · score ${ev.net.toFixed(2)} · stop ${priceFmt(p.sl)} · objectif ${priceFmt(p.tp)} · risque ${money(p.risk0)}${regimeMult<1?' · '+Math.round((1-regimeMult)*100)+'% réduit ('+S.regime+')':''}`);
+  pushDecision((dir>0?'BUY ':'SELL ')+sym,manual?'manuel':dt?`Tendance 1 jour · croisement EMA ${DTREND.f}/${DTREND.s} · stop ${priceFmt(p.sl)} (${DTREND.k} ATR) · risque ${money(p.risk0)}`:`${p.agent} · score ${ev.net.toFixed(2)} · stop ${priceFmt(p.sl)} · objectif ${priceFmt(p.tp)} · risque ${money(p.risk0)}${regimeMult<1?' · '+Math.round((1-regimeMult)*100)+'% réduit ('+S.regime+')':''}`);
   return true;
 }
 function fillExit(p,qty,reason){
@@ -1483,7 +1547,7 @@ function closePosition(p,reason){
     notional:p.notional,at:Date.now(),heldMs:Date.now()-p.openedAt,regime:p.regime});
   if(S.closed.length>200)S.closed.pop();
   const lead=S.agents[p.agentId];if(lead){lead.pnl+=total;lead.trades++;lead.sumR+=Number.isFinite(Rm)?Rm:0;if(win)lead.wins++;}
-  if(S.opts.learning&&p.agentId!=='manual'){
+  if(S.opts.learning&&p.agentId!=='manual'&&!p.dt){
     for(const a of new Set([p.agentId,...(p.supporters||[])])){
       const key=a+'|'+market,L=S.learn[key]||(S.learn[key]={r:[],until:0}),before=learnWeight(L,Date.now());
       L.r.push(clamp(Number.isFinite(Rm)?Rm:0,-3,6));if(L.r.length>12)L.r.shift();
@@ -1513,6 +1577,7 @@ function updatePositions(){
   for(const p of [...S.positions]){
     const q=S.prices[p.sym];
     if(!isFresh(q))continue;            // jamais de décision sur un prix périmé (la carte affiche « prix périmé »)
+    if(p.dt){if((q.price-p.sl)*p.dir<=0)closePosition(p,'Stop ATR');continue;}   // Tendance 1 jour : seul le stop agit en continu
     const ind=indFor(p.sym),act=managePos(p,q.price,ind?ind.atr:p.R/2,now,S.opts,COSTS[q.market]);
     if(!act)continue;
     if(act.type==='partial'){
@@ -1567,7 +1632,7 @@ function ctxFor(sym){
 function weightsFor(market){const w={},now=Date.now();for(const a of VOTERS)w[a]=S.opts.learning?learnWeight(S.learn[a+'|'+market],now):1;return w;}
 function params(){return paramsFor(S.mode,S.adapt,S.opts.trailing);}
 
-function tickStrategy(trade){
+function tickStrategy(trade,quiet){
   const now=Date.now(),gate=trade?riskGate():'',P=params(),agg={},cnt={};
   let best=null,bull=0,bear=0,seen=0;const blocked={};
   const block=r=>{const k=r.replace(/[-\d.,×]+/g,'#');const b=blocked[k]||(blocked[k]={n:0,txt:r});b.n++;b.txt=r;};
@@ -1594,7 +1659,7 @@ function tickStrategy(trade){
   S.agents.risk.bias=gate?'veto':'ok';
   S.consensus={bull,bear,action:'HOLD',veto:!!gate,vetoReason:gate};
   opens.sort((a,b)=>Math.abs(b.ev.net)-Math.abs(a.ev.net));
-  if(!trade){for(const o of opens.slice(0,3))maybeAlert(o,false);return;}   // mode surveillance : alerte sans trader
+  if(!trade){if(!quiet)for(const o of opens.slice(0,3))maybeAlert(o,false);return;}   // mode surveillance : alerte sans trader
   if(!seen){holdNote('aucune donnée réelle exploitable');return;}
   if(gate){holdNote('veto · '+gate);return;}
   S.openTimes=(S.openTimes||[]).filter(t=>now-t<3600000);
@@ -1614,6 +1679,47 @@ function tickStrategy(trade){
     const top=Object.values(blocked).sort((a,b)=>b.n-a.n)[0];
     holdNote(best?`${seen} actifs · meilleur ${best.sym} ${best.ev.net.toFixed(2)}`+(top?` · surtout « ${top.txt.replace(/^signal \S+ /,'signal ')} » (${top.n})`:''):'rien à signaler');
   }
+}
+/* ═══════════ TENDANCE 1 JOUR (v16) ═══════════ */
+const daily=new Map();   // sym → {d:[bougies journalières closes], at, fails}
+function dtSyms(){const act=activeSyms();return DTREND.syms.filter(x=>act.includes(x)||x==='BTC');}
+function dailyFor(sym){const e=daily.get(sym);return e&&e.d.length?e.d:null;}
+async function ensureDaily(sym){
+  const e=daily.get(sym)||{d:[],at:0,fails:0,busy:false};daily.set(sym,e);
+  const dayNow=Math.floor(Date.now()/DAY)*DAY;
+  if(e.busy||(e.d.length&&e.d[e.d.length-1].t+DAY>=dayNow&&Date.now()-e.at<6*3600e3)||Date.now()-e.at<Math.min(600e3,30e3*2**e.fails))return;
+  e.busy=true;
+  try{const q=S.prices[sym];const raw=await binanceGet(`/api/v3/klines?symbol=${q.binanceSymbol}&interval=1d&limit=400`,{timeout:10000});
+    e.d=parseKlines(raw).filter(k=>k.t+DAY<=Date.now());e.at=Date.now();e.fails=0;}
+  catch(x){e.fails++;e.at=Date.now();}
+  finally{e.busy=false;}
+}
+function dtTick(trade){
+  const syms=dtSyms();for(const x of syms)ensureDaily(x);
+  const bD=dailyFor('BTC');if(!bD){holdNote('Tendance 1 jour · chargement des bougies journalières…');return;}
+  const dayNow=Math.floor(Date.now()/DAY)*DAY,notes=[];
+  if(trade&&S.killed){holdNote('veto · arrêt drawdown');return;}
+  for(const sym of syms){
+    const d=dailyFor(sym),q=S.prices[sym];if(!d||!q)continue;
+    const sig=dtEval(d,bD);if(!sig)continue;
+    if(sig.t+DAY<dayNow)continue;                   // bougies pas à jour : on attend
+    const pos=S.positions.find(p=>p.sym===sym);
+    notes.push(`${sym} ${sig.st>0?'↑':'↓'}`);
+    if(S.dtDone[sym]===sig.t)continue;              // une seule décision par clôture journalière
+    if(pos&&!pos.dt){S.dtDone[sym]=sig.t;continue;}  // position manuelle ou v15 : on n'y touche pas
+    const dec=dtDecide(sig,pos?pos.dir:0);
+    if(!trade){if(dec.open&&S.opts.alertIdle)signalAlert(`Signal ${dec.open>0?'ACHAT':'VENTE'} · ${sym}`,`Tendance 1 jour · croisement EMA ${DTREND.f}/${DTREND.s} · stop ${DTREND.k} ATR · bot arrêté : aucun trade`,sym,dec.open>0?'buy':'sell');S.dtDone[sym]=sig.t;continue;}
+    if(!isFresh(q))continue;                        // jamais d'ordre sur un prix périmé
+    if(dec.close)closePosition(pos,'Croisement inverse');
+    if(dec.open){
+      const ev={dt:true,dir:dec.open,stopDist:sig.stopDist,lead:'trend',supporters:[],net:0};
+      if(openPosition(sym,dec.open,ev,false)){const p=S.positions.find(x=>x.sym===sym);
+        signalAlert(`${dec.open>0?'ACHAT simulé':'VENTE simulée'} · ${sym}`,`Tendance 1 jour · prix ${priceFmt(p.entry)} · stop ${priceFmt(p.sl)} · simulation`,sym,dec.open>0?'buy':'sell');}
+    }
+    S.dtDone[sym]=sig.t;saveState();
+  }
+  const next=new Date(dayNow+DAY).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  if(trade)holdNote(`Tendance 1 jour · BTC ${dtEval(bD,bD)?.refUp?'au-dessus':'sous'} son EMA50 · ${notes.join(' ')} · prochaine décision à ${next}`);
 }
 /* ═══════════ ALERTES ═══════════ */
 function maybeAlert(o,opened){
@@ -1677,7 +1783,10 @@ function renderNotifStatus(){
   btn.className='btn flex-1 '+(b.startsWith('Désactiver')?'btn-ghost':'btn-primary');
 }
 function renderStrategyBox(){
-  const box=$('stratBox');if(!box)return;const P=params(),L=ENTRY_LIMITS[S.mode]||ENTRY_LIMITS.normal,M=MODES[S.mode];
+  const box=$('stratBox');if(!box)return;
+  if(S.strategy==='daily'){const rows=[['Stratégie','Tendance 1 jour (v16)'],['Signal',`croisement EMA ${DTREND.f}/${DTREND.s}, bougies journalières closes`],['Filtre',`achats si BTC > EMA${DTREND.ref} journalière, ventes sinon`],['Stop',`${DTREND.k} × ATR journalier, fixe`],['Sortie','croisement inverse ou stop'],['Risque par trade',(RISK[S.risk].risk*100).toFixed(2).replace('.',',')+' % du capital'],['Cryptos',DTREND.syms.join(', ')]];
+    box.innerHTML=rows.map(r=>`<div class="flex justify-between gap-3"><span class="text-zinc-500">${r[0]}</span><span class="font-bold text-right num">${r[1]}</span></div>`).join('');return;}
+  const P=params(),L=ENTRY_LIMITS[S.mode]||ENTRY_LIMITS.normal,M=MODES[S.mode];
   const rows=[['Seuil de signal',P.thr.toFixed(2)],['Stop',P.stopMult.toFixed(2)+' × ATR'],['Objectif 1 (moitié vendue)',P.tp1R+' R · puis stop au point mort'],['Objectif final',P.tpR+' R'+(S.opts.trailing?` · stop suiveur ${String(STRAT.trailAtr).replace('.',',')} ATR dès +${STRAT.trailAct} R`:'')],
     ['Filtre volatilité','ATR entre 0,45× et 2,2× sa moyenne'],['Frais','≤ 35 % du risque, objectif ≥ 3× les frais'],['Anti-surtrading',`${L.perHour}/h max · ${Math.round(L.gap/1000)} s entre entrées · 1 par bougie`],['Pause après clôture',`${Math.round(cooldownFor()/3600e3)} h par actif (×2 après une perte)`],['Tendance','1h et marché de référence dans le sens du trade']];
   box.innerHTML=rows.map(r=>`<div class="flex justify-between gap-3"><span class="text-zinc-500">${r[0]}</span><span class="font-bold text-right num">${r[1]}</span></div>`).join('');
@@ -1698,7 +1807,8 @@ function mainLoop(){
   S.ticks++;
   updatePositions();
   if(S.ticks%ANALYSE_EVERY===0){
-    if(S.running){detectRegime();tickStrategy(true);}
+    if(S.strategy==='daily'){detectRegime();tickStrategy(false,true);dtTick(S.running);}   // les agents 15 min restent affichés, sans trader
+    else if(S.running){detectRegime();tickStrategy(true);}
     else{for(const sym of activeSyms())ensureCandles(sym);if(S.opts.alertIdle){detectRegime();tickStrategy(false);}}
   }
   const eq=equity();S.peakEquity=Math.max(S.peakEquity,eq);S.maxDD=Math.max(S.maxDD,S.peakEquity>0?(S.peakEquity-eq)/S.peakEquity*100:0);
@@ -1989,6 +2099,14 @@ function buildRiskSeg(){
 }
 function syncRiskSeg(){$('riskSeg').querySelectorAll('[data-risk]').forEach(b=>b.classList.toggle('on',b.dataset.risk===S.risk));}
 function setRisk(r){if(!RISK[r])return;S.risk=r;syncRiskSeg();renderHero();saveState();vibrate(10);}
+const STRATS={daily:{label:'Tendance 1 jour',sub:'v16 · validée',color:'#22c55e'},agents:{label:'Agents 15 min',sub:'v15',color:'#f59e0b'}};
+function buildStratSeg(){
+  $('stratSeg').innerHTML=Object.entries(STRATS).map(([k,v])=>`<button class="seg-btn" data-strat="${k}" style="--seg-c:${v.color}">${v.label}<span class="seg-sub">${v.sub}</span></button>`).join('');
+  $('stratSeg').querySelectorAll('[data-strat]').forEach(b=>{b.onclick=()=>setStrategy(b.dataset.strat);});syncStratSeg();
+}
+function syncStratSeg(){$('stratSeg').querySelectorAll('[data-strat]').forEach(b=>b.classList.toggle('on',b.dataset.strat===S.strategy));
+  $('stratNote').textContent=S.strategy==='daily'?`Croisement EMA ${DTREND.f}/${DTREND.s} sur bougies journalières · stop ${DTREND.k} ATR · ${DTREND.syms.join(', ')} · peu de trades (une décision par jour, à ${new Date(Math.floor(Date.now()/DAY)*DAY+DAY).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} heure locale)`:'Agents sur bougies 15 min · nombreux signaux · « Fréquence de trading » s\'applique ici';}
+function setStrategy(k){if(!STRATS[k])return;S.strategy=k;syncStratSeg();renderStrategyBox();saveState();vibrate(10);toast('Stratégie · '+STRATS[k].label,'info');}
 function buildModeSeg(){
   $('modeSeg').innerHTML=Object.entries(MODES).map(([k,v])=>`<button class="seg-btn" data-mode="${k}" style="--seg-c:${v.color}">${v.label}<span class="seg-sub">seuil ${v.thrAdd>0?'+':''}${v.thrAdd.toFixed(1)} · ×${v.maxPosMult}</span></button>`).join('');
   $('modeSeg').querySelectorAll('[data-mode]').forEach(b=>{b.onclick=()=>setMode(b.dataset.mode);});
@@ -2038,7 +2156,7 @@ function doReset(){
   stopBot();try{localStorage.removeItem(STORE_KEY);for(const k of LEGACY_KEYS)localStorage.removeItem(k);}catch(e){}
   $('ticker').innerHTML='';$('positionsList').innerHTML='';
   S=freshState();applyBinValid();posEls.clear();tickerEls.clear();inds.clear();candles.clear();whaleFeed=[];whaleFlow={};alerted.clear();
-  buildRiskSeg();buildModeSeg();syncMarketChips();syncOpts();renderAll();renderWhaleFeed();closeResetModal();connectWs();saveState();
+  buildStratSeg();buildRiskSeg();buildModeSeg();syncMarketChips();syncOpts();renderAll();renderWhaleFeed();closeResetModal();connectWs();saveState();
   toast('Simulation réinitialisée','info');
 }
 function closeAllPositions(){
@@ -2149,6 +2267,11 @@ async function btFetchKlines(binSym,fromT,toT,onPage){
   return out;
 }
 function btConfigs(){
+  if(S.strategy==='daily'){
+    const l=[{key:'cur',kind:'daily',label:'Tendance 1 jour (v16)',keepTrades:true}];
+    if(S.bt.compare)l.push({key:'k5',kind:'daily',label:'Stop 5 ATR',dt:{k:5}},{key:'nf',kind:'daily',label:'Sans filtre BTC',dt:{ref:0}},{key:'v15',kind:'v15',label:'Agents 15 min (v15)',opts:{},stopMult:S.adapt.stopMult||2});
+    return l;
+  }
   const o=S.opts,sm=S.adapt.stopMult||2;
   const list=[{key:'cur',label:'Réglages actuels',opts:{},stopMult:sm,keepTrades:true}];
   if(S.bt.compare){
@@ -2164,11 +2287,18 @@ function btCancel(){if(btWorker){btWorker.terminate();btWorker=null;}btBusy=fals
 async function btStart(){
   if(btBusy)return;btBusy=true;
   $('btRun').classList.add('hidden-tab');$('btCancel').classList.remove('hidden-tab');$('btResults').innerHTML='';
-  const days=S.bt.days,syms=[...S.bt.syms],endT=Math.floor(Date.now()/TF)*TF,startT=endT-days*86400000,fromT=startT-400*TF;
+  const days=S.bt.days,syms=[...S.bt.syms],isD=S.strategy==='daily',endT=isD?Math.floor(Date.now()/DAY)*DAY:Math.floor(Date.now()/TF)*TF,startT=endT-days*86400000,fromT=startT-400*TF;
+  const configs=btConfigs(),need15=configs.some(c=>c.kind!=='daily');
   try{
     const list=syms.includes('BTC')?syms:['BTC',...syms];   // BTC sert toujours de marché de référence
-    const data={};let done=0;
-    for(const x of list){
+    const data={},dd={};let done=0;
+    if(isD)for(const x of list){
+      if(!btBusy)return;btProgress(2+3*done/list.length,`Bougies journalières · ${x}…`);
+      const raw=await binanceGet(`/api/v3/klines?symbol=${S.prices[x].binanceSymbol}&interval=1d&startTime=${startT-300*DAY}&endTime=${endT-1}&limit=1000`,{timeout:12000});
+      dd[x]=parseKlines(raw).filter(k=>k.t+DAY<=endT);if(dd[x].length<60)throw new Error('historique journalier insuffisant pour '+x);done++;
+    }
+    done=0;
+    if(need15)for(const x of list){
       if(!btBusy)return;
       btProgress(2+6*done/list.length,`Téléchargement de l'historique · ${x}…`);
       data[x]=await btFetchKlines(S.prices[x].binanceSymbol,fromT,endT,p=>btProgress(2+6*(done+Math.min(1,p/(days*96/1000+1)))/list.length,`Historique ${x} · page ${p}`));
@@ -2179,20 +2309,21 @@ async function btStart(){
     const src=$('stmaCore').textContent+'\n'+$('btEngine').textContent;
     const url=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));
     btWorker=new Worker(url);URL.revokeObjectURL(url);
-    const configs=btConfigs(),t0=performance.now();
+    const t0=performance.now();
     btWorker.onmessage=ev=>{
       const m=ev.data;
       if(m.type==='progress')btProgress(m.pct,m.msg);
       else if(m.type==='error'){toast('Backtest : '+m.msg,'loss');btProgress(100,'Erreur : '+m.msg);btCancel();}
       else if(m.type==='result'){
-        btLast={results:m.results,bh:m.bh,syms,days,risk:S.risk,mode:S.mode,startT,endT,ms:Math.round(performance.now()-t0)};
+        btLast={results:m.results,bh:m.bh,syms,days,risk:S.risk,mode:S.mode,strategy:S.strategy,startT,endT,ms:Math.round(performance.now()-t0)};
         window.__btLast=btLast;
         btProgress(100,`Terminé en ${(btLast.ms/1000).toFixed(1)} s · ${syms.join(', ')} · ${days} jours`);
         btCancel();btRender(btLast);vibrate(15);
       }
     };
     btWorker.onerror=ev=>{toast('Backtest : erreur du calcul','loss');btProgress(100,'Erreur : '+(ev.message||'calcul impossible'));btCancel();};
-    btWorker.postMessage({type:'run',configs,data:{assets:syms.map(x=>({sym:x,market:S.prices[x].market,cs:data[x]})),btc:data.BTC,startT,endT,risk:S.risk,mode:S.mode,start:DEFAULT_START,
+    btWorker.postMessage({type:'run',configs,data:{assets:need15?syms.map(x=>({sym:x,market:S.prices[x].market,cs:data[x]})):null,btc:data.BTC,
+      daily:isD?syms.map(x=>({sym:x,market:S.prices[x].market,d:dd[x]})):null,btcDaily:dd.BTC,startT,endT,risk:S.risk,mode:S.mode,start:DEFAULT_START,
       opts:{sniper:S.opts.sniper,devil:S.opts.devil,shorts:S.opts.shorts,trailing:S.opts.trailing,htf:S.opts.htf!==false}}});
   }catch(err){toast('Backtest impossible : '+(err.message||err),'loss');btProgress(100,'Erreur : '+(err.message||'réseau'));btCancel();}
 }
@@ -2214,7 +2345,7 @@ function btRender(B){
   const m=(l,v,s,c='')=>`<div class="bt-metric"><div class="l">${l}</div><div class="v ${c}">${v}</div>${s?`<div class="s">${s}</div>`:''}</div>`;
   const bh=B.bh.map(x=>`${x.sym} ${x.pct>=0?'+':''}${x.pct.toFixed(1)} %`).join(' · ');
   let h=`<div class="card p-4 mb-3">
-    <div class="flex items-center justify-between mb-2"><div class="text-[13px] font-extrabold">Résultats · ${B.syms.join(', ')} · ${B.days} j</div><div class="text-[10.5px] text-zinc-500">${RISK[B.risk].label} · ${MODES[B.mode].label}</div></div>
+    <div class="flex items-center justify-between mb-2"><div class="text-[13px] font-extrabold">Résultats · ${B.syms.join(', ')} · ${B.days} j</div><div class="text-[10.5px] text-zinc-500">${RISK[B.risk].label} · ${B.strategy==='daily'?'Tendance 1 j':MODES[B.mode].label}</div></div>
     <div class="grid grid-cols-2 gap-2 mb-3">
       ${m('Résultat',`${r.pnlPct>=0?'+':''}${r.pnlPct.toFixed(2)} %`,signedMoney(r.pnl)+' sur '+money(DEFAULT_START),cls(r.pnl))}
       ${m('En R',`${r.sumR>=0?'+':''}${r.sumR.toFixed(1)} R`,`${r.expR>=0?'+':''}${r.expR.toFixed(2)} R / trade`,cls(r.sumR))}
@@ -2252,7 +2383,7 @@ function btRender(B){
 /* ═══════════ INIT ═══════════ */
 function init(){
   loadState();buildBinanceSymMap();saveState();
-  buildRiskSeg();buildModeSeg();buildMarketChips();syncOpts();
+  buildStratSeg();buildRiskSeg();buildModeSeg();buildMarketChips();syncOpts();
 
   $('btnStart').onclick=startBot;
   $('btnStop').onclick=stopBot;
