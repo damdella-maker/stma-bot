@@ -108,7 +108,7 @@ for (const [w, o] of Object.entries(W)) {
   const r = { w, pnl: +(o.pnl / sol).toFixed(3), roi: o.inv > 0 ? +(o.pnl / o.inv).toFixed(4) : 0, win: o.rt ? +(o.win / o.rt).toFixed(3) : 0, rt: o.rt, n: o.n, pools: o.pools, hold: Math.round(hold), tpd: Math.round(tpd), bot: bot ? 1 : 0, src: 'gt' };
   const k = kol[w];
   if (k) { r.src = o.rt ? 'gt+kolscan' : 'kolscan'; r.name = k.n; r.k7 = k.p7; r.k30 = k.p30; r.k1 = k.p1;
-    const kw = (k.w7 || 0) + (k.l7 || 0); if (!o.rt) { r.pnl = +(k.p7 || 0).toFixed(3); r.win = kw ? +((k.w7 || 0) / kw).toFixed(3) : 0; r.rt = kw; r.roi = null; r.tpd = Math.round(kw * 2 / 7); }   // ~2 transactions par aller-retour }
+    const kw = (k.w7 || 0) + (k.l7 || 0); if (!o.rt) { r.pnl = +(k.p7 || 0).toFixed(3); r.win = kw ? +((k.w7 || 0) / kw).toFixed(3) : 0; r.rt = kw; r.roi = null; r.tpd = Math.round(kw * 2 / 7); /* ~2 transactions par aller-retour */ } }
   // éligible : PnL réalisé ≥ 1 SOL, ROI ≥ 5 %, ≥ 3 allers-retours, détention médiane ≥ 30 s, pas un robot
   r.ok = !r.bot && r.pnl >= 1 && (r.roi == null || r.roi >= 0.05) && r.rt >= 3 && (r.src === 'kolscan' || r.hold >= 30) ? 1 : 0;
   // candidat à surveiller en direct (pré-filtre bon marché ; la copie exige ensuite des résultats mesurés en direct)
