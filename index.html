@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#08080a" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v18.4</title>
+<title>STMA Bot · v18.5</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -141,7 +141,7 @@
   .agent.learning::before{ animation:learnPulse 1.6s ease-in-out infinite; }
   @keyframes learnPulse{ 0%,100%{opacity:1} 50%{opacity:.4} }
   .ring-wrap{ position:relative; width:34px; height:34px; flex:none; }
-  .ring{ transform:rotate(-90deg); width:100%; height:100%; }
+  .ring{ transform:rotate(-90deg); width:100%; height:100%; box-shadow:none !important; }   /* la classe utilitaire « ring » de Tailwind dessinait un carré bleu */
   .ring circle{ fill:none; stroke-width:3; }
   .ring .track{ stroke:#232329; }
   .ring .fill{ stroke:var(--c,#71717a); stroke-linecap:round; transition:stroke-dashoffset .8s; }
@@ -295,6 +295,17 @@
   .team-badge{ flex:none; font-size:9.5px; font-weight:900; letter-spacing:.06em; color:var(--c); background:color-mix(in srgb,var(--c) 14%,transparent); border:1px solid color-mix(in srgb,var(--c) 45%,transparent); border-radius:6px; padding:2px 6px; min-width:74px; text-align:center; }
   .team-row.hot .team-badge{ box-shadow:0 0 12px color-mix(in srgb,var(--c) 70%,transparent); }
   .team-act{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lstat{ font-size:8px; font-weight:900; text-transform:uppercase; letter-spacing:.05em; padding:1px 5px; border-radius:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; color:#c4b5fd; background:rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.35); }
+  .lstat.promu{ color:#4ade80; background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.45); box-shadow:0 0 8px rgba(34,197,94,.25); }
+  .lstat.plancher{ color:#f87171; background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.45); }
+  .lstat.v1{ color:#7dd3fc; background:rgba(56,189,248,.1); border-color:rgba(56,189,248,.35); }
+  .lstat.off{ color:#71717a; background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.08); }
+  .learn-box{ margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,.06); font-size:11.5px; }
+  .seg-mini{ display:inline-flex; border:1px solid rgba(255,255,255,.1); border-radius:8px; overflow:hidden; }
+  .seg-mini button{ font-size:10.5px; font-weight:900; padding:3px 10px; color:#a1a1aa; }
+  .seg-mini button.on{ color:#04120a; background:#00ff66; box-shadow:0 0 10px rgba(0,255,102,.5); }
+  .learn-btn{ width:100%; font-size:11.5px; font-weight:800; padding:8px; border-radius:10px; color:#e9d5ff; background:rgba(167,139,250,.1); border:1px solid rgba(167,139,250,.4); }
+  .learn-btn:disabled{ opacity:.4; }
   .fl-fam{ margin-top:8px; }
   .fl-head{ display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:900; letter-spacing:.04em; text-transform:uppercase; color:#d4d4d8; margin-bottom:4px; }
   .fl-dot{ width:7px; height:7px; border-radius:50%; background:var(--c); box-shadow:0 0 8px var(--c); }
@@ -344,7 +355,7 @@
     <div class="logo">S</div>
     <div>
       <div class="text-[15px] font-extrabold leading-tight tracking-tight">STMA Bot</div>
-      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v18.4</div>
+      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v18.5</div>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -510,7 +521,7 @@
     </div>
     <div id="agentsGrid" class="grid grid-cols-2 gap-2"></div>
     <div class="card neo-card p-3.5 mt-3" id="fleetCard"><div class="flex items-center justify-between mb-1"><div class="text-[13px] font-extrabold">Flotte d'agents · v18.4</div><span class="text-[10px] font-bold text-zinc-500 mono" id="fleetSum">—</span></div><div class="text-[10.5px] text-zinc-500 mb-2 leading-snug">Petits signaux indépendants additionnés en un seul vote « Flotte » (somme ÷ √n), ajouté aux agents ci-dessus dans « Agents 15 min ». Touche un agent pour l'activer ou le couper. « exp. » = expérimental, coupé par défaut.</div><div id="fleetBox"></div></div>
-    <div class="card p-4 mt-3"><div class="text-[13px] font-extrabold mb-1">Réglages appris par le bot</div><div class="text-[10.5px] text-zinc-500 mb-2">Ajustés automatiquement à chaque audit (tous les 20 trades).</div><div id="adaptBox" class="text-[11.5px]"></div></div>
+    <div class="card p-4 mt-3"><div class="text-[13px] font-extrabold mb-1">Réglages appris par le bot</div><div class="text-[10.5px] text-zinc-500 mb-2">Ajustés automatiquement à chaque audit (tous les 20 trades).</div><div id="adaptBox" class="text-[11.5px]"></div><div id="learnBox" class="learn-box"></div></div>
   </section>
 
   <section id="tab-trades" class="hidden-tab">
@@ -609,7 +620,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v18.4</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v18.5</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -867,7 +878,7 @@ Object.defineProperty(EvHold.prototype,'reason',{enumerable:true,get(){const k=t
 function evaluate(ind,ctx,weights,P){
   const scores=agentScores(ind,ctx),cost=COSTS[ctx.market];
   let net=0;for(const a of VOTERS)net+=(weights[a]??1)*scores[a];
-  if(FLEET.w>0&&ctx.opts.fleet!==false){scores.fleet=fleetVote(ind,ctx);net+=FLEET.w*scores.fleet;}
+  if(FLEET.w>0&&ctx.opts.fleet!==false){scores.fleet=fleetVote(ind,ctx);net+=FLEET.w*(weights.fleet??1)*scores.fleet;}
   const dir=net>0?1:-1;
   const isSniper=Math.sign(scores.sniper)===dir&&Math.abs(scores.sniper)>=0.6&&ctx.opts.sniper;
   // Stop = multiple de l'ATR (volatilité réelle), jamais plus serré que 0,15 %
@@ -908,6 +919,7 @@ function evaluate(ind,ctx,weights,P){
   for(const a of VOTERS){const v=(weights[a]??1)*scores[a]*dir;if(v>best){best=v;lead=a;}}
   if(isSniper)lead='sniper';
   const supporters=VOTERS.filter(a=>scores[a]*dir>0.3);
+  if(scores.fleet!==undefined&&FLEET.w*scores.fleet*dir>0.3)supporters.push('fleet');   // v18.5 : la flotte apprend comme un agent
   return {action:'OPEN',isSniper,lead,supporters,costShare,conf:clampN(Math.abs(net)/(P.thr*2),0.5,0.99),isStrong,scores,net,dir,devilWhy:why,stopDist,tp1R,tpR,htf:ind.htf,atrRel:ind.atrRel};
 }
 function sizeQty(eq,price,stopDist,cost,R,mult,heatLeft,exposureNow){
@@ -943,6 +955,157 @@ function corrRet(a,b,n=48){
   const v=(sxx-sx*sx/n)*(syy-sy*sy/n);return v>0?(sxy-sx*sy/n)/Math.sqrt(v):0;
 }
 function learnWeight(L,now){if(!L)return 1;if(L.until>now)return 0;if(L.r.length<10)return 1;return clampN(1+0.6*(L.r.reduce((a,b)=>a+b,0)/L.r.length),0.25,1.5);}
+/* ═══ STMA-LEARN v2 (v18.5, d'après le module DeepSeek, corrigé) ═══
+   Apprentissage par agent × marché, avec bonus par régime, statistiques par horizon, lissage bayésien, borne de Wilson,
+   mode shadow, replay, méta-audit honnête (appris sur l'ancienne moitié, jugé sur la récente), snapshots compacts et rollback.
+   Fonctions pures sur un état L (pas de variable globale) : utilisées par l'appli, le backtest et le serveur.
+   Règle de Damian : l'apprentissage ne change que des POIDS de vote. Un agent mauvais tombe au plancher (0,10), aucun trade n'est bloqué. */
+const LEARN2={VERSION:2,FULL_TRUST:60,PRIOR_WR:0.5,PRIOR_K:4,REGIME_MIN:10,SHADOW_W:1,FLOOR:0.10,MAX_W:1.75,KILL_MIN:25,R_CLAMP:6,
+  MAX_RECENT:60,REPLAY_EVERY:50,META_EVERY:100,SWEEP_EVERY:25,MAX_REPLAY:300,SNAP_DAYS:7,SNAP_MAX:2,SNAP_RECENT:20,
+  META:[{name:'base',MIN_SAMPLES:20,KILL_R:-0.40,UCB_C:0.15},{name:'strict',MIN_SAMPLES:35,KILL_R:-0.25,UCB_C:0.10},{name:'agressive',MIN_SAMPLES:15,KILL_R:-0.55,UCB_C:0.25}]};
+const LEARN_IDS=[...VOTERS,'fleet'];
+function learnFresh(){return {v:2,rev:0,stats:{},shadow:{},meta:{active:'base',history:[]},replay:[],totalTrades:0,lastReplayAt:0,lastMetaAt:0,snapshots:[],lastSnapshotAt:0,migrated:false};}
+function learnParams(L){return LEARN2.META.find(c=>c.name===(L&&L.meta&&L.meta.active))||LEARN2.META[0];}
+function learnStats(L,a,m){const A=L.stats[a]||(L.stats[a]={});return A[m]||(A[m]={n:0,wins:0,sumR:0,sumR2:0,maxDD:0,recentR:[],perRegime:{},perHorizon:{},lastUpdate:0});}
+function learnHorizonOf(ms){return !Number.isFinite(ms)?'moyen':ms<2*3600e3?'court':ms<12*3600e3?'moyen':'long';}
+function learnUpdateOne(s,R,won,regime,horizon){
+  if(!Number.isFinite(R))return;const r=Math.round(clampN(R,-LEARN2.R_CLAMP,LEARN2.R_CLAMP)*1000)/1000;
+  s.n++;if(won)s.wins++;s.sumR+=r;s.sumR2+=r*r;if(r<s.maxDD)s.maxDD=r;
+  s.recentR.push(r);if(s.recentR.length>LEARN2.MAX_RECENT)s.recentR.shift();
+  if(regime){const g=s.perRegime[regime]||(s.perRegime[regime]={n:0,wins:0,sumR:0});g.n++;if(won)g.wins++;g.sumR+=r;}
+  if(horizon){const h=s.perHorizon[horizon]||(s.perHorizon[horizon]={n:0,wins:0,sumR:0});h.n++;if(won)h.wins++;h.sumR+=r;}
+}
+// migration v1 → v2 : S.learn = {"agent|marché":{r:[…],until}}
+function learnMigrateV1(L,v1){
+  if(!L||L.migrated)return 0;let n=0;
+  for(const key in (v1||{})){const e=v1[key];if(!e||!Array.isArray(e.r))continue;const [a,m]=key.split('|');if(!a||!m)continue;
+    const s=learnStats(L,a,m);for(const r of e.r)learnUpdateOne(s,r,r>0,null,null);n++;}
+  L.migrated=true;L.rev++;return n;
+}
+function learnRecentMean(s){if(!s.recentR.length)return 0;let t=0;for(const r of s.recentR)t+=r;return t/s.recentR.length;}
+function learnKilled(s,P){return s.n>=LEARN2.KILL_MIN&&learnRecentMean(s)<P.KILL_R;}   // récupérable : basé sur les trades récents
+function learnWeight2(L,a,m,regime,P){
+  P=P||learnParams(L);const s=L.stats[a]&&L.stats[a][m];
+  if(!s)return LEARN2.SHADOW_W;
+  if(learnKilled(s,P))return LEARN2.FLOOR;                       // même en shadow, un agent clairement mauvais tombe au plancher
+  const sh=L.shadow[a];if(s.n<P.MIN_SAMPLES||!sh||!sh.promoted)return LEARN2.SHADOW_W;   // shadow : poids neutre, il apprend sans peser
+  const k=LEARN2.PRIOR_K,p=(s.wins+LEARN2.PRIOR_WR*k)/(s.n+k),z=1.96,n=s.n+k;
+  const wilson=(p+z*z/(2*n)-z*Math.sqrt((p*(1-p)+z*z/(4*n))/n))/(1+z*z/n);
+  let sum=0,ws=0,w=1;for(let i=s.recentR.length-1;i>=0&&w>=0.05;i--){sum+=s.recentR[i]*w;ws+=w;w*=0.95;}
+  const recent=ws>0?sum/ws:0,wr=clampN((wilson-0.35)/0.40,0,1),ex=clampN((recent+0.5)/1.0,0,1);
+  const base=0.40+1.20*(wr*0.35+ex*0.65);                        // 0,4 → 1,6 (neutre ≈ 1) : peut monter comme baisser
+  const trust=clampN((s.n-P.MIN_SAMPLES)/(LEARN2.FULL_TRUST-P.MIN_SAMPLES),0,1);
+  let rm=1;const g=regime&&s.perRegime[regime];
+  if(g&&g.n>=LEARN2.REGIME_MIN)rm=clampN(0.85+(g.wins/g.n)*0.20+clampN(g.sumR/g.n,-0.5,0.5)*0.15,0.75,1.25);
+  const explore=s.n<LEARN2.FULL_TRUST?P.UCB_C*Math.sqrt(Math.log(L.totalTrades+1)/s.n):0;
+  return clampN((1+(base-1)*trust)*rm+explore,LEARN2.FLOOR,LEARN2.MAX_W);
+}
+// un trade clos : met à jour chaque agent participant, puis les déclencheurs (une seule fois par trade)
+function learnRecordTrade(L,agents,market,regime,R,won,holdMs,now){
+  const ev=[];if(!Number.isFinite(R)||!agents.length)return ev;
+  const P=learnParams(L),hz=learnHorizonOf(holdMs),r=Math.round(clampN(R,-LEARN2.R_CLAMP,LEARN2.R_CLAMP)*1000)/1000;
+  for(const a of agents){const s=learnStats(L,a,market),was=learnKilled(s,P);learnUpdateOne(s,R,won,regime,hz);s.lastUpdate=now;
+    const sh=L.shadow[a]||(L.shadow[a]={promoted:false,since:now,shadowPerf:0});sh.shadowPerf=sh.shadowPerf*0.9+r*0.1;
+    const is=learnKilled(s,P);if(is!==was)ev.push({type:is?'floor':'recover',a,market});
+    L.replay.push([now,a,market,regime||'',r]);}
+  if(L.replay.length>LEARN2.MAX_REPLAY)L.replay.splice(0,L.replay.length-LEARN2.MAX_REPLAY);
+  L.totalTrades++;L.rev++;
+  if(L.totalTrades%LEARN2.SWEEP_EVERY===0)ev.push(...learnShadowSweep(L));
+  if(L.totalTrades%LEARN2.REPLAY_EVERY===0)ev.push(...learnReplay(L,now));
+  if(L.totalTrades%LEARN2.META_EVERY===0)ev.push(...learnMetaAudit(L,now));
+  learnMaybeSnapshot(L,now);
+  return ev;
+}
+function learnAgg(L,a){let n=0,wins=0,sumR=0;for(const m in (L.stats[a]||{})){const s=L.stats[a][m];n+=s.n;wins+=s.wins;sumR+=s.sumR;}return {n,wins,sumR};}
+function learnShadowSweep(L,P){
+  P=P||learnParams(L);let sum=0,k=0;
+  for(const a in L.stats)for(const m in L.stats[a]){const s=L.stats[a][m];if(s.n>=P.MIN_SAMPLES){sum+=s.sumR/s.n;k++;}}
+  const avg=k?sum/k:0,ev=[];
+  for(const a in L.shadow){const sh=L.shadow[a];if(sh.promoted)continue;const g=learnAgg(L,a);if(g.n<P.MIN_SAMPLES)continue;
+    const wr=g.wins/g.n,ex=g.sumR/g.n;if(ex>=avg-0.05&&wr>=0.45){sh.promoted=true;L.rev++;ev.push({type:'promo',a,n:g.n,wr,ex});}}
+  return ev;
+}
+// replay : quels agents auraient le plus changé le résultat récent avec leur poids actuel (diagnostic, ne touche à rien)
+function learnReplay(L,now){
+  const P=learnParams(L),d={};for(const [,a,m,g,R] of L.replay){const w=learnWeight2(L,a,m,g,P);d[a]=(d[a]||0)+(w-1)*R;}
+  L.lastReplayAt=now;const top=Object.entries(d).filter(([,x])=>Math.abs(x)>3).sort((x,y)=>Math.abs(y[1])-Math.abs(x[1]))[0];
+  return top?[{type:'replay',a:top[0],delta:top[1]}]:[];
+}
+// méta-audit : chaque réglage apprend sur l'ANCIENNE moitié du replay et est jugé sur la moitié RÉCENTE (pas sur les trades appris)
+function learnMetaAudit(L,now){
+  const R=L.replay;if(R.length<60)return [];
+  const half=R.length>>1,train=R.slice(0,half),test=R.slice(half),scores=[];
+  for(const P of LEARN2.META){const T=learnFresh();
+    for(const [t,a,m,g,r] of train){learnUpdateOne(learnStats(T,a,m),r,r>0,g,null);if(!T.shadow[a])T.shadow[a]={promoted:false,since:t,shadowPerf:0};}
+    T.totalTrades=train.length;learnShadowSweep(T,P);
+    let sc=0;for(const [,a,m,g,r] of test)sc+=learnWeight2(T,a,m,g,P)*r;scores.push({name:P.name,score:+sc.toFixed(2)});}
+  const cur=scores.find(x=>x.name===L.meta.active)||scores[0],best=scores.reduce((x,y)=>y.score>x.score?y:x);
+  L.meta.history.push({at:now,scores});if(L.meta.history.length>10)L.meta.history.shift();L.lastMetaAt=now;
+  if(best.name!==L.meta.active&&best.score>cur.score+1){const prev=L.meta.active;L.meta.active=best.name;L.rev++;return [{type:'meta',prev,next:best.name,gain:best.score-cur.score}];}   // changement seulement si net (> 1 R)
+  return [];
+}
+// snapshots compacts (20 derniers R, pas d'horizon) : 2 au maximum, environ 10 à 20 ko
+function learnMaybeSnapshot(L,now,force){
+  if(!force&&now-L.lastSnapshotAt<LEARN2.SNAP_DAYS*86400000)return false;
+  const st={};for(const a in L.stats){st[a]={};for(const m in L.stats[a]){const s=L.stats[a][m];st[a][m]={n:s.n,wins:s.wins,sumR:+s.sumR.toFixed(3),sumR2:+s.sumR2.toFixed(3),maxDD:s.maxDD,recentR:s.recentR.slice(-LEARN2.SNAP_RECENT),perRegime:s.perRegime};}}
+  const sh={};for(const a in L.shadow)sh[a]=L.shadow[a].promoted?1:0;
+  L.snapshots.push({at:now,total:L.totalTrades,meta:L.meta.active,stats:st,shadow:sh});if(L.snapshots.length>LEARN2.SNAP_MAX)L.snapshots.shift();
+  L.lastSnapshotAt=now;return true;
+}
+function learnRollback(L){
+  const s=L.snapshots[L.snapshots.length-1];if(!s)return null;
+  L.stats={};for(const a in s.stats){L.stats[a]={};for(const m in s.stats[a]){const x=s.stats[a][m];L.stats[a][m]={n:x.n,wins:x.wins,sumR:x.sumR,sumR2:x.sumR2,maxDD:x.maxDD,recentR:x.recentR.slice(),perRegime:JSON.parse(JSON.stringify(x.perRegime||{})),perHorizon:{},lastUpdate:s.at};}}
+  L.shadow={};for(const a in s.shadow)L.shadow[a]={promoted:!!s.shadow[a],since:s.at,shadowPerf:0};
+  L.meta.active=s.meta||'base';if(typeof s.total==='number')L.totalTrades=s.total;L.rev++;return s.at;
+}
+function learnStatus(L,a,P){
+  P=P||learnParams(L);let floor=false;for(const m in (L.stats[a]||{}))if(learnKilled(L.stats[a][m],P))floor=true;
+  return floor?'plancher':L.shadow[a]&&L.shadow[a].promoted?'promu':'shadow';
+}
+function learnReport(L,markets,regime){
+  if(!L)return null;const P=learnParams(L),by={};
+  for(const a of LEARN_IDS){const g=learnAgg(L,a),ms=markets&&markets.length?markets:['crypto'];
+    let w=0;for(const m of ms)w+=learnWeight2(L,a,m,regime,P);
+    by[a]={n:g.n,winrate:g.n?g.wins/g.n:0,expR:g.n?g.sumR/g.n:0,weight:w/ms.length,status:learnStatus(L,a,P),promoted:!!(L.shadow[a]&&L.shadow[a].promoted===true)};}
+  return {totalTrades:L.totalTrades,activeMeta:L.meta.active,byAgent:by,snapshots:L.snapshots.length,lastSnapshotAt:L.lastSnapshotAt};
+}
+// v1 (historique) : même règle qu'avant, déplacée ici pour être partagée
+function learnV1Record(map,a,market,Rm,now){
+  const key=a+'|'+market,L=map[key]||(map[key]={r:[],until:0}),before=learnWeight(L,now);
+  L.r.push(clampN(Number.isFinite(Rm)?Rm:0,-3,6));if(L.r.length>12)L.r.shift();
+  if(L.r.length>=10&&L.until<=now&&L.r.reduce((x,y)=>x+y,0)/L.r.length<-0.35){L.until=now+2*3600000;L.r=L.r.slice(-4);return {type:'ban',a,market};}
+  const after=learnWeight(L,now);return after-before>0.12?{type:'up',a,market,w:after}:before-after>0.12?{type:'down',a,market,w:after}:null;
+}
+// point d'entrée commun : les deux moteurs apprennent toujours (la v2 « en ombre » quand la v1 est active), seul le moteur choisi pèse
+function learnOnClose(st,agents,market,regime,Rm,won,holdMs,now){
+  const v2=!!st.opts.learnV2,ev1=[];
+  for(const a of agents){const e=learnV1Record(st.learn,a,market,Rm,now);if(e)ev1.push(e);}
+  if(!st.learn2)st.learn2=learnFresh();
+  const ev2=learnRecordTrade(st.learn2,agents,market,regime,Rm,won,holdMs,now);
+  return v2?ev2:ev1;
+}
+function learnWeightsFor(st,market,regime,now){
+  const w={};
+  if(!st.opts.learning){for(const a of LEARN_IDS)w[a]=1;return w;}
+  if(st.opts.learnV2&&st.learn2){const P=learnParams(st.learn2);for(const a of LEARN_IDS)w[a]=learnWeight2(st.learn2,a,market,regime,P);}
+  else for(const a of LEARN_IDS)w[a]=learnWeight(st.learn[a+'|'+market],now);
+  return w;
+}
+// texte des leçons (partagé appli / serveur)
+function learnLessonText(e,nameOf,labelOf){
+  const nm=nameOf(e.a),mk=e.market?labelOf(e.market):'';
+  switch(e.type){
+    case 'ban':return [`${nm} écarté de ${mk} 2h`,'bad'];
+    case 'up':return [`${nm} gagne en influence sur ${mk} · ×${e.w.toFixed(2)}`,'good'];
+    case 'down':return [`${nm} perd de l'influence sur ${mk} · ×${e.w.toFixed(2)}`,'bad'];
+    case 'floor':return [`${nm} au plancher sur ${mk} (poids ×0,10, ses trades restent permis)`,'bad'];
+    case 'recover':return [`${nm} remonte du plancher sur ${mk}`,'good'];
+    case 'promo':return [`Agent promu : ${nm} · ${e.n} trades · réussite ${(e.wr*100).toFixed(0)} % · espérance ${e.ex.toFixed(2)}R`,'good'];
+    case 'replay':return [`Replay : ${nm} aurait changé le résultat récent de ${e.delta>0?'+':''}${e.delta.toFixed(1)}R avec son poids actuel`,e.delta>0?'good':'bad'];
+    case 'meta':return [`Méta-audit : réglage « ${e.prev} » → « ${e.next} » (+${e.gain.toFixed(1)}R sur des trades récents non appris)`,'good'];
+  }
+  return null;
+}
 const RISK={
   low:{label:'Faible',risk:0.0025,maxPos:3,posCap:0.08,expo:0.5,dd:0.08,daily:0.02,heat:0.01,color:'#38bdf8'},
   medium:{label:'Moyen',risk:0.005,maxPos:4,posCap:0.15,expo:1.0,dd:0.12,daily:0.03,heat:0.02,color:'#22c55e'},
@@ -1040,7 +1203,8 @@ function btRun(D,prep,cfg){
   const R=RISK[risk],M=MODES[mode],L=ENTRY_LIMITS[mode]||ENTRY_LIMITS.normal,maxPos=maxPosOf(risk,mode);
   const opts=Object.assign({},D.opts,cfg.opts);
   const P=paramsFor(mode,{thrAdd:0,stopMult:cfg.stopMult},opts.trailing);
-  const W={};for(const a of VOTERS)W[a]=1;
+  const LS={opts:{learning:!!cfg.learn,learnV2:cfg.learn==='v2'},learn:{},learn2:learnFresh()};let Wc={},Wkey='';
+  const Wfor=(mk,rg,t)=>{const k=rg+'|'+(LS.learn2.rev)+'|'+Math.floor(t/60000);if(k!==Wkey){Wkey=k;Wc={};}return Wc[mk]||(Wc[mk]=learnWeightsFor(LS,mk,rg,t));};
   const times=btc.filter(k=>k.t>=startT&&k.t<endT).map(k=>k.t);
   let capital=start,peak=start,maxDD=0,fees=0,lossRun=0,pauseUntil=0,dayKey='',dayStart=start,dayHalt=false,killed=false,seq=1;
   const positions=[],trades=[],curve=[],cooldown={},openTimes=[];let pending=[];
@@ -1054,6 +1218,7 @@ function btRun(D,prep,cfg){
     positions.splice(positions.indexOf(p),1);
     lossRun=win?0:lossRun+1;cooldown[p.ai]=t+cooldownOf(mode)*(win?1:2);
     trades.push({sym:assets[p.ai].sym,side:p.dir>0?'LONG':'SHORT',entry:p.entry,exit:px,pnl:total,R:Number.isFinite(Rm)?Rm:0,reason,openT:p.openT,closeT:t,lead:p.lead});
+    if(cfg.learn){learnOnClose(LS,[...new Set([p.lead,...(p.sup||[])])],assets[p.ai].market,p.regime,Number.isFinite(Rm)?Rm:0,win,t-p.openT,t);Wkey='';}
     if(!win&&lossRun>=6){lossRun=0;pauseUntil=t+3600000;}
   }
   for(let ti=0;ti<times.length;ti++){
@@ -1072,7 +1237,7 @@ function btRun(D,prep,cfg){
       if(!qty)continue;
       const fee=qty*fill*cost.fee;capital-=fee;fees+=fee;
       positions.push({id:seq++,ai:e.ai,dir:e.dir,entry:fill,qty,R:e.stopDist,sl:fill-e.dir*e.stopDist,tp1:fill+e.dir*e.stopDist*e.tp1R,tp:fill+e.dir*e.stopDist*e.tpR,
-        peak:fill,partial:false,realized:-fee,sniper:e.isSniper,openedAt:t,openT:t,risk0:qty*(e.stopDist+2*(cost.fee+cost.slip)*fill),lead:e.lead,atr:e.atr});
+        peak:fill,partial:false,realized:-fee,sniper:e.isSniper,openedAt:t,openT:t,risk0:qty*(e.stopDist+2*(cost.fee+cost.slip)*fill),lead:e.lead,sup:e.sup,regime:e.regime,atr:e.atr});
       openTimes.push(t);
     }
     pending=[];
@@ -1116,8 +1281,8 @@ function btRun(D,prep,cfg){
       const ctx={market:a.market,opts,inst:false,depthRatio:0,whale:0,funding:null,ls:null,fng:null,regime:MARKET_REF[a.market]?refDir:null,sideOff:{long:false,short:false}};
       if(FLEET.w>0){ctx.btc=bInd;if(a.daily){const dt=dailyTrendAt(a.daily,t+TF);if(dt){ctx.d1=dt.d1;ctx.w1=dt.w1;}}
         const pb=PAIRS[a.sym]&&assets.find(x=>x.sym===PAIRS[a.sym]);if(pb){const j=pb.idx.get(t);if(j!=null)ctx.pairZ=pairZAt(a.cs,i,pb.cs,j,96);}}
-      const ev=evaluate(ind,ctx,W,P);
-      if(ev.action==='OPEN')opens.push({ai,dir:ev.dir,net:ev.net,stopDist:ev.stopDist,tp1R:ev.tp1R,tpR:ev.tpR,isSniper:ev.isSniper,lead:ev.lead,atr:ind.atr,atrRel:ind.atrRel,regime});
+      const ev=evaluate(ind,ctx,Wfor(a.market,regime,t+TF),P);
+      if(ev.action==='OPEN')opens.push({ai,dir:ev.dir,net:ev.net,stopDist:ev.stopDist,tp1R:ev.tp1R,tpR:ev.tpR,isSniper:ev.isSniper,lead:ev.lead,sup:ev.supporters,atr:ind.atr,atrRel:ind.atrRel,regime});
     }
     opens.sort((x,y)=>Math.abs(y.net)-Math.abs(x.net));
     while(openTimes.length&&t+TF-openTimes[0]>=3600000)openTimes.shift();
@@ -1224,7 +1389,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='18.4',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='18.5',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1312,11 +1477,11 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:18.4,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
+  const st={v:18.5,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
-    opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true},huntDone:{},
+    opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true,learnV2:true},huntDone:{},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
-    agents:{},learn:{},prices:{},consensus:{bull:0,bear:0,action:'HOLD',veto:false},regime:'range',ticks:0,seq:1,streak:0,
+    agents:{},learn:{},learn2:learnFresh(),prices:{},consensus:{bull:0,bear:0,action:'HOLD',veto:false},regime:'range',ticks:0,seq:1,streak:0,
     killed:false,dayKey:'',dayStart:DEFAULT_START,dayHalt:false,lossRun:0,pauseUntil:0,cooldown:{},
     adapt:{thrAdd:0,stopMult:2,sideOff:{long:0,short:0},audits:0,lastAuditAt:0},feesPaid:0,
     closedCount:0,lastEntry:{},openTimes:[],lastAutoOpen:0,bt:{syms:['BTC','ETH'],days:30,compare:true}};
@@ -1838,9 +2003,9 @@ function animateProfitToWallet(amount,startRect,onDone,n=1,meta=null){
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:18.4,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:18.5,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
-    agents:S.agents,learn:S.learn,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
+    agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
     cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen}));}catch(x){}
 }
 function loadState(){
@@ -1848,7 +2013,7 @@ function loadState(){
   try{for(const k of [STORE_KEY,...LEGACY_KEYS]){const raw=localStorage.getItem(k);if(raw){saved=JSON.parse(raw);from=k;break;}}}catch(x){}
   S=freshState();if(!saved)return;
   // Migration v11/v12 → v13 : on reprend tout ce qui est compatible, les nouveaux champs prennent leur valeur par défaut
-  if(![11,12,13,14,15,16,17,18,18.1,18.2,18.3,18.4].includes(saved.v))return;
+  if(![11,12,13,14,15,16,17,18,18.1,18.2,18.3,18.4,18.5].includes(saved.v))return;
   try{
     for(const k of ['start','capital','closed','lessons','equityHist','peakEquity','maxDD','streak','seq','killed','dayKey','dayStart','dayHalt','lossRun','pauseUntil','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen'])if(saved[k]!=null)S[k]=saved[k];
     if(saved.closedCount==null)S.closedCount=Array.isArray(S.closed)?S.closed.length:0;
@@ -1860,6 +2025,9 @@ function loadState(){
     if(!(saved.v>=18.1))S.markets=Object.keys(MARKETS);   // migration v18.1 : toutes les classes activées une fois (Damian peut ensuite en couper)
     Object.assign(S.opts,saved.opts||{});Object.assign(S.adapt,saved.adapt||{});S.adapt.sideOff=Object.assign({long:0,short:0},S.adapt.sideOff||{});
     S.learn=saved.learn||{};S.cooldown=saved.cooldown||{};
+    // v18.5 : apprentissage v2 (reprend l'historique v1 une seule fois, sans le modifier)
+    S.learn2=saved.learn2&&saved.learn2.v===2?Object.assign(learnFresh(),saved.learn2):learnFresh();
+    if(!S.learn2.migrated){const n=learnMigrateV1(S.learn2,S.learn);if(n)console.info('[stmaLearn] migration v1 → v2 ·',n,'entrées');}
     if(saved.bt&&Array.isArray(saved.bt.syms))S.bt=Object.assign(S.bt,saved.bt);
     if(saved.v>=16&&(saved.strategy==='daily'||saved.strategy==='agents'))S.strategy=saved.strategy;   // v15 et avant : passe à la stratégie validée v16
     if(saved.dtDone&&typeof saved.dtDone==='object')S.dtDone=saved.dtDone;
@@ -1982,18 +2150,8 @@ function closePosition(p,reason){
   if(S.closed.length>200)S.closed.pop();
   const lead=S.agents[p.agentId];if(lead){lead.pnl+=total;lead.trades++;lead.sumR+=Number.isFinite(Rm)?Rm:0;if(win)lead.wins++;}
   if(S.opts.learning&&p.agentId!=='manual'&&!p.dt&&!p.hunt){
-    for(const a of new Set([p.agentId,...(p.supporters||[])])){
-      const key=a+'|'+market,L=S.learn[key]||(S.learn[key]={r:[],until:0}),before=learnWeight(L,Date.now());
-      L.r.push(clamp(Number.isFinite(Rm)?Rm:0,-3,6));if(L.r.length>12)L.r.shift();
-      if(L.r.length>=10&&L.until<=Date.now()&&L.r.reduce((x,y)=>x+y,0)/L.r.length<-0.35){
-        L.until=Date.now()+2*3600000;L.r=L.r.slice(-4);
-        pushLesson(`${AGENTS.find(x=>x.id===a)?.name||a} écarté de ${MARKETS[market]?.label||market} 2h`,'bad');
-      }else{
-        const after=learnWeight(L,Date.now()),nm=AGENTS.find(x=>x.id===a)?.name||a;
-        if(after-before>0.12)pushLesson(`${nm} gagne en influence sur ${MARKETS[market]?.label||market} · ×${after.toFixed(2)}`,'good');
-        else if(before-after>0.12)pushLesson(`${nm} perd de l'influence sur ${MARKETS[market]?.label||market} · ×${after.toFixed(2)}`,'bad');
-      }
-    }
+    const evs=learnOnClose(S,[...new Set([p.agentId,...(p.supporters||[])])],market,p.regime||S.regime,Number.isFinite(Rm)?Rm:0,win,Date.now()-p.openedAt,Date.now());
+    for(const e of evs){const t=learnLessonText(e,agentName,m=>MARKETS[m]?.label||m);if(t)pushLesson(t[0],t[1]);}
   }
   if(!noLim()&&!win&&S.lossRun>=6){S.lossRun=0;S.pauseUntil=Date.now()+3600000;pushLesson('6 pertes d\'affilée · pause d\'une heure','bad');}
   if(total/S.start*100>1.5)confetti();
@@ -2136,7 +2294,7 @@ function renderFleet(){
     if(!box._wired){box._wired=true;box.addEventListener('click',e=>{const c=e.target.closest('.fl-chip');if(c)fleetToggle(c.dataset.fid);});}
   }
   for(const r of box._v){const u=FLEET_UP[r.i],d=FLEET_DN[r.i],b=u-d,t=!FLEET.on[r.i]?'off':u||d?(u?'▲'+u:'')+(u&&d?' ':'')+(d?'▼'+d:''):'·';setText(r.v,t);const c=b>0?'up':b<0?'dn':'';if(r.c!==c){r.c=c;r.v.className='fl-v '+c;}}
-  const st=fleetStats();setText($('fleetSum'),`${st.on}/${NF} actifs · poids ${FLEET.w.toFixed(1)}`);
+  const st=fleetStats();setText($('fleetSum'),`${st.on}/${NF} actifs · poids ${FLEET.w.toFixed(1)}`+(S.opts.learning&&FLEET.w>0?` · appris ×${learnedWeight('fleet').toFixed(2)}`:''));
 }
 function ctxBase(sym){
   const q=S.prices[sym],mk=MARKETS[q.market],now=Date.now();
@@ -2147,7 +2305,24 @@ function ctxBase(sym){
     btc:null,usd:null,usdSide:0,vix:null,vixChg:0,spx:null,pairZ:0,d1:0,w1:0,liq:0,oiChg:null,pcr:null};   // champs flotte toujours présents : forme d'objet stable (plus rapide)
 }
 function ctxFor(sym){const ctx=ctxBase(sym);if(FLEET.w>0&&S.opts.fleet!==false)fleetCtx(ctx,sym,S.prices[sym]);return ctx;}
-function weightsFor(market){const w={},now=Date.now();for(const a of VOTERS)w[a]=S.opts.learning?learnWeight(S.learn[a+'|'+market],now):1;return w;}
+const W_CACHE=new Map();let wKey='',wL2=null;
+function weightsFor(market){   // v18.5 : recalculé seulement quand un trade se clôt, que le régime change ou chaque minute (expiration v1)
+  const now=Date.now(),k=(S.opts.learning?1:0)+'|'+(S.opts.learnV2?1:0)+'|'+S.regime+'|'+(S.learn2?S.learn2.rev:0)+'|'+Math.floor(now/60000);
+  if(k!==wKey||wL2!==S.learn2){wKey=k;wL2=S.learn2;W_CACHE.clear();}
+  let w=W_CACHE.get(market);if(!w){w=learnWeightsFor(S,market,S.regime,now);W_CACHE.set(market,w);}return w;
+}
+function agentName(a){return a==='fleet'?'Flotte':AGENTS.find(x=>x.id===a)?.name||a;}
+// poids affiché : moyenne des marchés pondérée par le nombre de trades appris sur chacun (moyenne simple si aucun trade)
+function learnedWeight(a){const ms=S.markets.length?S.markets:['crypto'];let s=0,sn=0,sw=0;
+  for(const m of ms){const w=weightsFor(m)[a]??1,st=S.learn2.stats[a]&&S.learn2.stats[a][m],v1=S.learn[a+'|'+m],n=S.opts.learnV2?(st?st.n:0):(v1?v1.r.length:0);s+=w;sn+=n;sw+=w*n;}
+  return sn?sw/sn:s/ms.length;}
+function learnRollbackUI(){
+  const at=learnRollback(S.learn2);
+  if(!at){toast('Aucun snapshot pour l\'instant (le premier est pris au premier trade appris)','info');return;}
+  pushLesson('Rollback : apprentissage restauré au snapshot du '+new Date(at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}),'bad');
+  toast('Apprentissage restauré au dernier snapshot','info');saveState();scheduleRender();
+}
+function setLearnEngine(v2){S.opts.learnV2=v2;saveState();scheduleRender();toast('Apprentissage '+(v2?'v2 (bayésien, par régime)':'v1 (historique)'),'info');}
 function params(){return paramsFor(S.mode,S.adapt,S.opts.trailing);}
 
 function tickStrategy(trade,quiet){try{return tickStrategy0(trade,quiet);}finally{NET.busy=performance.now();}}   // les animations du réseau cèdent la main juste après un calcul
@@ -2657,13 +2832,16 @@ function renderAgents(){
         </div>
       </div>
       <div class="flex justify-between items-center text-[9.5px] font-bold num mt-1"><span class="text-zinc-600" data-r="tr"></span><span data-r="pnl"></span></div>
-      <div class="flex justify-between items-center text-[9px] mt-0.5"><span class="text-zinc-600">poids</span><span class="font-extrabold num" data-r="w"></span></div>
+      <div class="flex justify-between items-center text-[9px] mt-0.5 gap-1"><span class="lstat" data-r="st">shadow</span><span class="font-extrabold num" data-r="w"></span></div>
     </div>`).join('');
-    grid._refs=AGENTS.map((a,i)=>{const el=grid.children[i],q=r=>el.querySelector(`[data-r="${r}"]`);return {a,el,b:q('b'),ring:q('ring'),acc:q('acc'),tr:q('tr'),pnl:q('pnl'),w:q('w'),k:{}};});
+    grid._refs=AGENTS.map((a,i)=>{const el=grid.children[i],q=r=>el.querySelector(`[data-r="${r}"]`);return {a,el,b:q('b'),ring:q('ring'),acc:q('acc'),tr:q('tr'),pnl:q('pnl'),w:q('w'),st:q('st'),k:{}};});
   }
   const setCls=(r,key,el,c)=>{if(r.k[key]!==c){r.k[key]=c;el.className=c;}};
+  const LI=learnInfoCached(now);
   for(const r of grid._refs){const a=r.a,st=S.agents[a.id],acc=st.trades?st.wins/st.trades:0.5;
-    const wv=a.vote&&S.opts.learning?S.markets.reduce((s,m)=>s+learnWeight(S.learn[a.id+'|'+m],now),0)/Math.max(1,S.markets.length):1;
+    const li=a.vote?LI[a.id]:null,wv=li?li.w:1;
+    if(li){setText(r.st,li.txt);setCls(r,'st',r.st,li.cls);}
+    else{setText(r.st,a.id==='devil'?'contradicteur':'taille seulement');setCls(r,'st',r.st,'lstat off');}
     const isL=S.opts.learning&&st.trades>=3;if(r.k.L!==isL){r.k.L=isL;r.el.classList.toggle('learning',isL);}
     setText(r.b,st.bias==='ok'?'ok':st.bias==='veto'?'veto':st.bias==='bullish'?'bull':st.bias==='bearish'?'bear':'neutre');setCls(r,'b',r.b,'bias '+st.bias);
     const off=String(circ*(1-acc));if(r.k.off!==off){r.k.off=off;r.ring.setAttribute('stroke-dashoffset',off);}
@@ -2673,6 +2851,7 @@ function renderAgents(){
     setText(r.w,a.vote?wv.toFixed(2)+'×':'—');setCls(r,'w',r.w,(st.sumR>0.3?'text-emerald-400':st.sumR<-0.3?'text-red-400':'text-zinc-400')+' font-extrabold num');
   }
   renderFleet();
+  renderLearnBox();
   const ab=$('adaptBox');
   if(ab){
     const A=S.adapt;
@@ -2682,6 +2861,28 @@ function renderAgents(){
       <div class="flex justify-between py-0.5"><span class="text-zinc-500">Achats / ventes en pause</span><span class="num font-bold">${A.sideOff.long>Date.now()?'achats ':''}${A.sideOff.short>Date.now()?'ventes ':''}${(A.sideOff.long>Date.now()||A.sideOff.short>Date.now())?'':'aucun'}</span></div>
       <div class="flex justify-between py-0.5"><span class="text-zinc-500">Audits effectués</span><span class="num font-bold">${A.audits}</span></div>`;
   }
+}
+// infos d'apprentissage des cartes : recalculées seulement quand l'état appris, le régime, les marchés ou la minute changent
+let LI_CACHE=null,LI_KEY='';
+function learnInfoCached(now){
+  const L2=S.learn2,k=(S.opts.learning?1:0)+'|'+(S.opts.learnV2?1:0)+'|'+S.regime+'|'+L2.rev+'|'+L2.totalTrades+'|'+S.markets.join(',')+'|'+Math.floor(now/60000);
+  if(LI_CACHE&&LI_KEY===k&&LI_CACHE._L===L2)return LI_CACHE;
+  const o={_L:L2},P=learnParams(L2);
+  for(const a of AGENTS){if(!a.vote)continue;const n=learnAgg(L2,a.id).n,ls=!S.opts.learning?'off':S.opts.learnV2?learnStatus(L2,a.id,P):'v1';
+    o[a.id]={w:S.opts.learning?learnedWeight(a.id):1,txt:(ls==='off'?'coupé':ls)+' · '+n+' tr',cls:'lstat '+ls};}
+  LI_CACHE=o;LI_KEY=k;return o;
+}
+let LB_KEY='';
+function renderLearnBox(){
+  const box=$('learnBox');if(!box)return;
+  if(!box._wired){box._wired=true;box.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const act=b.dataset.act;
+    if(act==='v1')setLearnEngine(false);else if(act==='v2')setLearnEngine(true);else if(act==='rollback')learnRollbackUI();});}
+  const L=S.learn2,last=L.snapshots[L.snapshots.length-1],v2=!!S.opts.learnV2;
+  const lk=(S.opts.learning?1:0)+'|'+(v2?1:0)+'|'+L.totalTrades+'|'+L.meta.active+'|'+L.snapshots.length+'|'+(last?last.at:0);
+  if(box._lk===lk)return;box._lk=lk;
+  memoEl(box).innerHTML=`<div class="flex items-center justify-between mb-1.5"><span class="text-zinc-500 font-semibold">Moteur d'apprentissage</span><span class="seg-mini"><button data-act="v1" class="${v2?'':'on'}">v1</button><button data-act="v2" class="${v2?'on':''}">v2</button></span></div>
+    <div class="text-[10px] text-zinc-500 leading-snug mb-2">${S.opts.learning?'':'Apprentissage coupé dans les réglages · '}${L.totalTrades} trades appris · réglage « ${escH(L.meta.active)} » · ${L.snapshots.length} snapshot(s). Un agent mauvais tombe au plancher (×0,10), il ne bloque jamais un trade.</div>
+    <button data-act="rollback" class="learn-btn"${last?'':' disabled'}>↺ Revenir au dernier snapshot${last?' · '+new Date(last.at).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}):''}</button>`;
 }
 function renderConsensus(){
   const c=S.consensus,total=(c.bull+c.bear)||1,bp=(c.bull/total)*100;
@@ -2942,7 +3143,7 @@ function btConfigs(){
     return l;
   }
   const o=S.opts,sm=S.adapt.stopMult||2;
-  const list=[{key:'cur',label:'Réglages actuels',opts:{},stopMult:sm,keepTrades:true}];
+  const list=[{key:'cur',label:'Réglages actuels',opts:{},stopMult:sm,keepTrades:true,learn:o.learning?(o.learnV2?'v2':'v1'):null}];   // v18.5 : le backtest apprend comme le bot (en repartant de zéro)
   if(S.bt.compare){
     list.push({key:'htf',label:o.htf!==false?'Sans filtre 1h':'Avec filtre 1h',opts:{htf:o.htf===false},stopMult:sm});
     if(Math.abs(sm-1.5)>0.01)list.push({key:'s15',label:'Stop 1,5 ATR',opts:{},stopMult:1.5});
