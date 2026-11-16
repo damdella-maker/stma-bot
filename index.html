@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#08080a" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v16</title>
+<title>STMA Bot · v17</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -237,6 +237,9 @@
   .legend-dot{ display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:4px; vertical-align:middle; }
   .stale-tag{ font-size:10px; font-weight:800; color:#fbbf24; }
   @media (prefers-reduced-motion: reduce){ *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } }
+  .inp{ width:100%; background:#131317; border:1px solid var(--border); border-radius:12px; padding:11px 12px; color:#fff; font-size:16px; outline:none; }
+  .inp:focus{ border-color:#22c55e; }
+  .srv-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,.04); font-size:12px; }
 </style>
 </head>
 <body>
@@ -246,7 +249,7 @@
     <div class="logo">S</div>
     <div>
       <div class="text-[15px] font-extrabold leading-tight tracking-tight">STMA Bot</div>
-      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v16</div>
+      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v17</div>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -400,6 +403,7 @@
   </section>
 
   <section id="tab-trades" class="hidden-tab">
+    <div id="srvTradesCard" class="card p-3.5 mb-3 hidden-tab"></div>
     <div class="grid grid-cols-2 gap-2 mb-3">
       <div class="card p-3.5"><div class="sect-title">Trades clôturés</div><div id="sTrades" class="text-[22px] font-extrabold num mt-0.5">0</div></div>
       <div class="card p-3.5"><div class="sect-title">Winrate</div><div id="sWin" class="text-[22px] font-extrabold num mt-0.5">—</div></div>
@@ -457,6 +461,17 @@
       <div class="set-row flex items-center justify-between py-2.5 border-b border-white/5"><div><div class="text-[13px] font-semibold">Surveiller même bot arrêté</div><div class="text-[10.5px] text-zinc-500">Alerte sur les signaux sans ouvrir de trade</div></div><label class="sw"><input type="checkbox" id="opt-alertIdle" aria-label="Surveiller même bot arrêté"><span></span></label></div>
       <div class="set-row flex items-center justify-between py-2.5"><div><div class="text-[13px] font-semibold">Alerter aussi les clôtures</div><div class="text-[10.5px] text-zinc-500">Stop, objectif atteint, durée max</div></div><label class="sw"><input type="checkbox" id="opt-notifyClose" aria-label="Alerter aussi les clôtures"><span></span></label></div>
     </div>
+    <div class="card p-4 mb-3" id="serverCard">
+      <div class="flex items-center justify-between mb-1"><div class="text-[13px] font-extrabold">☁️ Serveur 24h/24</div><span id="srvState" class="src-badge connect">NON CONFIGURÉ</span></div>
+      <div id="srvHint" class="text-[11.5px] text-zinc-400 leading-relaxed mb-3">Ton serveur Cloudflare gratuit fait tourner la stratégie choisie ci-dessous sur les cryptos, même appli fermée, et t'envoie ses alertes. Il sert aussi de relais fiable pour les actions, le forex et les matières premières. Colle le jeton secret puis touche Connecter.</div>
+      <input id="srvUrl" class="inp mb-2" type="url" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://stma-bot.….workers.dev" aria-label="Adresse du serveur">
+      <input id="srvToken" class="inp mb-2" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Jeton secret (APP_TOKEN)" aria-label="Jeton du serveur">
+      <div class="flex gap-2 mb-2"><button id="btnSrvSave" class="btn btn-primary flex-1">Connecter</button><button id="btnSrvForget" class="btn btn-ghost">Oublier</button></div>
+      <div class="flex gap-2 mb-2"><button id="btnSrvPush" class="btn btn-ghost flex-1">🔔 Alertes appli fermée</button><button id="btnSrvTest" class="btn btn-ghost">Tester</button></div>
+      <div class="set-row flex items-center justify-between py-2.5 border-b border-white/5"><div><div class="text-[13px] font-semibold">Le serveur trade</div><div class="text-[10.5px] text-zinc-500">Sinon : signaux seulement, sans trade simulé</div></div><label class="sw"><input type="checkbox" id="srv-trade" aria-label="Le serveur trade" checked><span></span></label></div>
+      <button id="btnSrvSync" class="btn btn-ghost w-full mt-2">Envoyer mes réglages au serveur</button>
+      <div class="text-[10.5px] text-zinc-500 mt-2 leading-relaxed">Envoie la stratégie (Tendance 1 jour ou Agents 15 min), le niveau de risque, la fréquence, les marchés crypto / memecoins et les options. Changer de stratégie l'envoie automatiquement. Le serveur a son propre portefeuille simulé, affiché dans l'onglet Trades.</div>
+    </div>
     <div class="card p-4 mb-3">
       <div class="text-[13px] font-extrabold mb-1">Stratégie</div>
       <div class="text-[10.5px] text-zinc-500 mb-2">Règles appliquées à chaque signal, frais simulés inclus.</div>
@@ -476,7 +491,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v16.0</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v17.0</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -921,7 +936,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='16.0',STORE_KEY='stma.bot.v16',LEGACY_KEYS=['stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='17.0',STORE_KEY='stma.bot.v16',LEGACY_KEYS=['stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1164,6 +1179,7 @@ function pollRef(){
 
 /* ═══════════ YAHOO (via relais CORS) ═══════════ */
 const PROXIES=[
+  {name:'stma',make:u=>(SRV.url||SRV_DEFAULT)?(SRV.url||SRV_DEFAULT)+'/yahoo'+u.replace(/^https:\/\/query[12]\.finance\.yahoo\.com/,''):null},   // relais personnel (serveur Cloudflare)
   {name:'allorigins',make:u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`},
   {name:'corsproxy',make:u=>`https://corsproxy.io/?url=${encodeURIComponent(u)}`},
   {name:'codetabs',make:u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`}];
@@ -1174,8 +1190,8 @@ async function fetchViaProxies(target,timeout=12000){
   const order=PROXIES.map((_,i)=>i).sort((a,b)=>{const A=proxyState[a],B=proxyState[b],da=A.downUntil>now,db=B.downUntil>now;if(da!==db)return da?1:-1;return B.okAt-A.okAt;});
   let last=null;
   for(const i of order){
-    const st=proxyState[i];if(st.downUntil>now&&i!==order[0])continue;
-    try{const j=await fetchJSON(PROXIES[i].make(target),{timeout,retries:0});st.fails=0;st.downUntil=0;st.okAt=Date.now();netMark('yahoo',true);return j;}
+    const st=proxyState[i],purl=PROXIES[i].make(target);if(!purl)continue;if(st.downUntil>now&&i!==order[0])continue;
+    try{const j=await fetchJSON(purl,{timeout,retries:0});st.fails=0;st.downUntil=0;st.okAt=Date.now();netMark('yahoo',true);return j;}
     catch(x){last=x;st.fails++;st.downUntil=Date.now()+Math.min(600000,15000*Math.pow(2,st.fails-1));}
   }
   netMark('yahoo',false,last);return null;
@@ -1779,7 +1795,7 @@ function renderNotifStatus(){
   else if(Notification.permission==='denied'){label='REFUSÉES';cls='src-badge stale';h='Tu as refusé les notifications. Pour les réactiver : Réglages de l\'iPhone › Notifications › STMA Bot. '+ios16;}
   else if(Notification.permission==='granted'&&S.opts.notify){label='ACTIVES';cls='src-badge live';b='Désactiver les notifications';h=ios16;}
   else{label='INACTIVES';cls='src-badge connect';h=ios16;}
-  st.textContent=label;st.className=cls;hint.textContent=h;btn.textContent=b;
+  st.textContent=label;st.className=cls;hint.textContent=h+(srvOn()?' ☁️ Serveur connecté : le bot serveur t\'envoie aussi ses alertes appli fermée (Réglages › Serveur 24h/24).':'');btn.textContent=b;
   btn.className='btn flex-1 '+(b.startsWith('Désactiver')?'btn-ghost':'btn-primary');
 }
 function renderStrategyBox(){
@@ -1816,6 +1832,7 @@ function mainLoop(){
   scheduleRender();
   if(S.ticks%10===0){pollWhales();pollRef();if(tvShown)updateIndicatorsUI(tvShown);}
   if(S.ticks%30===0){pollInstitutional();pollFng();saveState();}
+  if(S.ticks%60===0)srvRefresh();
   if(S.ticks%60===0||(!smcData.at&&(candles.get('BTC')?.cs.length||0)>=30))detectSMC();
   if(document.hidden||!wsShouldConnect)return;
   // Chien de garde : WebSocket ouvert mais muet depuis 8 s → on change d'hôte
@@ -2106,7 +2123,7 @@ function buildStratSeg(){
 }
 function syncStratSeg(){$('stratSeg').querySelectorAll('[data-strat]').forEach(b=>b.classList.toggle('on',b.dataset.strat===S.strategy));
   $('stratNote').textContent=S.strategy==='daily'?`Croisement EMA ${DTREND.f}/${DTREND.s} sur bougies journalières · stop ${DTREND.k} ATR · ${DTREND.syms.join(', ')} · peu de trades (une décision par jour, à ${new Date(Math.floor(Date.now()/DAY)*DAY+DAY).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} heure locale)`:'Agents sur bougies 15 min · nombreux signaux · « Fréquence de trading » s\'applique ici';}
-function setStrategy(k){if(!STRATS[k])return;S.strategy=k;syncStratSeg();renderStrategyBox();saveState();vibrate(10);toast('Stratégie · '+STRATS[k].label,'info');}
+function setStrategy(k){if(!STRATS[k])return;S.strategy=k;syncStratSeg();renderStrategyBox();saveState();srvSendStrategy();vibrate(10);toast('Stratégie · '+STRATS[k].label,'info');}
 function buildModeSeg(){
   $('modeSeg').innerHTML=Object.entries(MODES).map(([k,v])=>`<button class="seg-btn" data-mode="${k}" style="--seg-c:${v.color}">${v.label}<span class="seg-sub">seuil ${v.thrAdd>0?'+':''}${v.thrAdd.toFixed(1)} · ×${v.maxPosMult}</span></button>`).join('');
   $('modeSeg').querySelectorAll('[data-mode]').forEach(b=>{b.onclick=()=>setMode(b.dataset.mode);});
@@ -2227,7 +2244,8 @@ function showTab(name){
   window.scrollTo({top:0,behavior:'smooth'});
   if(name==='analyse'&&!tvShown){const first=Object.keys(S.prices).find(s=>S.markets.some(m=>MARKETS[m]&&MARKETS[m].symbols[s]));if(first)updateTvFrame(S.prices[first].market,first);}
   if(name==='inst'){renderInstitutional();renderFng();renderDepth();renderSMC();}
-  if(name==='settings'){renderNotifStatus();renderStrategyBox();}
+  if(name==='settings'){renderNotifStatus();renderStrategyBox();renderServer();}
+  if(name==='trades')srvRefresh(true);
   if(name==='backtest')btBuildUI();
   scheduleRender();
 }
@@ -2380,6 +2398,128 @@ function btRender(B){
   $('btResults').innerHTML=h;
 }
 
+/* ═══════════ SERVEUR CLOUDFLARE : bot 24h/24, alertes appli fermée, relais Yahoo ═══════════ */
+const SRV_KEY='stma.server',SRV_DEFAULT='https://stma-bot.young-frog-2911.workers.dev';   // adresse publique du serveur (le jeton n'est jamais dans le code)
+let SRV={url:'',token:''},srvData=null,srvLastFetch=0,srvErr='';
+try{const o=JSON.parse(localStorage.getItem(SRV_KEY)||'{}');if(o&&typeof o.url==='string')SRV={url:o.url.replace(/\/+$/,''),token:String(o.token||'')};}catch(x){}
+function srvOn(){return !!(SRV.url&&SRV.token);}
+function escH(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
+async function srvFetch(path,{method='GET',body,timeout=12000,auth=true}={}){
+  const ctrl=new AbortController(),t=setTimeout(()=>ctrl.abort(),timeout);
+  try{
+    const h={};if(auth)h.Authorization='Bearer '+SRV.token;if(body)h['Content-Type']='application/json';
+    const res=await fetch(SRV.url+path,{method,headers:h,body:body?JSON.stringify(body):undefined,cache:'no-store',signal:ctrl.signal});
+    const j=await res.json().catch(()=>({}));
+    if(!res.ok){const e=new Error(j.error||('HTTP '+res.status));e.status=res.status;throw e;}
+    return j;
+  }catch(x){throw x&&x.name==='AbortError'?new Error('délai dépassé'):x;}
+  finally{clearTimeout(t);}
+}
+function b64uToU8(s){s=String(s).replace(/-/g,'+').replace(/_/g,'/');const b=atob(s+'='.repeat((4-s.length%4)%4));return Uint8Array.from(b,c=>c.charCodeAt(0));}
+async function srvRefresh(force){
+  if(!srvOn()||document.hidden)return;
+  if(!force&&Date.now()-srvLastFetch<60000)return;srvLastFetch=Date.now();
+  try{srvData=await srvFetch('/api/state');srvErr='';}
+  catch(x){srvErr=x.status===401?'jeton refusé':String(x.message||x);}
+  renderServer();
+}
+async function srvSave(){
+  const url=($('srvUrl').value||'').trim().replace(/\/+$/,''),token=($('srvToken').value||'').trim();
+  if(!/^https:\/\/[a-z0-9.-]+$/i.test(url)&&!/^http:\/\/localhost(:\d+)?$/.test(url)){toast('Adresse invalide : colle l\'adresse https://…workers.dev','info');return;}
+  if(token.length<16){toast('Jeton trop court','info');return;}
+  SRV={url,token};try{localStorage.setItem(SRV_KEY,JSON.stringify(SRV));}catch(x){}
+  await srvRefresh(true);
+  if(srvErr)toast('Serveur : '+srvErr,'info');
+  else{toast('Serveur connecté','info');lastYahooQuote=0;pollYahooQuotes(true);srvSendStrategy();}
+  renderNotifStatus();
+}
+async function srvForget(){
+  try{const reg=swReg||(navigator.serviceWorker&&await navigator.serviceWorker.getRegistration());const sub=reg&&reg.pushManager&&await reg.pushManager.getSubscription();
+    if(sub&&srvOn()){await srvFetch('/api/unsubscribe',{method:'POST',body:{endpoint:sub.endpoint}}).catch(()=>{});await sub.unsubscribe().catch(()=>{});}}catch(x){}
+  SRV={url:'',token:''};srvData=null;srvErr='';try{localStorage.removeItem(SRV_KEY);localStorage.removeItem('stma.srvPushAt');}catch(x){}
+  $('srvUrl').value=SRV_DEFAULT;$('srvToken').value='';renderServer();renderNotifStatus();toast('Serveur oublié sur ce téléphone','info');
+}
+async function srvSubscribe(test){
+  const reg=swReg||await navigator.serviceWorker.ready;
+  const {publicKey}=await srvFetch('/api/vapid-public-key',{auth:false});
+  if(!publicKey)throw new Error('clé VAPID absente sur le serveur');
+  const key=b64uToU8(publicKey);
+  let sub=await reg.pushManager.getSubscription();
+  // Si la clé du serveur a changé, l'ancien abonnement est inutilisable
+  if(sub&&sub.options&&sub.options.applicationServerKey){const cur=new Uint8Array(sub.options.applicationServerKey);if(cur.length!==key.length||cur.some((v,i)=>v!==key[i])){await sub.unsubscribe();sub=null;}}
+  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});
+  const r=await srvFetch('/api/subscribe',{method:'POST',body:{subscription:sub.toJSON(),test:!!test}});
+  try{localStorage.setItem('stma.srvPushAt',String(Date.now()));}catch(x){}
+  return r;
+}
+async function srvEnablePush(){
+  initAudio();
+  if(!srvOn()){toast('Connecte d\'abord le serveur','info');return;}
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)||!notifSupported()){
+    toast(isIOS&&!isStandalone()?'Sur iPhone : ouvre STMA Bot depuis son icône sur l\'écran d\'accueil (iOS 16.4 ou plus)':'Notifications push indisponibles sur ce navigateur','info');return;}
+  let perm=Notification.permission;
+  if(perm==='default'){try{perm=await Notification.requestPermission();}catch(x){perm=Notification.permission;}}
+  if(perm!=='granted'){toast('Notifications refusées · Réglages iPhone › Notifications › STMA Bot','info');renderServer();return;}
+  try{const r=await srvSubscribe(true);
+    toast(r.test&&r.test.sent?'Alertes appli fermée activées · notification de test envoyée':'Abonné, mais le test a échoué : '+((r.test&&r.test.errors&&r.test.errors[0])||'?'),'info');}
+  catch(x){toast('Échec de l\'abonnement : '+(x.message||x),'info');}
+  srvRefresh(true);
+}
+async function srvCheckSub(){
+  // À l'ouverture, une fois par jour : renouvelle l'abonnement si iOS l'a perdu
+  if(!srvOn()||!('PushManager' in window)||!notifSupported()||Notification.permission!=='granted')return;
+  const last=+(localStorage.getItem('stma.srvPushAt')||0);if(!last||Date.now()-last<86400000)return;
+  try{await srvSubscribe(false);}catch(x){}
+}
+function srvSendStrategy(){   // le serveur suit la stratégie choisie dans l'appli
+  if(!srvOn())return;
+  srvFetch('/api/config',{method:'POST',body:{strategy:S.strategy}}).then(()=>srvRefresh(true)).catch(x=>toast('Serveur : stratégie non envoyée ('+(x.message||x)+')','info'));
+}
+async function srvSyncSettings(){
+  if(!srvOn()){toast('Connecte d\'abord le serveur','info');return;}
+  const o=S.opts;
+  try{const r=await srvFetch('/api/config',{method:'POST',body:{strategy:S.strategy,risk:S.risk,mode:S.mode,markets:S.markets.filter(m=>m==='crypto'||m==='meme'),
+      opts:{sniper:o.sniper,devil:o.devil,trailing:o.trailing,learning:o.learning,instfilter:o.instfilter,shorts:o.shorts,htf:o.htf},
+      trade:$('srv-trade').checked,notify:{closes:!!o.notifyClose,signals:true}}});
+    toast('Réglages envoyés · '+(STRATS[r.strategy]?STRATS[r.strategy].label+' · ':'')+RISK[r.risk].label.toLowerCase()+' · '+MODES[r.mode].label.toLowerCase()+(r.trade?'':' · signaux seulement'),'info');srvRefresh(true);}
+  catch(x){toast('Serveur : '+(x.message||x),'info');}
+}
+async function srvTestPush(){
+  if(!srvOn()){toast('Connecte d\'abord le serveur','info');return;}
+  try{const r=await srvFetch('/api/test-push',{method:'POST'});toast(r.sent?'Notification envoyée par le serveur : ferme l\'appli pour la voir arriver':'Aucun appareil abonné'+(r.errors&&r.errors[0]?' · '+r.errors[0]:''),'info');}
+  catch(x){toast('Serveur : '+(x.message||x),'info');}
+}
+function srvStratLabel(d){return (STRATS[d.stratMode]?STRATS[d.stratMode].label:'Agents 15 min')+' (code v'+(d.strategy&&d.strategy.appVersion)+')';}
+function srvDailyLine(d){
+  if(d.stratMode!=='daily')return '';
+  const b=d.dt&&d.dt.BTC,next=new Date((Math.floor(Date.now()/DAY)+1)*DAY).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const syms=(d.dtSyms||[]).map(x=>{const e=d.dt&&d.dt[x];return e?`${x} ${e.st>0?'↑':'↓'}`:x;}).join(' ');
+  return `<div class="text-[11px] text-zinc-400 mb-2">Tendance 1 jour · ${b?'BTC '+(b.refUp?'au-dessus':'sous')+' son EMA50 ('+(b.refUp?'achats':'ventes')+' seulement)':'bougies journalières en chargement'} · ${escH(syms)} · prochaine décision vers ${next} · stop surveillé chaque minute</div>`;
+}
+function renderServer(){
+  const st=$('srvState'),hint=$('srvHint'),card=$('srvTradesCard');
+  if(st){
+    let label='NON CONFIGURÉ',cls='src-badge connect';
+    if(srvOn()){if(srvErr){label='ERREUR';cls='src-badge stale';}else if(srvData){label=srvData.trade?'BOT ACTIF':'SIGNAUX';cls='src-badge live';}else{label='…';}}
+    st.textContent=label;st.className=cls;
+    if(srvOn()&&srvData){const lr=srvData.lastRun;hint.textContent=(lr?`Dernier passage il y a ${ago(lr.at)}${lr.ok?'':' · données indisponibles'}`:'En attente du premier passage (1/min)')+` · ${srvData.subscriptions} appareil${srvData.subscriptions>1?'s':''} abonné${srvData.subscriptions>1?'s':''} aux alertes · ${srvStratLabel(srvData)}`;
+      const t=$('srv-trade');if(t&&document.activeElement!==t)t.checked=!!srvData.trade;}
+    else if(srvOn()&&srvErr)hint.textContent='Impossible de joindre le serveur : '+srvErr+'. Vérifie l\'adresse et le jeton.';
+  }
+  if(!card)return;
+  if(!srvOn()||!srvData){card.classList.add('hidden-tab');return;}
+  const d=srvData,pnl=d.equity-d.start,pct=d.start>0?pnl/d.start*100:0,lr=d.lastRun;
+  const pos=d.positions.length?d.positions.map(p=>`<div class="srv-row"><span><span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md ${p.dir>0?'bg-emerald-500/15 text-emerald-400':'bg-red-500/15 text-red-400'}">${p.dir>0?'LONG':'SHORT'}</span> <b>${escH(p.sym)}</b> <span class="text-zinc-500">${priceFmt(p.entry)} → ${priceFmt(p.price)}</span></span><span class="num font-bold ${p.pnl>=0?'green':'red'}">${signedMoney(p.pnl)}</span></div>`).join(''):'<div class="text-[11.5px] text-zinc-500 py-1">Aucune position ouverte</div>';
+  const cl=d.closed.slice(0,15).map(c=>`<div class="srv-row"><span><span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md ${c.side==='LONG'?'bg-emerald-500/15 text-emerald-400':'bg-red-500/15 text-red-400'}">${c.side}</span> <b>${escH(c.sym)}</b> <span class="text-zinc-500">${escH(c.reason)} · il y a ${ago(c.at)}</span></span><span class="num font-bold ${c.pnl>=0?'green':'red'}">${signedMoney(c.pnl)}</span></div>`).join('')||'<div class="text-[11.5px] text-zinc-500 py-1">Aucun trade clôturé pour l\'instant</div>';
+  const dec=d.decisions&&d.decisions[0]?`<div class="text-[11px] text-zinc-400 mt-2">Dernière décision : <b>${escH(d.decisions[0].action)}</b> · ${escH(d.decisions[0].reason)}</div>`:'';
+  card.innerHTML=`<div class="flex items-center justify-between mb-1"><div class="text-[13px] font-extrabold">☁️ Bot serveur 24h/24</div><span class="src-badge ${d.trade?'live':'connect'}">${d.killed?'ARRÊTÉ':d.trade?'ACTIF':'SIGNAUX'}</span></div>
+    <div class="text-[10.5px] text-zinc-500 mb-2">${escH(srvStratLabel(d))} · portefeuille simulé séparé, tenu par le serveur même appli fermée${lr?' · passage il y a '+ago(lr.at):''}</div>${srvDailyLine(d)}
+    <div class="flex items-end justify-between mb-2"><div class="text-[22px] font-extrabold num">${money(d.equity)}</div><div class="num font-bold ${pnl>=0?'green':'red'}">${signedMoney(pnl)} (${pct>=0?'+':''}${pct.toFixed(2)} %)</div></div>
+    <div class="sect-title mt-1">Positions</div>${pos}
+    <div class="sect-title mt-3">Derniers trades</div><div style="max-height:40vh;overflow-y:auto">${cl}</div>${dec}`;
+  card.classList.remove('hidden-tab');
+}
+
 /* ═══════════ INIT ═══════════ */
 function init(){
   loadState();buildBinanceSymMap();saveState();
@@ -2422,6 +2562,9 @@ function init(){
   $('btCancel').onclick=()=>{btCancel();btProgress(0,'Backtest annulé');};
   $('btCompare').onchange=ev=>{S.bt.compare=ev.target.checked;saveState();};
   $('btnNotif').onclick=toggleNotifications;
+  $('srvUrl').value=SRV.url||SRV_DEFAULT;$('srvToken').value=SRV.token;
+  $('btnSrvSave').onclick=srvSave;$('btnSrvForget').onclick=srvForget;$('btnSrvPush').onclick=srvEnablePush;
+  $('btnSrvTest').onclick=srvTestPush;$('btnSrvSync').onclick=srvSyncSettings;
   $('btnNotifTest').onclick=()=>{initAudio();signalAlert('Test · Signal ACHAT · BTC','Exemple d\'alerte : prix, stop et objectif s\'affichent ici.','BTC','buy');};
   $('sigClose').onclick=hideBanner;
   $('sigView').onclick=()=>{hideBanner();if(bannerSym){showTab('bot');openSymbol(bannerSym);}};
@@ -2432,7 +2575,7 @@ function init(){
   const goBackground=()=>{saveState();wsShouldConnect=false;closeWs();clearTimeout(restTimer);};
   const resume=()=>{
     wsShouldConnect=true;wsFails=0;restPollCrypto();connectWs();if(restActive)restLoop();
-    lastYahooQuote=0;pollYahooQuotes(true);lastChartCycle=0;lastWhalePoll=0;lastInstPoll=Math.min(lastInstPoll,Date.now()-55000);
+    srvRefresh(true);lastYahooQuote=0;pollYahooQuotes(true);lastChartCycle=0;lastWhalePoll=0;lastInstPoll=Math.min(lastInstPoll,Date.now()-55000);
     for(const sym of activeSyms())ensureCandles(sym);updateSrcMode();scheduleRender();
   };
   window.addEventListener('pagehide',goBackground);
@@ -2454,6 +2597,8 @@ function init(){
   pollYahooQuotes(true);
   setTimeout(pollWhales,2500);
   if(S.migratedFrom)setTimeout(()=>toast('Données reprises de la version précédente','info'),800);
+  srvRefresh(true);setTimeout(srvCheckSub,4000);
+  if(/[?&]src=server\b/.test(location.search)){showTab('trades');try{history.replaceState(null,'',location.pathname);}catch(x){}}
 
   if(!loopId)loopId=setInterval(mainLoop,1000);
 }

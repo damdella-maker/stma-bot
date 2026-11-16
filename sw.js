@@ -1,9 +1,9 @@
-/* STMA Bot · service worker v16
+/* STMA Bot · service worker v17
    - met en cache la « coquille » de l'appli (HTML, icônes, manifest) pour l'ouvrir hors ligne
    - met en cache les bibliothèques CDN (Tailwind, polices)
    - ne met JAMAIS en cache les données de marché (Binance, Yahoo, relais, Fear & Greed…)
    - affiche / gère le clic sur les notifications */
-const VERSION = 'stma-v16.0';
+const VERSION = 'stma-v17.0';
 const SHELL_CACHE = VERSION + '-shell';
 const CDN_CACHE = VERSION + '-cdn';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
@@ -64,12 +64,27 @@ self.addEventListener('fetch', (event) => {
   // Tout le reste (API de marché, relais CORS, TradingView, WebSocket) : réseau direct, aucune mise en cache.
 });
 
+// Notifications envoyées par le serveur Cloudflare (Web Push), même appli fermée.
+// iOS exige d'afficher une notification pour CHAQUE message push reçu (sinon il coupe l'abonnement).
+self.addEventListener('push', (event) => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; } catch (e) { d = { body: event.data ? event.data.text() : '' }; }
+  const title = d.title || 'STMA Bot';
+  event.waitUntil(self.registration.showNotification(title, {
+    body: d.body || '', tag: d.tag || 'stma-server', renotify: true,
+    icon: 'icon-192.png', badge: 'icon-192.png', timestamp: d.ts || Date.now(),
+    data: { url: d.url || './?src=server' },
+  }));
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const target = (event.notification.data && event.notification.data.url) || './';
   event.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    for (const c of all) { if ('focus' in c) return c.focus(); }
+    for (const c of all) {
+      if ('focus' in c) { if (/src=server/.test(target) && 'navigate' in c) { try { await c.navigate(new URL(target, self.registration.scope).href); } catch (e) {} } return c.focus(); }
+    }
     if (self.clients.openWindow) return self.clients.openWindow(target);
   })());
 });
