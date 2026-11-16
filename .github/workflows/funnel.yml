@@ -2,7 +2,8 @@
 # Résultat publié sur la branche « funnel-data » (un seul commit, écrasé à chaque passage) ; le Worker lit short.json.
 name: funnel
 on:
-  schedule: [{ cron: '7,37 * * * *' }]
+  schedule:
+    - cron: '7,37 * * * *'
   workflow_dispatch: {}
 permissions: { contents: write }
 concurrency: { group: funnel, cancel-in-progress: false }
