@@ -1,8 +1,8 @@
-# Entonnoir de traders memecoins (copie en argent fictif) : toutes les heures, données publiques uniquement, aucun secret.
+# Entonnoir de traders memecoins (copie en argent fictif) : toutes les 30 min, données publiques uniquement, aucun secret.
 # Résultat publié sur la branche « funnel-data » (un seul commit, écrasé à chaque passage) ; le Worker lit short.json.
 name: funnel
 on:
-  schedule: [{ cron: '7 * * * *' }]
+  schedule: [{ cron: '7,37 * * * *' }]
   workflow_dispatch: {}
 permissions: { contents: write }
 concurrency: { group: funnel, cancel-in-progress: false }

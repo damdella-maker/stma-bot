@@ -6,7 +6,7 @@
 // short.json (300 meilleurs éligibles) que le Worker lit pour choisir les portefeuilles à suivre.
 import fs from 'node:fs'; import zlib from 'node:zlib';
 const DIR = process.argv[2] || 'data', NOW = Date.now(), H = 3600000, KEEP = 3 * 24 * H;
-const BUDGET_MS = (+process.env.FUNNEL_MINUTES || 9) * 60000, GT_GAP = +process.env.GT_GAP_MS || 4000;
+const BUDGET_MS = (+process.env.FUNNEL_MINUTES || 9) * 60000, GT_GAP = +process.env.GT_GAP_MS || 6500;
 const WSOL = 'So11111111111111111111111111111111111111112';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 fs.mkdirSync(DIR, { recursive: true });
@@ -19,7 +19,7 @@ async function gt(path) {
     const wait = lastGt + GT_GAP - Date.now(); if (wait > 0) await sleep(wait); lastGt = Date.now();
     stat.gtCalls++;
     try { const r = await fetch('https://api.geckoterminal.com/api/v2' + path, { headers: { accept: 'application/json' } });
-      if (r.status === 429) { stat.gt429++; await sleep(15000 * (a + 1)); continue; }
+      if (r.status === 429) { stat.gt429++; await sleep(30000); continue; }
       if (!r.ok) return null; return await r.json(); } catch (e) { await sleep(3000); }
   }
   return null;
