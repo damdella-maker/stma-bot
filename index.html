@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#08080a" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v18.8</title>
+<title>STMA Bot · v18.9</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -373,7 +373,7 @@
     <div class="logo">S</div>
     <div>
       <div class="text-[15px] font-extrabold leading-tight tracking-tight">STMA Bot</div>
-      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v18.8</div>
+      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v18.9</div>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -558,7 +558,7 @@
     </div>
     <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-1">Positions copiées</div><div id="cpPos" class="text-[11.5px] text-zinc-500">—</div></div>
     <div class="card p-4 mb-3"><div class="flex items-center justify-between mb-1"><div class="text-[13px] font-extrabold">Journal en direct</div><span class="text-[10px] text-zinc-500" id="cpJAge">—</span></div><div id="cpJournal" class="text-[11.5px] text-zinc-500">—</div></div>
-    <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-0.5">Portefeuilles suivis</div><div class="text-[10.5px] text-zinc-500 mb-1 leading-snug">Re-sélection automatique toutes les 12 h sur le serveur, jamais figée : sortent les robots, les inactifs (3 j), ceux dont la copie perd ≥ 15 % ou dont le trader perd ≥ 10 % sur les 3 derniers jours, et le bas du classement ; entrent les nouveaux du classement Kolscan du jour (vérifiés). Copiés : les 10 meilleurs avec PnL ≥ 1 SOL et ROI ≥ 5 % sur 7 jours, ≥ 5 trades bouclés ; les autres sont observés (copie fantôme de 100 $ pour les noter).</div><div id="cpRot" class="text-[10.5px] text-zinc-400 mb-2 leading-snug"></div><div id="cpWallets" class="text-[11.5px] text-zinc-500">—</div></div>
+    <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-0.5">Portefeuilles suivis</div><div class="text-[10.5px] text-zinc-500 mb-2 leading-snug">3 étages, re-sélection automatique sur le serveur, jamais figée. <b class="text-zinc-300">Analysés</b> : toutes les 30 min, un robot GitHub lit les trades publics des pools Solana actifs (GeckoTerminal, DexScreener) et le classement Kolscan, et note des milliers de portefeuilles sur 3 jours glissants (PnL réalisé, ROI, taux de gain, robots exclus). <b class="text-zinc-300">Surveillés</b> : chaque heure, les meilleurs nouveaux sont vérifiés (Helius) et mis sur le webhook temps réel, autant que le budget de crédits gratuit le permet ; chacun reçoit une copie fantôme de 100 $ pour le noter en direct. <b class="text-zinc-300">Copiés</b> : re-classés toutes les 10 min ; entrent les 20 meilleurs éligibles (PnL ≥ 1 SOL, ROI ≥ 5 %, ≥ 5 trades bouclés), d'abord ceux dont la copie fantôme gagne ; un copié reste tant qu'il est dans le top 30 (au moins 1 h entre deux changements, pas d'aller-retour) ; jamais un portefeuille dont la copie fantôme perd. Sortent : robots, trop actifs (coût en crédits), inactifs 3 j, en perte depuis plus d'1 h sur 3 j, bas du classement — jamais avant la vente d'une position copiée ouverte.</div><div class="grid grid-cols-3 gap-2 text-center mb-2"><div class="rounded-xl bg-white/5 py-2"><div id="cpTA" class="font-extrabold num text-[17px] text-zinc-100">—</div><div class="text-[10px] text-zinc-500">analysés</div></div><div class="rounded-xl bg-white/5 py-2"><div id="cpTW" class="font-extrabold num text-[17px] text-zinc-100">—</div><div class="text-[10px] text-zinc-500">surveillés</div></div><div class="rounded-xl bg-white/5 py-2"><div id="cpTC" class="font-extrabold num text-[17px] text-cyan-300">—</div><div class="text-[10px] text-zinc-500">copiés</div></div></div><div id="cpFun" class="text-[10.5px] text-zinc-400 mb-1 leading-snug"></div><div class="text-[10.5px] text-zinc-400 flex justify-between mb-1"><span>Crédits Helius (offre gratuite)</span><span id="cpCredT" class="num">—</span></div><div class="h-2 rounded-full bg-white/10 overflow-hidden mb-2"><div id="cpCredBar" class="h-full rounded-full" style="width:0%;background:#22d3ee"></div></div><div id="cpRot" class="text-[10.5px] text-zinc-400 mb-2 leading-snug"></div><div id="cpWallets" class="text-[11.5px] text-zinc-500">—</div></div>
     <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-2">Réglages de la copie</div>
       <div class="grid grid-cols-3 gap-2 text-[11px]">
         <label>Taille / trade<select id="cpSize" class="inp mt-1"><option value="1">1 %</option><option value="2">2 %</option><option value="5">5 %</option><option value="10">10 %</option></select></label>
@@ -668,7 +668,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v18.8</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v18.9</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -1454,7 +1454,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='18.8',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='18.9',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1543,7 +1543,7 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:18.8,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
+  const st={v:18.9,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
     opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true,learnV2:true},huntDone:{},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
@@ -2070,7 +2070,7 @@ function animateProfitToWallet(amount,startRect,onDone,n=1,meta=null){
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:18.8,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:18.9,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
     cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen}));}catch(x){}
@@ -2080,7 +2080,7 @@ function loadState(){
   try{for(const k of [STORE_KEY,...LEGACY_KEYS]){const raw=localStorage.getItem(k);if(raw){saved=JSON.parse(raw);from=k;break;}}}catch(x){}
   S=freshState();if(!saved)return;
   // Migration v11/v12 → v13 : on reprend tout ce qui est compatible, les nouveaux champs prennent leur valeur par défaut
-  if(![11,12,13,14,15,16,17,18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8].includes(saved.v))return;
+  if(![11,12,13,14,15,16,17,18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9].includes(saved.v))return;
   try{
     for(const k of ['start','capital','closed','lessons','equityHist','peakEquity','maxDD','streak','seq','killed','dayKey','dayStart','dayHalt','lossRun','pauseUntil','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen'])if(saved[k]!=null)S[k]=saved[k];
     if(saved.closedCount==null)S.closedCount=Array.isArray(S.closed)?S.closed.length:0;
@@ -3457,8 +3457,8 @@ function renderCopy(){
   const d=cpData,sig=JSON.stringify([d.now&&Math.floor(d.now/5000),d.journal[0]&&d.journal[0].t,d.equity,d.on,cpErr]);
   if(sig===cpSig)return;cpSig=sig;
   $('cpOn').checked=!!d.on;
-  const act=d.wallets.filter(w=>w.act).length;
-  st.innerHTML=`${d.on?'<b class="green">Active</b>':'<b class="text-zinc-400">En pause</b>'} · ${act} trader(s) copié(s), ${d.wallets.length-act} observé(s) · dernier signal Helius ${d.hook.last?'il y a '+cpAgo(d.hook.last):'—'} · ${d.hook.today} transaction(s) reçue(s) aujourd'hui${cpErr?' · <span class="red">'+escH(cpErr)+'</span>':''}`;
+  const act=d.tiers?d.tiers.copied:d.wallets.filter(w=>w.act).length;
+  st.innerHTML=`${d.on?'<b class="green">Active</b>':'<b class="text-zinc-400">En pause</b>'} · ${act} trader(s) copié(s), ${((d.tiers&&d.tiers.watched)||d.wallets.length)-act} surveillé(s) · dernier signal Helius ${d.hook.last?'il y a '+cpAgo(d.hook.last):'—'} · ${d.hook.today} transaction(s) reçue(s) aujourd'hui${cpErr?' · <span class="red">'+escH(cpErr)+'</span>':''}`;
   $('cpEq').textContent=cpMoney(d.equity);
   const pnl=d.equity-d.start;$('cpPnl').textContent=(pnl>=0?'+':'')+cpMoney(pnl);$('cpPnl').className='text-[14px] font-extrabold num '+(pnl>=0?'green':'red');
   $('cpWin').textContent=d.stats.closed?`${Math.round(100*d.stats.wins/d.stats.closed)} % gagnants · frais ${cpMoney(d.stats.fees)}`:'aucune vente encore';
@@ -3474,9 +3474,14 @@ function renderCopy(){
     const v=e.k==='sell'?e.tot:e.pnl;return `<div class="cp-row"><span class="cp-tag cp-sell">SELL${e.k==='part'?' '+e.pct+'%':''}</span><b class="text-zinc-200">${escH(e.sym)}</b><span class="text-zinc-500 truncate">${nm} · ${escH(e.why)}</span><b class="ml-auto num ${v>=0?'green':'red'}">${v>=0?'+':''}${cpMoney(v)}</b></div>`;}).join(''):'Le journal se remplit dès le premier signal.';
   {const dl=d.daily||{},hs=d.hookSync,rot=(d.rot||[]).filter(r=>(r.in||[]).length||(r.out||[]).length).slice(0,3);
    const li=(x,c)=>`<span class="${c}">${escH(x.n||cpShort(x.w))}</span> <span class="text-zinc-600">(${escH(x.why)})</span>`;
-   memoEl($('cpRot')).innerHTML=(dl.at?`🔄 Liste mise à jour il y a <b class="text-zinc-200">${cpAgo(dl.at)}</b>${dl.next?' · prochaine dans '+cpAgo(2*Date.now()-dl.next).replace(/^0 s$/,'quelques instants'):''} · webhook Helius ${hs?(hs.ok?'<span class="green">à jour</span> ('+hs.n+' adresses)':'<span class="red">échec, nouvel essai auto</span>'):'—'}`:'🔄 Première re-sélection automatique dans les 12 h.')
+   memoEl($('cpRot')).innerHTML=(dl.at?`🔄 Liste mise à jour il y a <b class="text-zinc-200">${cpAgo(dl.at)}</b>${dl.next?' · prochaine dans '+cpAgo(2*Date.now()-dl.next).replace(/^0 s$/,'quelques instants'):''}${dl.intakeAt?' · nouveaux entrants il y a '+cpAgo(dl.intakeAt):''}${dl.changedAt?' · dernier changement il y a '+cpAgo(dl.changedAt):''} · webhook Helius ${hs?(hs.ok?'<span class="green">à jour</span> ('+hs.n+' adresses)':'<span class="red">échec, nouvel essai auto</span>'):'—'}`:'🔄 Première re-sélection automatique dans les 12 h.')
      +rot.map(r=>`<div class="mt-1"><span class="text-zinc-500">${new Date(r.at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span> · ${(r.in||[]).length?'<span class="green">entrés</span> : '+r.in.map(x=>li(x,'text-zinc-200')).join(', '):''}${(r.in||[]).length&&(r.out||[]).length?' · ':''}${(r.out||[]).length?'<span class="red">sortis</span> : '+r.out.map(x=>li(x,'text-zinc-300')).join(', '):''}</div>`).join('');}
-  memoEl($('cpWallets')).innerHTML=d.wallets.map(w=>{const o=w.own||{},s=w.sh||{};return `<div class="cp-row"><span class="cp-tag ${w.act?'cp-act':'cp-obs'}">${w.act?'COPIÉ':'OBSERVÉ'}</span><div class="min-w-0"><div class="font-bold text-zinc-200 truncate">${escH(w.n||cpShort(w.w))} <span class="text-zinc-600 font-normal">${cpShort(w.w)}</span></div><div class="text-[10px] text-zinc-500">7 j : ${(o.pnl||0)>=0?'+':''}${(o.pnl||0).toFixed(1)} SOL · ROI ${Math.round((o.roi||0)*100)} % · ${Math.round((o.win||0)*100)} % gagnants · ${o.n||0} trades${s.n?' · copie fantôme '+(s.pnl>=0?'+':'')+cpMoney(s.pnl)+' ('+s.n+')':''}</div></div><span class="ml-auto font-extrabold num ${w.ok?'text-cyan-300':'text-zinc-600'}">${w.score}</span></div>`;}).join('');
+  {const t=d.tiers||{},f=d.funnel,cr=d.credits||{};const nf=v=>v==null?'—':Number(v).toLocaleString('fr-FR');
+   memoEl($('cpTA')).innerHTML=nf(t.analyzed||null);memoEl($('cpTW')).innerHTML=nf(t.watched);memoEl($('cpTC')).innerHTML=nf(t.copied);
+   memoEl($('cpFun')).innerHTML=f&&f.at?`🔎 Entonnoir mis à jour il y a <b class="text-zinc-200">${cpAgo(f.at)}</b> · ${nf(f.seen)} portefeuilles vus, ${nf(f.analyzed)} analysés, ${nf(f.eligible)} éligibles · ${nf(f.pools)} pools lus${f.kol?' · '+f.kol+' KOL Kolscan':''} · surveillés : ${nf(t.rate)} tx/jour pour ${nf(t.budget)} au budget`:'🔎 Entonnoir : en attente du premier passage (robot GitHub horaire).';
+   const pc=Math.min(100,cr.pct||0);memoEl($('cpCredT')).innerHTML=cr.estMonth!=null?`≈ ${nf(cr.estMonth)} / mois (${pc} %) · ${nf(cr.month)} ce mois`:'—';
+   const bar=$('cpCredBar');if(bar){bar.style.width=pc+'%';bar.style.background=pc>85?'#ef4444':pc>70?'#f59e0b':'#22d3ee';}}
+  memoEl($('cpWallets')).innerHTML=d.wallets.map(w=>{const o=w.own||{},s=w.sh||{};return `<div class="cp-row"><span class="cp-tag ${w.act?'cp-act':'cp-obs'}">${w.act?'COPIÉ':'SURVEILLÉ'}</span><div class="min-w-0"><div class="font-bold text-zinc-200 truncate">${escH(w.n||cpShort(w.w))} <span class="text-zinc-600 font-normal">${cpShort(w.w)}</span></div><div class="text-[10px] text-zinc-500">7 j : ${(o.pnl||0)>=0?'+':''}${(o.pnl||0).toFixed(1)} SOL · ROI ${Math.round((o.roi||0)*100)} % · ${Math.round((o.win||0)*100)} % gagnants · ${o.n||0} trades${s.n?' · copie fantôme '+(s.pnl>=0?'+':'')+cpMoney(s.pnl)+' ('+s.n+')':''}${w.rate!=null?' · '+w.rate+' tx/j':''}</div></div><span class="ml-auto font-extrabold num ${w.ok?'text-cyan-300':'text-zinc-600'}">${w.score}</span></div>`;}).join('')+((d.tiers&&d.tiers.watched>d.wallets.length)?`<div class="text-[10px] text-zinc-600 mt-2">${d.wallets.length} premiers affichés sur ${d.tiers.watched} surveillés.</div>`:'');
   const c=d.cfg;$('cpSize').value=String(c.sizePct);$('cpStop').value=String(c.stopPct);$('cpMcap').value=String(c.minMcap);
 }
 async function cpConfig(body,msg){
