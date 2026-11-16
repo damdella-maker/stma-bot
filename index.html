@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#08080a" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v18.9.1</title>
+<title>STMA Bot · v19.0</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -197,6 +197,22 @@
   .sw input:checked + span::after{ transform:translateX(18px); background:#22c55e; }
   .modal-back{ position:fixed; inset:0; z-index:100; background:rgba(0,0,0,.72); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:20px; animation:fade .25s; }
   .modal-back.open{ display:flex; }
+  /* v19 : capital fictif */
+  .funds-btn{ font-size:10.5px; font-weight:800; padding:4px 10px; border-radius:999px; color:#fde68a; background:rgba(250,204,21,.10); border:1px solid rgba(250,204,21,.35); box-shadow:0 0 12px -4px rgba(250,204,21,.5); }
+  .funds-main{ background:linear-gradient(135deg,#facc15,#f59e0b); color:#1a1203; font-weight:800; }
+  .funds-box{ max-height:88vh; overflow-y:auto; }
+  .fd-tabs{ display:grid; grid-template-columns:repeat(3,1fr); gap:4px; background:#0f0f12; border-radius:12px; padding:3px; }
+  .fd-tabs button{ font-size:11px; font-weight:800; padding:7px 4px; border-radius:9px; color:#8b8b95; }
+  .fd-tabs button.on{ background:#24242b; color:#fff; box-shadow:inset 0 0 0 1px rgba(250,204,21,.4); }
+  .fd-tabs button:disabled{ opacity:.35; }
+  .fd-kpi{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .fd-kpi div{ background:#0f0f12; border:1px solid var(--border); border-radius:12px; padding:8px 10px; }
+  .fd-kpi span{ display:block; font-size:9.5px; color:#71717a; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+  .fd-kpi b{ display:block; font-size:15px; font-weight:800; font-variant-numeric:tabular-nums; } .fd-kpi i{ font-style:normal; font-size:10px; color:#a1a1aa; }
+  .fd-ccy{ display:flex; gap:4px; } .fd-ccy button{ font-size:12px; font-weight:800; padding:8px 12px; border-radius:10px; background:#1c1c21; color:#8b8b95; } .fd-ccy button.on{ background:#facc15; color:#1a1203; }
+  .fd-chips{ display:grid; grid-template-columns:repeat(4,1fr); gap:5px; } .fd-chips button{ font-size:11px; font-weight:800; padding:7px 2px; border-radius:9px; background:#1c1c21; color:#d4d4d8; border:1px solid var(--border); }
+  .fd-act{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .fd-led{ font-size:10.5px; color:#a1a1aa; } .fd-led div{ display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid rgba(255,255,255,.04); }
   .modal-box{ background:#16161a; border:1px solid var(--border); border-radius:18px; padding:20px; max-width:380px; width:100%; animation:toastIn .35s; }
   @keyframes fade{ from{opacity:0} to{opacity:1} }
   .confetti-piece{ position:fixed; width:8px; height:8px; z-index:200; pointer-events:none; border-radius:2px; animation:confettiFall linear forwards; }
@@ -373,7 +389,7 @@
     <div class="logo">S</div>
     <div>
       <div class="text-[15px] font-extrabold leading-tight tracking-tight">STMA Bot</div>
-      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v18.9.1</div>
+      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v19.0</div>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -410,6 +426,7 @@
           </div>
           <div id="pnlLine" class="text-[13px] font-bold mt-1 text-emerald-300 num">+$0.00 · +0.00%</div>
           <div class="flex items-center gap-2 mt-1.5"><span id="heroMult" class="mult-pill">1.00x</span><span id="heroReal" class="text-[11.5px] font-bold num text-zinc-400">+$0.00 · 0W 0L</span></div>
+          <button id="btnFunds" class="funds-btn mt-1.5" aria-label="Gérer le capital fictif">💶 Capital fictif</button>
           <div id="peakLine" class="text-[10.5px] text-white/55 mt-0.5 num">Pic $10,000.00</div>
         </div>
         <div class="text-right">
@@ -566,7 +583,7 @@
         <label>Capi minimale<select id="cpMcap" class="inp mt-1"><option value="0">aucune</option><option value="5000">5 000 $</option><option value="50000">50 k$</option><option value="100000">100 k$</option><option value="500000">500 k$</option></select></label>
       </div>
       <div class="text-[10.5px] text-zinc-500 mt-2 leading-snug">Aucune limite de nombre de trades. Si le capital manque, la position est plus petite. Un trade n'est refusé que si le prix est périmé. Le stop est vérifié sur le serveur toutes les 15 s, uniquement sur un prix de moins de 2 min.</div>
-      <button id="cpReset" class="btn btn-ghost w-full mt-3">Remettre le portefeuille copie à 10 000 $</button>
+      <button id="cpFunds" class="btn btn-ghost w-full mt-3">💶 Capital du portefeuille copie (ajouter, retirer, repartir)</button>
     </div>
     <div class="card p-4 mb-3 border border-amber-500/20"><div class="text-[12.5px] font-extrabold text-amber-300 mb-1">⚠️ À savoir (backtests honnêtes)</div>
       <div class="text-[11px] text-zinc-400 leading-relaxed">Sur Solana, copier ces traders avec 1 minute de retard a perdu en moyenne <b>−17 % par trade</b> (16 % de gagnants, 97 trades, semaine du 9 au 16 novembre), car ils revendent souvent en moins de 2 minutes. Sur Hyperliquid, la copie des 10 « meilleurs » a perdu <b>−5 % à −13 %</b> par mois hors échantillon. Ici la copie se fait en quelques secondes grâce au webhook Helius, ce qui n'a pas encore d'historique : les résultats en direct ci-dessus sont la vraie mesure. Argent fictif uniquement, aucune clé, aucun ordre réel.</div></div>
@@ -657,7 +674,9 @@
     </div>
     <div class="card p-4 mb-3">
       <div class="text-[13px] font-extrabold mb-1">Portefeuille</div>
-      <div class="text-[10.5px] text-zinc-500 mb-3">Réinitialise capital, historique et apprentissage.</div>
+      <div class="text-[10.5px] text-zinc-500 mb-3">Choisis ton capital fictif (en euros ou en dollars), ajoute ou retire de l'argent, ou repars de zéro.</div>
+      <button id="btnFunds2" class="btn w-full mb-2 funds-main">💶 Gérer le capital fictif</button>
+      <div class="text-[10.5px] text-zinc-500 mb-2">Réinitialisation complète : capital, historique, réglages et apprentissage.</div>
       <button id="btnReset" class="btn btn-ghost w-full" style="color:#f87171;border-color:rgba(239,68,68,.3)">Réinitialiser la simulation</button>
     </div>
     <div class="card p-4">
@@ -668,7 +687,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v18.9.1</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v19.0</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -690,6 +709,7 @@
 
 <div id="toasts"></div>
 <div id="modal" class="modal-back"><div class="modal-box"><div class="text-[15px] font-extrabold mb-2">Réinitialiser la simulation ?</div><div class="text-[12px] text-zinc-400 mb-4 leading-relaxed">Capital, positions, historique et apprentissage seront perdus.</div><div class="flex gap-2"><button id="modalCancel" class="btn btn-ghost flex-1">Annuler</button><button id="modalConfirm" class="btn btn-danger flex-1">Réinitialiser</button></div></div></div>
+<div id="fundsModal" class="modal-back"><div class="modal-box funds-box" id="fundsBox"></div></div>
 <div id="symbolModal" class="modal-back"><div class="modal-box" id="symbolBox"></div></div>
 
 <!-- Cœur de stratégie : partagé tel quel entre l'appli et le Web Worker du backtest -->
@@ -1454,7 +1474,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='18.9.1',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='19.0',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1543,14 +1563,14 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:18.91,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
+  const st={v:19,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
     opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true,learnV2:true},huntDone:{},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
     agents:{},learn:{},learn2:learnFresh(),prices:{},consensus:{bull:0,bear:0,action:'HOLD',veto:false},regime:'range',ticks:0,seq:1,streak:0,
     killed:false,dayKey:'',dayStart:DEFAULT_START,dayHalt:false,lossRun:0,pauseUntil:0,cooldown:{},
     adapt:{thrAdd:0,stopMult:2,sideOff:{long:0,short:0},audits:0,lastAuditAt:0},feesPaid:0,
-    closedCount:0,lastEntry:{},openTimes:[],lastAutoOpen:0,bt:{syms:['BTC','ETH'],days:30,compare:true}};
+    closedCount:0,lastEntry:{},openTimes:[],lastAutoOpen:0,funds:[],fxEUR:0,bt:{syms:['BTC','ETH'],days:30,compare:true}};
   AGENTS.forEach(a=>{st.agents[a.id]={bias:'neutral',conf:0.5,pnl:0,trades:0,wins:0,sumR:0};});
   initPrices(st);return st;
 }
@@ -2070,19 +2090,20 @@ function animateProfitToWallet(amount,startRect,onDone,n=1,meta=null){
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:18.91,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
-    cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen}));}catch(x){}
+    cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR}));}catch(x){}
 }
 function loadState(){
   let saved=null,from='';
   try{for(const k of [STORE_KEY,...LEGACY_KEYS]){const raw=localStorage.getItem(k);if(raw){saved=JSON.parse(raw);from=k;break;}}}catch(x){}
   S=freshState();if(!saved)return;
   // Migration v11/v12 → v13 : on reprend tout ce qui est compatible, les nouveaux champs prennent leur valeur par défaut
-  if(![11,12,13,14,15,16,17,18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,18.91].includes(saved.v))return;
+  if(!(Number(saved.v)>=11))return;   // v19 : toute version connue ou plus récente est reprise (plus de perte si la liste n'est pas à jour)
   try{
-    for(const k of ['start','capital','closed','lessons','equityHist','peakEquity','maxDD','streak','seq','killed','dayKey','dayStart','dayHalt','lossRun','pauseUntil','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen'])if(saved[k]!=null)S[k]=saved[k];
+    for(const k of ['start','capital','closed','lessons','equityHist','peakEquity','maxDD','streak','seq','killed','dayKey','dayStart','dayHalt','lossRun','pauseUntil','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen','funds','fxEUR'])if(saved[k]!=null)S[k]=saved[k];
+    if(!Array.isArray(S.funds))S.funds=[];
     if(saved.closedCount==null)S.closedCount=Array.isArray(S.closed)?S.closed.length:0;
     if(!S.lastEntry||typeof S.lastEntry!=='object')S.lastEntry={};
     if(!Array.isArray(S.openTimes))S.openTimes=[];
@@ -3092,6 +3113,92 @@ function stopBot(){
   $('liveDot').classList.remove('on');$('liveDot').style.background='';$('liveTxt').textContent='Off';$('liveTxt').style.color='#71717a';
   saveState();renderAll();toast('Bot arrêté','info');vibrate(20);
 }
+/* ═══ v19 : CAPITAL FICTIF (bot de l'appareil, serveur 24h/24, portefeuille copie) ═══
+   Saisie en euros (converti au cours EUR/USD en direct) ou en dollars. Un apport ou un retrait ne compte jamais comme gain ou perte :
+   départ, pic, début de journée et courbe sont décalés du même montant. Argent fictif uniquement. */
+let fundsCcy='EUR',fundsTarget='bot',fundsBusy=false;
+let eurFetchAt=0;
+async function fetchEurUsd(){   // repli si le forex n'est pas encore coté : prix public EUR/USDT de Binance (aucun compte)
+  if(Date.now()-eurFetchAt<60000)return;eurFetchAt=Date.now();
+  for(const h of ['https://data-api.binance.vision','https://api.binance.com']){try{const r=await fetch(h+'/api/v3/ticker/price?symbol=EURUSDT',{cache:'no-store'});if(!r.ok)continue;const j=await r.json(),x=+j.price;
+    if(x>0.5&&x<2){fxLast.EUR=x;S.fxEUR=x;if($('fundsModal').classList.contains('open')){const v=$('fdAmt').value;renderFunds();$('fdAmt').value=v;fundsConv();}return;}}catch(e){}}
+}
+function eurUsd(){const x=fxRate('EUR');if(x>0&&Number.isFinite(x)){S.fxEUR=x;return x;}return S.fxEUR>0?S.fxEUR:1.08;}
+function eurLive(){const x=fxRate('EUR');return x>0&&Number.isFinite(x);}   // cours forex (Yahoo) ou EUR/USDT Binance
+function fmtEur(usd){return (usd/eurUsd()).toLocaleString('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:2});}
+function fundsToUsd(v){return fundsCcy==='EUR'?v*eurUsd():v;}
+function fundsFmt(usd){return fundsCcy==='EUR'?fmtEur(usd)+' · '+money(usd):money(usd)+' · '+fmtEur(usd);}
+function fundsLog(kind,usd){S.funds.unshift({at:Date.now(),kind,usd:+usd.toFixed(2),rate:+eurUsd().toFixed(5)});if(S.funds.length>30)S.funds.length=30;}
+function fundsBot(usd){   // + apport / − retrait (au plus le capital libre, marge du levier comprise)
+  let f=usd;if(f<0){const room=Math.max(0,S.capital-(typeof marginUsed==='function'?marginUsed():0)-1);f=-Math.min(-f,room);}
+  if(!Number.isFinite(f)||Math.abs(f)<0.01)return 0;
+  S.capital+=f;S.start+=f;S.peakEquity+=f;S.dayStart+=f;S.equityHist=S.equityHist.map(v=>v+f);
+  fundsLog(f>0?'apport':'retrait',f);heroMemo.spark='';heroMemo.stk='';saveState();renderAll();return f;
+}
+function restartBot(usd){   // nouveau départ : portefeuille vidé (positions fermées sans résultat), réglages et apprentissage gardés
+  const F=freshState();
+  for(const k of ['positions','closed','decisions','maxDD','streak','killed','dayKey','dayHalt','lossRun','pauseUntil','cooldown','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen','huntDone','dtDone'])S[k]=F[k];
+  for(const id in S.agents)Object.assign(S.agents[id],{pnl:0,trades:0,wins:0,sumR:0});
+  S.start=S.capital=S.peakEquity=S.dayStart=usd;S.equityHist=[usd];
+  fundsLog('nouveau départ',usd);$('positionsList').innerHTML='';posEls.clear();heroMemo.spark='';heroMemo.stk='';saveState();renderAll();
+}
+function fundsData(t){
+  if(t==='bot')return {ok:true,start:S.start,cash:S.capital,eq:equity(),label:'Bot de cet appareil'};
+  if(t==='srv')return srvData?{ok:true,start:srvData.start,cash:srvData.capital,eq:srvData.equity,label:'Serveur 24h/24'}:{ok:false,why:srvOn()?'chargement…':'serveur non connecté (Réglages)'};
+  return cpData?{ok:true,start:cpData.start,cash:cpData.cash,eq:cpData.equity,label:'Portefeuille copie'}:{ok:false,why:srvOn()?'chargement…':'serveur non connecté (Réglages)'};
+}
+function openFunds(t){fundsTarget=t||'bot';if(!(fxRate('EUR')>0))fetchEurUsd();if(fundsTarget!=='bot'&&srvOn()){if(fundsTarget==='srv')srvRefresh(true).then(()=>{if($('fundsModal').classList.contains('open'))renderFunds();});else cpFetch(true).then(()=>{if($('fundsModal').classList.contains('open'))renderFunds();});}renderFunds();$('fundsModal').classList.add('open');setTimeout(()=>{const i=$('fdAmt');if(i&&!('ontouchstart' in window))i.focus();},60);}
+function closeFunds(){$('fundsModal').classList.remove('open');}
+function renderFunds(){
+  const d=fundsData(fundsTarget),led=fundsTarget==='bot'?S.funds.slice(0,6):[],rate=eurUsd(),live=eurLive();
+  const kp=d.ok?`<div class="fd-kpi mb-3"><div><span>Départ (apports)</span><b>${escH(fmtEur(d.start))}</b><i>${money(d.start)}</i></div><div><span>Valeur actuelle</span><b class="${d.eq>=d.start?'green':'red'}">${escH(fmtEur(d.eq))}</b><i>${money(d.eq)} · ${d.eq>=d.start?'+':''}${((d.eq/d.start-1)*100).toFixed(2)} %</i></div><div><span>Capital libre</span><b>${escH(fmtEur(d.cash))}</b><i>${money(d.cash)}</i></div><div><span>Résultat</span><b class="${d.eq>=d.start?'green':'red'}">${escH((d.eq-d.start>=0?'+':'')+fmtEur(d.eq-d.start))}</b><i>${signedMoney(d.eq-d.start)}</i></div></div>`:`<div class="text-[11.5px] text-zinc-500 mb-3">${escH(d.why)}</div>`;
+  $('fundsBox').innerHTML=`<div class="flex items-start justify-between mb-2"><div><div class="text-[16px] font-extrabold">💶 Capital fictif</div><div class="text-[10.5px] text-zinc-500">Argent fictif uniquement · aucun dépôt réel</div></div><button class="btn-mini" data-fd="close" aria-label="Fermer">✕</button></div>
+    <div class="fd-tabs mb-3"><button data-fd="t:bot" class="${fundsTarget==='bot'?'on':''}">Bot</button><button data-fd="t:srv" class="${fundsTarget==='srv'?'on':''}"${srvOn()?'':' disabled'}>Serveur</button><button data-fd="t:copy" class="${fundsTarget==='copy'?'on':''}"${srvOn()?'':' disabled'}>Copie</button></div>
+    ${kp}
+    <div class="flex items-center gap-2 mb-2"><input id="fdAmt" class="inp num" type="number" inputmode="decimal" min="0" step="any" placeholder="Montant" aria-label="Montant"><div class="fd-ccy"><button data-fd="c:EUR" class="${fundsCcy==='EUR'?'on':''}">€</button><button data-fd="c:USD" class="${fundsCcy==='USD'?'on':''}">$</button></div></div>
+    <div class="fd-chips mb-2">${[100,1000,10000,100000].map(v=>`<button data-fd="p:${v}">${v.toLocaleString('fr-FR')} ${fundsCcy==='EUR'?'€':'$'}</button>`).join('')}</div>
+    <div id="fdConv" class="text-[10.5px] text-zinc-500 mb-2 num">1 € = ${rate.toFixed(4)} $ ${live?'(EUR/USD en direct)':'(dernier cours connu)'}</div>
+    <div class="fd-act mb-2"><button class="btn" data-fd="a:add" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#03130a"${d.ok?'':' disabled'}>＋ Ajouter</button><button class="btn" data-fd="a:wd" style="background:#2a1214;color:#fca5a5;border:1px solid rgba(239,68,68,.35)"${d.ok?'':' disabled'}>− Retirer</button></div>
+    <button class="btn w-full funds-main mb-1" data-fd="a:restart"${d.ok||fundsTarget==='bot'?'':' disabled'}>↺ Repartir de zéro avec ce montant</button>
+    <div class="text-[10px] text-zinc-600 leading-snug mb-2">${fundsTarget==='bot'?'Repartir : positions et historique effacés, réglages et apprentissage gardés.':fundsTarget==='srv'?'Repartir : le serveur efface ses positions et son historique, réglages gardés.':'Repartir : positions copiées et journal effacés, traders suivis gardés.'} Un apport ou un retrait ne compte pas comme un gain ou une perte.</div>
+    ${led.length?`<div class="fd-led"><div class="text-[10px] font-bold text-zinc-500 uppercase" style="border:0">Derniers mouvements</div>${led.map(x=>`<div><span>${new Date(x.at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${escH(x.kind)}</span><b class="${x.usd>=0?'green':'red'} num">${x.usd>=0?'+':''}${escH(fmtEur(x.usd))}</b></div>`).join('')}</div>`:''}`;
+  fundsConv();
+}
+function fundsConv(){const i=$('fdAmt'),c=$('fdConv');if(!i||!c)return;const v=parseFloat(i.value);const rate=eurUsd();
+  c.textContent=(v>0?(fundsCcy==='EUR'?`${v.toLocaleString('fr-FR')} € = ${money(v*rate)}`:`${money(v)} = ${(v/rate).toLocaleString('fr-FR',{maximumFractionDigits:2})} €`)+' · ':'')+`1 € = ${rate.toFixed(4)} $ ${eurLive()?'(EUR/USD en direct)':'(dernier cours connu)'}`;}
+async function fundsAct(a){
+  const v=parseFloat($('fdAmt').value);if(!(v>0)){toast('Entre un montant','info');return;}
+  const usd=fundsToUsd(v);if(usd>1e9){toast('Montant trop grand (1 milliard max)','info');return;}
+  if(a==='restart'&&usd<10){toast('Minimum 10 $ pour repartir','info');return;}
+  const t=fundsTarget,lbl=fundsFmt(usd);
+  if(t==='bot'){
+    if(a==='add'){fundsBot(usd);toast('Ajouté au bot : '+lbl,'win');}
+    else if(a==='wd'){const f=fundsBot(-usd);toast(f?'Retiré du bot : '+fundsFmt(-f)+(Math.abs(f)<usd-0.01?' (capital libre max)':''):'Rien à retirer (capital engagé)','info');}
+    else{if(!confirm('Repartir de zéro avec '+lbl+' ? Les positions et l\'historique du bot seront effacés.'))return;restartBot(usd);toast('Nouveau départ : '+lbl,'info');}
+    renderFunds();return;
+  }
+  if(fundsBusy)return;fundsBusy=true;
+  try{
+    if(t==='srv'){
+      if(a==='restart'){if(!confirm('Le serveur repart de zéro avec '+lbl+' ?'))return;await srvFetch('/api/reset',{method:'POST',body:{start:usd}});}
+      else await srvFetch('/api/config',{method:'POST',body:{funds:a==='add'?usd:-usd}});
+      await srvRefresh(true);
+    }else{
+      if(a==='restart'){if(!confirm('Le portefeuille copie repart de zéro avec '+lbl+' ?'))return;await srvFetch('/api/copy/config',{method:'POST',body:{reset:true,start:usd}});}
+      else await srvFetch('/api/copy/config',{method:'POST',body:{funds:a==='add'?usd:-usd}});
+      await cpFetch(true);
+    }
+    toast((a==='restart'?'Nouveau départ : ':a==='add'?'Ajouté : ':'Retiré : ')+lbl,'info');
+  }catch(x){toast('Serveur : '+(x.status===401?'jeton refusé':String(x.message||x)),'info');}
+  finally{fundsBusy=false;renderFunds();}
+}
+function wireFunds(){
+  const m=$('fundsModal');
+  m.addEventListener('click',e=>{if(e.target===m){closeFunds();return;}const b=e.target.closest('[data-fd]');if(!b||b.disabled)return;const [k,v]=b.dataset.fd.split(':');
+    if(k==='close')closeFunds();else if(k==='t'){fundsTarget=v;openFunds(v);}else if(k==='c'){const keep=$('fdAmt').value;fundsCcy=v;renderFunds();$('fdAmt').value=keep;fundsConv();}
+    else if(k==='p'){$('fdAmt').value=v;fundsConv();}else if(k==='a')fundsAct(v);});
+  m.addEventListener('input',e=>{if(e.target.id==='fdAmt')fundsConv();});
+}
 function openResetModal(){$('modal').classList.add('open');}
 function closeResetModal(){$('modal').classList.remove('open');}
 function doReset(){
@@ -3494,7 +3601,7 @@ function cpInit(){
   $('cpSize').onchange=e=>cpConfig({sizePct:+e.target.value},'Taille par trade : '+e.target.value+' %');
   $('cpStop').onchange=e=>cpConfig({stopPct:+e.target.value},'Stop de protection : −'+e.target.value+' %');
   $('cpMcap').onchange=e=>cpConfig({minMcap:+e.target.value},'Capitalisation minimale mise à jour');
-  $('cpReset').onclick=()=>{if(confirm('Remettre le portefeuille copie à 10 000 $ ? Les portefeuilles suivis sont gardés.'))cpConfig({reset:true,start:10000},'Portefeuille copie remis à 10 000 $');};
+  $('cpFunds').onclick=()=>openFunds('copy');
   clearInterval(cpTimer);cpTimer=setInterval(()=>cpFetch(false),5000);
   setTimeout(()=>cpFetch(true),3000);
   if(new URLSearchParams(location.search).get('tab')==='copy')showTab('copy');
@@ -3547,6 +3654,7 @@ function initApp(){
   $('btnStart').onclick=startBot;
   $('btnStop').onclick=stopBot;
   $('btnReset').onclick=openResetModal;
+  $('btnFunds').onclick=()=>openFunds('bot');$('btnFunds2').onclick=()=>openFunds('bot');wireFunds();
   $('btnExport').onclick=exportCSV;
   $('btnCloseAll').onclick=closeAllPositions;
   $('modalCancel').onclick=closeResetModal;
