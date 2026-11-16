@@ -12,17 +12,24 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 fs.mkdirSync(DIR, { recursive: true });
 let S = { v: 1, pools: {}, wp: {}, runs: [] };
 try { S = JSON.parse(zlib.gunzipSync(fs.readFileSync(DIR + '/state.json.gz'))); } catch (e) { console.log('nouvel état'); }
-const stat = { gtCalls: 0, gt429: 0, pools: 0, trades: 0, newTrades: 0, dsTokens: 0, kol: 0 };
-let lastGt = 0;
+const stat = { gtCalls: 0, gt429: 0, gtFail: 0, gtWait: 0, pools: 0, trades: 0, newTrades: 0, dsTokens: 0, kol: 0 };
+// GeckoTerminal (gratuit, ~30 appels/min par IP, IP des runners GitHub partagées) : rythme adaptatif (AIMD)
+// refus 429 → intervalle ×1,5 (max 20 s) + pause (Retry-After, sinon 20 s, 40 s…) ; 10 succès d'affilée → intervalle −0,5 s (min GT_MIN_MS)
+const GT_MIN = +process.env.GT_MIN_MS || 4000, GT_MAX = 20000;
+let lastGt = 0, gap = GT_GAP, okRun = 0;
 async function gt(path) {
-  for (let a = 0; a < 4; a++) {
-    const wait = lastGt + GT_GAP - Date.now(); if (wait > 0) await sleep(wait); lastGt = Date.now();
+  for (let a = 0; a < 5; a++) {
+    const wait = lastGt + gap - Date.now(); if (wait > 0) await sleep(wait); lastGt = Date.now();
     stat.gtCalls++;
     try { const r = await fetch('https://api.geckoterminal.com/api/v2' + path, { headers: { accept: 'application/json' } });
-      if (r.status === 429) { stat.gt429++; await sleep(30000); continue; }
-      if (!r.ok) return null; return await r.json(); } catch (e) { await sleep(3000); }
+      if (r.status === 429) { stat.gt429++; okRun = 0; gap = Math.min(GT_MAX, Math.round(gap * 1.5));
+        const ra = +r.headers.get('retry-after') || 0, pause = Math.max(ra * 1000, 20000 * Math.pow(2, Math.min(a, 2)));
+        stat.gtWait += pause; await sleep(pause); lastGt = Date.now(); continue; }
+      if (!r.ok) { stat.gtFail++; return null; }
+      if (++okRun >= 10 && gap > GT_MIN) { gap = Math.max(GT_MIN, gap - 500); okRun = 0; }
+      return await r.json(); } catch (e) { await sleep(3000); }
   }
-  return null;
+  stat.gtFail++; return null;
 }
 async function js(url) { try { const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (STMA Bot funnel)', accept: 'application/json,text/html' } }); return r.ok ? await r.text() : null; } catch (e) { return null; } }
 
@@ -53,7 +60,7 @@ let solUsd = 0;
 const order = [...pools.keys()].sort((a, b) => ((S.pools[a] && S.pools[a].read) || 0) - ((S.pools[b] && S.pools[b].read) || 0));
 const t0 = Date.now(); let read = 0;
 for (const a of order) {
-  if (Date.now() - t0 > BUDGET_MS) break;
+  if (Date.now() - t0 + gap > BUDGET_MS) break;
   const j = await gt('/networks/solana/pools/' + a + '/trades'); if (!j || !j.data) continue; read++;
   const P = S.pools[a] || (S.pools[a] = { ts: 0, seen: NOW, read: 0, fdv: pools.get(a).fdv });
   P.read = NOW; P.fdv = pools.get(a).fdv || P.fdv;
@@ -121,7 +128,7 @@ const rp = rank((r) => r.pnl), rr = rank((r) => r.roi == null ? 0.2 : r.roi), rw
 for (const r of rows) r.score = Math.round(100 * (0.4 * rp.get(r.w) + 0.35 * rr.get(r.w) + 0.25 * rw.get(r.w)) + (r.k30 > 0 ? 3 : 0));
 rows.sort((a, b) => (b.ok - a.ok) || (b.cand - a.cand) || (b.score - a.score));
 const analyzed = rows.slice(0, 3000), eligible = rows.filter((r) => r.ok), cands = rows.filter((r) => r.cand);
-const run = { at: NOW, ...stat, read, sol: +sol.toFixed(2), seen, analyzed: analyzed.length, scored: rows.length, eligible: eligible.length, cands: cands.length, wp: Object.keys(S.wp).length, ms: Date.now() - NOW };
+const run = { at: NOW, ...stat, gap, read, sol: +sol.toFixed(2), seen, analyzed: analyzed.length, scored: rows.length, eligible: eligible.length, cands: cands.length, wp: Object.keys(S.wp).length, ms: Date.now() - NOW };
 S.runs = [run, ...(S.runs || [])].slice(0, 48);
 fs.writeFileSync(DIR + '/state.json.gz', zlib.gzipSync(JSON.stringify(S)));
 fs.writeFileSync(DIR + '/analyzed.json.gz', zlib.gzipSync(JSON.stringify({ at: NOW, run, rows: analyzed })));
