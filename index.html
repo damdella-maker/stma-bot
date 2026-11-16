@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#08080a" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v19.2</title>
+<title>STMA Bot · v19.3</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -197,6 +197,11 @@
   .sw input:checked + span::after{ transform:translateX(18px); background:#22c55e; }
   .modal-back{ position:fixed; inset:0; z-index:100; background:rgba(0,0,0,.72); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:20px; animation:fade .25s; }
   .modal-back.open{ display:flex; }
+  /* v19.2 : relais serveur */
+  .relay-chip{ display:block; width:100%; text-align:left; font-size:10.5px; font-weight:700; padding:6px 10px; border-radius:10px; margin:0 0 8px; border:1px solid var(--border); background:#131317; color:#a1a1aa; }
+  .relay-chip.on{ color:#4ade80; border-color:rgba(34,197,94,.35); background:rgba(34,197,94,.08); }
+  .relay-chip.err{ color:#fbbf24; border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.08); }
+  .relay-chip.off{ color:#fca5a5; border-color:rgba(239,68,68,.3); background:rgba(239,68,68,.07); }
   /* v19.1 : plateforme simulée */
   .pf-list{ display:grid; gap:5px; }
   .pf-item{ display:grid; grid-template-columns:10px 1fr; column-gap:8px; align-items:center; text-align:left; padding:8px 10px; border-radius:12px; background:#131317; border:1px solid var(--border); }
@@ -396,7 +401,7 @@
     <div class="logo">S</div>
     <div>
       <div class="text-[15px] font-extrabold leading-tight tracking-tight">STMA Bot</div>
-      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v19.2</div>
+      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v19.3</div>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -418,6 +423,8 @@
 <main style="padding:12px 12px calc(96px + env(safe-area-inset-bottom));">
 
   <section id="tab-bot">
+    <button id="relayChip" class="relay-chip off" type="button">📴 Sans serveur</button>
+    <div id="awayCard" class="card p-4 mb-3 hidden-tab"></div>
     <div class="flex items-center gap-1.5 mb-1.5 px-1">
       <span id="srcBadge" class="src-badge connect">CONNEXION</span>
       <span id="srcLabel" class="text-[10px] text-zinc-600 font-semibold">Flux automatique</span>
@@ -705,7 +712,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v19.2</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v19.3</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -1528,7 +1535,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='19.2',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='19.3',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1617,14 +1624,14 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:19.2,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
+  const st={v:19.3,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
     opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true,learnV2:true},huntDone:{},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
     agents:{},learn:{},learn2:learnFresh(),prices:{},consensus:{bull:0,bear:0,action:'HOLD',veto:false},regime:'range',ticks:0,seq:1,streak:0,
     killed:false,dayKey:'',dayStart:DEFAULT_START,dayHalt:false,lossRun:0,pauseUntil:0,cooldown:{},
     adapt:{thrAdd:0,stopMult:2,sideOff:{long:0,short:0},audits:0,lastAuditAt:0},feesPaid:0,
-    closedCount:0,lastEntry:{},openTimes:[],lastAutoOpen:0,funds:[],fxEUR:0,platform:'binance',bt:{syms:['BTC','ETH'],days:30,compare:true}};
+    closedCount:0,lastEntry:{},openTimes:[],lastAutoOpen:0,funds:[],fxEUR:0,platform:'binance',hiddenAt:0,relayOut:null,bt:{syms:['BTC','ETH'],days:30,compare:true}};
   AGENTS.forEach(a=>{st.agents[a.id]={bias:'neutral',conf:0.5,pnl:0,trades:0,wins:0,sumR:0};});
   initPrices(st);return st;
 }
@@ -2144,10 +2151,10 @@ function animateProfitToWallet(amount,startRect,onDone,n=1,meta=null){
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.2,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.3,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
-    cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR,platform:S.platform}));}catch(x){}
+    cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR,platform:S.platform,hiddenAt:S.hiddenAt,relayOut:S.relayOut}));}catch(x){}
 }
 function loadState(){
   let saved=null,from='';
@@ -2156,7 +2163,7 @@ function loadState(){
   // Migration v11/v12 → v13 : on reprend tout ce qui est compatible, les nouveaux champs prennent leur valeur par défaut
   if(!(Number(saved.v)>=11))return;   // v19 : toute version connue ou plus récente est reprise (plus de perte si la liste n'est pas à jour)
   try{
-    for(const k of ['start','capital','closed','lessons','equityHist','peakEquity','maxDD','streak','seq','killed','dayKey','dayStart','dayHalt','lossRun','pauseUntil','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen','funds','fxEUR','platform'])if(saved[k]!=null)S[k]=saved[k];
+    for(const k of ['start','capital','closed','lessons','equityHist','peakEquity','maxDD','streak','seq','killed','dayKey','dayStart','dayHalt','lossRun','pauseUntil','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen','funds','fxEUR','platform','hiddenAt','relayOut'])if(saved[k]!=null)S[k]=saved[k];
     if(!PLATFORMS[S.platform])S.platform='binance';
     if(!Array.isArray(S.funds))S.funds=[];
     if(saved.closedCount==null)S.closedCount=Array.isArray(S.closed)?S.closed.length:0;
@@ -2319,7 +2326,7 @@ function openPosition(sym,dir,ev,manual){
   return true;
 }
 function fillExit(p,qty,reason){
-  const q=S.prices[p.sym],cost=p.pf?platformCost(q.market,p.sym,p.pf,p.bnb):costOf(p.sym),raw=reason==='Liquidée'?p.bk:levClamp(p,q&&q.price>0?(p.pf===S.platform?refPx(p.sym,q.price):q.price):p.entry);   // liquidation : toute la marge est perdue
+  const q=S.prices[p.sym],cost=p.pf?platformCost(q.market,p.sym,p.pf,p.bnb):costOf(p.sym),raw=p.relayRaw!=null?p.relayRaw:reason==='Liquidée'?p.bk:levClamp(p,q&&q.price>0?(p.pf===S.platform?refPx(p.sym,q.price):q.price):p.entry);   // liquidation : toute la marge est perdue
   const fx=pfx(p),px=raw*(1-p.dir*cost.slip),fee=qty*px*fx*cost.fee+(cost.fixed||0)+fundingCost(cost,qty*p.entry*fx,p.dir,Date.now()-p.openedAt),pnl=(px-p.entry)*qty*p.dir*fx-fee;
   S.capital+=pnl;S.feesPaid+=fee+qty*raw*fx*cost.slip;p.qty-=qty;p.realized+=pnl;
   return {px,pnl};
@@ -2355,6 +2362,7 @@ function closePosition(p,reason){
   saveState();scheduleRender();
 }
 function updatePositions(){
+  if(relayLock)return;   // v19.2 : le serveur vient de gérer ces positions ; on attend ses résultats (quelques secondes)
   const now=Date.now();
   for(const p of [...S.positions]){
     const q=S.prices[p.sym];
@@ -3607,6 +3615,64 @@ async function srvCheckSub(){
   const last=+(localStorage.getItem('stma.srvPushAt')||0);if(!last||Date.now()-last<86400000)return;
   try{await srvSubscribe(false);}catch(x){}
 }
+/* ═══ v19.2 · RELAIS SERVEUR : iOS suspend l'appli en arrière-plan ; le serveur gère alors ses positions crypto/memecoins
+   (mêmes stops, objectifs, stop suiveur, liquidation, avec le noyau partagé) et l'appli rejoue ses sorties au retour, une seule fois. ═══ */
+let relayLock=false,relayTry=0,relayTimer=0;
+function relayEligible(p){const q=S.prices[p.sym];return !!(q&&q.binanceSymbol&&(q.market==='crypto'||q.market==='meme'));}
+function relayHandoff(){
+  const now=Date.now();if(!(S.relayOut&&now-S.relayOut.at<5000))S.hiddenAt=now;
+  if(!srvOn())return;
+  if(S.relayOut&&now-S.relayOut.at<5000)return;   // visibilitychange + pagehide : un seul envoi
+  const o=S.opts,pos=S.positions.filter(relayEligible).map(p=>({id:p.id,sym:p.sym,dir:p.dir,entry:p.entry,qty:p.qty,qty0:p.qty0,notional:p.notional,sl:p.sl,R:p.R,peak:p.peak,partial:!!p.partial,
+    tp1:p.tp1,tp:p.tp,openedAt:p.openedAt,sniper:!!p.sniper,dt:!!p.dt,pf:p.pf||S.platform,bnb:!!(p.pf?p.bnb:o.bnb),lev:p.lev,bk:p.bk,liq:p.liq,margin:p.margin,realized:p.realized,trailed:!!p.trailed}));
+  const body={op:'handoff',sess:String(now),positions:pos,opts:{trailing:o.trailing,sniper:o.sniper,shorts:o.shorts},
+    config:{strategy:S.strategy,risk:S.risk,mode:S.mode,platform:S.platform,opts:{sniper:o.sniper,devil:o.devil,trailing:o.trailing,learning:o.learning,instfilter:o.instfilter,shorts:o.shorts,htf:o.htf,noLimit:o.noLimit!==false,bnb:!!o.bnb}}};
+  S.relayOut={at:now,n:pos.length,ids:pos.map(p=>p.id)};
+  try{fetch(SRV.url+'/api/relay',{method:'POST',keepalive:true,headers:{Authorization:'Bearer '+SRV.token,'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(()=>{});}catch(x){}
+}
+async function relayResume(){
+  if(!S.relayOut||!srvOn()){relayLock=false;return;}
+  if(document.hidden)return;
+  relayLock=true;clearTimeout(relayTimer);
+  try{
+    const r=await srvFetch('/api/relay',{method:'POST',body:{op:'resume'},timeout:8000});
+    const done=[];
+    for(const ev of r.events||[]){
+      const p=S.positions.find(x=>x.id===ev.id);if(!p||!(ev.qty>0))continue;
+      if(ev.kind==='partial'){if(p.partial)continue;p.relayRaw=ev.raw;const x=fillExit(p,Math.min(ev.qty,p.qty));delete p.relayRaw;p.partial=true;done.push({sym:p.sym,kind:'Moitié vendue',pnl:x.pnl,reason:ev.reason});}
+      else{p.relayRaw=ev.raw;const rp=p.realized;closePosition(p,ev.reason+' · serveur');done.push({sym:p.sym,kind:'Clôture',pnl:S.closed[0]&&S.closed[0].id===p.id?S.closed[0].pnl:rp,reason:ev.reason});}
+    }
+    for(const sp of r.positions||[]){const p=S.positions.find(x=>x.id===sp.id);if(!p)continue;for(const k of ['sl','peak','partial','trailed'])if(sp[k]!==undefined)p[k]=sp[k];}
+    const out=S.relayOut;S.relayOut=null;relayTry=0;relayLock=false;saveState();scheduleRender();
+    await srvRefresh(true).catch(()=>{});try{awaySummary(out,done);}catch(e){console.warn('absence',e);}
+  }catch(x){
+    relayTry++;
+    if(relayTry>=3){relayLock=false;toast('Serveur injoignable : l\'appli reprend la main sur ses positions ('+(x.message||x)+')','info');}
+    relayTimer=setTimeout(relayResume,relayTry<3?3000*relayTry:30000);
+  }
+}
+function awaySummary(out,done){
+  const away=S.hiddenAt?Date.now()-S.hiddenAt:0;if(away<60000&&!done.length)return;
+  const card=$('awayCard');if(!card)return;
+  const dur=away<3600e3?Math.round(away/60000)+' min':(away/3600e3).toFixed(1).replace('.',',')+' h';
+  const sc=(srvData&&Array.isArray(srvData.closed)?srvData.closed:[]).filter(c=>(c.at||0)>S.hiddenAt);
+  const left=S.positions.filter(p=>!relayEligible(p)).length,tot=done.reduce((a,b)=>a+(+b.pnl||0),0);
+  card.innerHTML=`<div class="flex items-center justify-between"><div class="text-[13px] font-extrabold">🌙 Pendant ton absence · ${dur}</div><button class="text-zinc-500 text-[15px] px-1" data-away-x aria-label="Fermer">✕</button></div>
+    <div class="text-[11px] text-zinc-400 mt-1 leading-snug">${out.n?`Le serveur a surveillé tes ${out.n} position(s) crypto/memecoins : ${done.length?done.length+' sortie(s), '+signedMoney(tot):'aucune sortie'}.`:'Aucune position à surveiller.'}${left?` ${left} position(s) actions/forex/matières n'ont pas pu être surveillées (pas de prix côté serveur).`:''}</div>
+    ${done.map(d=>`<div class="flex justify-between text-[11.5px] mt-1"><span>${escH(d.kind)} ${escH(d.sym)} <span class="text-zinc-500">· ${escH(d.reason)}</span></span><span class="num font-bold ${d.pnl>=0?'text-emerald-300':'text-rose-300'}">${signedMoney(d.pnl)}</span></div>`).join('')}
+    <div class="text-[11px] text-zinc-400 mt-1.5">Bot serveur (son propre portefeuille) : ${srvData?(sc.length?sc.length+' trade(s) clôturé(s), '+signedMoney(sc.reduce((a,c)=>a+(+c.pnl||0),0)):'aucun trade clôturé'):'données en cours de chargement'}.</div>`;
+  card.classList.remove('hidden-tab');
+  card.querySelector('[data-away-x]').onclick=()=>card.classList.add('hidden-tab');
+}
+function renderRelayChip(){
+  const c=$('relayChip');if(!c)return;let t,k;
+  if(!srvOn()){t='📴 Sans serveur : le bot s\'arrête quand tu quittes l\'appli';k='off';}
+  else if(srvErr){t='⚠️ Serveur injoignable : relais indisponible';k='err';}
+  else if(!srvData){t='☁️ Serveur…';k='wait';}
+  else{const lr=srvData.lastRun,fresh=lr&&Date.now()-lr.at<180000;
+    t=!fresh?'⚠️ Serveur en retard : relais incertain':srvData.trade?'☁️ Relais actif : le serveur continue quand l\'appli est fermée':'☁️ Serveur en mode signaux : il surveille tes positions, sans nouveaux trades';k=!fresh?'err':'on';}
+  if(c.textContent!==t){c.textContent=t;c.className='relay-chip '+k;}
+}
 function srvSendStrategy(){   // le serveur suit la stratégie choisie dans l'appli
   if(!srvOn())return;
   srvFetch('/api/config',{method:'POST',body:{strategy:S.strategy}}).then(()=>srvRefresh(true)).catch(x=>toast('Serveur : stratégie non envoyée ('+(x.message||x)+')','info'));
@@ -3737,6 +3803,7 @@ function renderServer(){
       const t=$('srv-trade');if(t&&document.activeElement!==t)t.checked=!!srvData.trade;}
     else if(srvOn()&&srvErr)hint.textContent='Impossible de joindre le serveur : '+srvErr+'. Vérifie l\'adresse et le jeton.';
   }
+  renderRelayChip();
   if(!card)return;
   if(!srvOn()||!srvData){card.classList.add('hidden-tab');return;}
   const d=srvData,pnl=d.equity-d.start,pct=d.start>0?pnl/d.start*100:0,lr=d.lastRun;
@@ -3809,7 +3876,9 @@ function initApp(){
   $('btnNotif').onclick=toggleNotifications;
   $('srvUrl').value=SRV.url||SRV_DEFAULT;$('srvToken').value=SRV.token;
   $('btnSrvSave').onclick=srvSave;$('btnSrvForget').onclick=srvForget;$('btnSrvPush').onclick=srvEnablePush;
-  $('btnSrvTest').onclick=srvTestPush;$('btnSrvSync').onclick=srvSyncSettings;
+  $('btnSrvTest').onclick=srvTestPush;
+  $('relayChip').onclick=()=>{showTab('settings');setTimeout(()=>$('serverCard')?.scrollIntoView({behavior:'smooth',block:'start'}),150);};
+  renderRelayChip();$('btnSrvSync').onclick=srvSyncSettings;
   try{cpInit();}catch(x){console.warn('copie',x);}
   $('btnNotifTest').onclick=()=>{initAudio();signalAlert('Test · Signal ACHAT · BTC','Exemple d\'alerte : prix, stop et objectif s\'affichent ici.','BTC','buy');};
   $('sigClose').onclick=hideBanner;
@@ -3818,10 +3887,10 @@ function initApp(){
   document.addEventListener('pointerdown',initAudio,{once:true,passive:true});
 
   // Veille / reprise : on coupe le réseau quand l'appli est cachée et on recharge tout au retour
-  const goBackground=()=>{saveState();wsShouldConnect=false;closeWs();clearTimeout(restTimer);};
+  const goBackground=()=>{relayHandoff();saveState();wsShouldConnect=false;closeWs();clearTimeout(restTimer);};
   const resume=()=>{
     wsShouldConnect=true;wsFails=0;restPollCrypto();connectWs();if(restActive)restLoop();
-    srvRefresh(true);lastYahooQuote=0;pollYahooQuotes(true);lastChartCycle=0;lastWhalePoll=0;lastInstPoll=Math.min(lastInstPoll,Date.now()-55000);
+    relayResume();srvRefresh(true);lastYahooQuote=0;pollYahooQuotes(true);lastChartCycle=0;lastWhalePoll=0;lastInstPoll=Math.min(lastInstPoll,Date.now()-55000);
     for(const sym of activeSyms())ensureCandles(sym);updateSrcMode();scheduleRender();
   };
   window.addEventListener('pagehide',goBackground);
