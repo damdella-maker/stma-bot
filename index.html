@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#08080a" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v19.0</title>
+<title>STMA Bot · v19.1</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -197,6 +197,13 @@
   .sw input:checked + span::after{ transform:translateX(18px); background:#22c55e; }
   .modal-back{ position:fixed; inset:0; z-index:100; background:rgba(0,0,0,.72); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:20px; animation:fade .25s; }
   .modal-back.open{ display:flex; }
+  /* v19.1 : plateforme simulée */
+  .pf-list{ display:grid; gap:5px; }
+  .pf-item{ display:grid; grid-template-columns:10px 1fr; column-gap:8px; align-items:center; text-align:left; padding:8px 10px; border-radius:12px; background:#131317; border:1px solid var(--border); }
+  .pf-item .pf-dot{ width:8px; height:8px; border-radius:50%; background:var(--pf-c); box-shadow:0 0 8px var(--pf-c); grid-row:span 2; }
+  .pf-item .pf-name{ font-size:12px; font-weight:800; color:#e4e4e7; } .pf-item .pf-name i{ font-style:normal; font-size:9px; color:#71717a; font-weight:700; margin-left:4px; }
+  .pf-item .pf-fee{ font-size:10px; color:#8b8b95; }
+  .pf-item.on{ border-color:var(--pf-c); background:linear-gradient(90deg,color-mix(in srgb,var(--pf-c) 14%,transparent),transparent); box-shadow:0 0 14px -6px var(--pf-c); }
   /* v19 : capital fictif */
   .funds-btn{ font-size:10.5px; font-weight:800; padding:4px 10px; border-radius:999px; color:#fde68a; background:rgba(250,204,21,.10); border:1px solid rgba(250,204,21,.35); box-shadow:0 0 12px -4px rgba(250,204,21,.5); }
   .funds-main{ background:linear-gradient(135deg,#facc15,#f59e0b); color:#1a1203; font-weight:800; }
@@ -389,7 +396,7 @@
     <div class="logo">S</div>
     <div>
       <div class="text-[15px] font-extrabold leading-tight tracking-tight">STMA Bot</div>
-      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v19.0</div>
+      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v19.1</div>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -655,6 +662,13 @@
       <div class="set-row flex items-center justify-between py-2.5 border-b border-white/5"><div><div class="text-[13px] font-semibold">Surveiller même bot arrêté</div><div class="text-[10.5px] text-zinc-500">Alerte sur les signaux sans ouvrir de trade</div></div><label class="sw"><input type="checkbox" id="opt-alertIdle" aria-label="Surveiller même bot arrêté"><span></span></label></div>
       <div class="set-row flex items-center justify-between py-2.5"><div><div class="text-[13px] font-semibold">Alerter aussi les clôtures</div><div class="text-[10.5px] text-zinc-500">Stop, objectif atteint, durée max</div></div><label class="sw"><input type="checkbox" id="opt-notifyClose" aria-label="Alerter aussi les clôtures"><span></span></label></div>
     </div>
+    <div class="card p-4 mb-3" id="pfCard">
+      <div class="flex items-center justify-between mb-1"><div class="text-[13px] font-extrabold">🏦 Plateforme simulée</div><span id="pfFeed" class="src-badge connect">—</span></div>
+      <div class="text-[10.5px] text-zinc-500 mb-2 leading-snug">Les ordres fictifs sont exécutés comme sur cette plateforme : ses frais réels, son glissement habituel et son prix public quand il est disponible. Aucun compte, aucune clé, aucun ordre réel.</div>
+      <div id="pfList" class="pf-list"></div>
+      <div class="set-row flex items-center justify-between py-2.5 border-t border-white/5 mt-2"><div><div class="text-[13px] font-semibold">Payer les frais en BNB</div><div class="text-[10.5px] text-zinc-500">Binance : −25 % en spot, −10 % en futures</div></div><label class="sw"><input type="checkbox" id="opt-bnb"><span></span></label></div>
+      <div class="text-[10.5px] text-zinc-400 leading-snug mt-1"><b class="text-zinc-300">Conseil :</b> grandes cryptos → Binance Spot avec BNB (0,075 %) ; shorts et levier → Hyperliquid (0,045 %, sans compte) ou Binance Futures ; memecoins Solana → Jupiter (≈0,1 %) plutôt que Phantom (≈0,95 %, 9× plus cher). Actions, forex et matières ne dépendent pas de ce choix.</div>
+    </div>
     <div class="card p-4 mb-3" id="serverCard">
       <div class="flex items-center justify-between mb-1"><div class="text-[13px] font-extrabold">☁️ Serveur 24h/24</div><span id="srvState" class="src-badge connect">NON CONFIGURÉ</span></div>
       <div id="srvHint" class="text-[11.5px] text-zinc-400 leading-relaxed mb-3">Ton serveur Cloudflare gratuit fait tourner la stratégie choisie ci-dessous sur les cryptos, même appli fermée, et t'envoie ses alertes. Il sert aussi de relais fiable pour les actions, le forex et les matières premières. Colle le jeton secret puis touche Connecter.</div>
@@ -687,7 +701,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v19.0</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v19.1</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -717,6 +731,40 @@
 /* ═══════════ CŒUR DE STRATÉGIE ═══════════ */
 const TF=900000;
 const COSTS={crypto:{fee:0.001,slip:0.0005},altcoins:{fee:0.001,slip:0.001},cryptoX:{fee:0.001,slip:0.001},meme:{fee:0.001,slip:0.003},stocks:{fee:0.0005,slip:0.0005},stocksEU:{fee:0.001,slip:0.001},etf:{fee:0.0005,slip:0.0005},indices:{fee:0.0003,slip:0.0003},forex:{fee:0.0001,slip:0.0001},commodities:{fee:0.0003,slip:0.0003},bonds:{fee:0.0001,slip:0.0001}};
+/* v19.1 — PROFILS DE PLATEFORME (simulation uniquement : aucun compte, aucune clé, aucun ordre réel).
+   Frais publics vérifiés le 16/11/2026, ordres au marché (= « taker ») :
+   · Binance Spot : 0,10 % maker/taker ; 0,075 % en payant les frais en BNB (−25 %).
+     Sources : binance.com/en/fee/tradingPromote · binance.com/en/support/faq/detail/115000583311
+   · Binance Futures USDⓈ-M : maker 0,02 %, taker 0,05 % ; BNB −10 % → taker 0,045 %. Financement toutes les 8 h (taux de base ≈ 0,01 %).
+     Source : binance.com/en/support/faq/detail/360033544231
+   · Hyperliquid (perps) : taker 0,045 %, maker 0,015 % au palier 0 (spot : taker 0,07 %). Financement chaque heure (≈ 0,01 % / 8 h en moyenne).
+     Source : hyperliquid.gitbook.io/hyperliquid-docs/trading/fees
+   · Phantom (swap Solana) : frais Phantom 0,85 % sur la plupart des swaps + routage Jupiter Ultra (≈ 0,1 %, jusqu'à 0,5 % sur un jeton récent)
+     + frais réseau / priorité (≈ 0,02–0,05 $ par transaction). Sources : help.phantom.com « Swap tokens in Phantom » · docs.jup.ag/user-docs/trade/spot/fees
+   · Jupiter (swap direct, mode Ultra) : 0 % de plateforme, routage 0–0,5 % (≈ 0,1 % sur les paires courantes) + frais réseau / priorité.
+   Glissement : estimation prudente d'après la profondeur habituelle des carnets ou des pools (majeures < altcoins < memecoins).
+   Les profils Solana (Phantom, Jupiter) ne valent que pour les jetons Solana (SOL_MINTS) ; les autres cryptos passent par Binance Spot. */
+const CRYPTO_MKTS={crypto:1,altcoins:1,cryptoX:1,meme:1};
+const SOL_MINTS={SOL:'So11111111111111111111111111111111111111112',JUP:'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN',BONK:'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
+  WIF:'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm',POPCAT:'7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr',BOME:'ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82',
+  PENGU:'2zMMhcVQEXDtdE6vsFS7S7D5oUodfJHE8vd1gnBouauv',PYTH:'HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3',JTO:'jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL',RENDER:'rndrizKT3MK1iimdxRdWabcF7Zg7AR5T4nud4EkHBof'};
+const PLATFORMS={
+  binance:{label:'Binance Spot',kind:'spot',fee:0.001,bnbFee:0.00075,slip:{crypto:0.0005,altcoins:0.001,cryptoX:0.001,meme:0.003},fund8h:0,fixed:0,feed:'binance',color:'#f0b90b'},
+  binanceFut:{label:'Binance Futures',kind:'perp',fee:0.0005,bnbFee:0.00045,slip:{crypto:0.0003,altcoins:0.0008,cryptoX:0.0008,meme:0.002},fund8h:0.0001,fixed:0,feed:'binanceFut',color:'#fcd535'},
+  hyperliquid:{label:'Hyperliquid',kind:'perp',fee:0.00045,slip:{crypto:0.0004,altcoins:0.001,cryptoX:0.001,meme:0.0025},fund8h:0.0001,fixed:0,feed:'hyperliquid',color:'#50e3c2'},
+  phantom:{label:'Phantom (Solana)',kind:'dex',fee:0.0095,slip:{crypto:0.0015,altcoins:0.004,cryptoX:0.004,meme:0.006},fund8h:0,fixed:0.03,feed:'jupiter',solOnly:true,color:'#ab9ff2'},
+  jupiter:{label:'Jupiter (Solana)',kind:'dex',fee:0.001,slip:{crypto:0.0015,altcoins:0.004,cryptoX:0.004,meme:0.006},fund8h:0,fixed:0.03,feed:'jupiter',solOnly:true,color:'#c7f284'}
+};
+const _pfCache=new Map();
+function platformCost(market,sym,pf,bnb){   // coûts d'exécution simulés : profil Binance Spot sans BNB = COSTS (résultats historiques inchangés)
+  if(!CRYPTO_MKTS[market]||!pf||(pf==='binance'&&!bnb)||!PLATFORMS[pf])return COSTS[market];
+  const k=pf+'|'+(bnb?1:0)+'|'+market+'|'+sym;let c=_pfCache.get(k);if(c)return c;
+  const P=PLATFORMS[pf];
+  if(P.solOnly&&!SOL_MINTS[sym])c=platformCost(market,sym,'binance',bnb);
+  else c={fee:bnb&&P.bnbFee?P.bnbFee:P.fee,slip:P.slip[market]??COSTS[market].slip,fund8h:P.fund8h||0,fixed:P.fixed||0,pf};
+  _pfCache.set(k,c);return c;
+}
+function fundingCost(c,notional,dir,heldMs){return c&&c.fund8h?notional*c.fund8h*heldMs/28800000*dir:0;}   // > 0 = payé (acheteurs quand le financement est positif)
 const VOTERS=['sniper','scalper','breakout','momentum','dip','whale','market','orderflow','derivatives','sentiment'];
 const clampN=(v,a,b)=>Math.min(b,Math.max(a,v));
 function emaSeries(a,n){const k=2/(n+1),o=new Array(a.length);o[0]=a[0];for(let i=1;i<a.length;i++)o[i]=a[i]*k+o[i-1]*(1-k);return o;}
@@ -945,7 +993,7 @@ function EvHold(k,x,scores,net,dir,why,stopDist,tp1R,tpR,ind){this.action='HOLD'
 Object.defineProperty(EvHold.prototype,'reason',{enumerable:true,get(){const k=this.k;
   return typeof k==='string'?k:k===0?'signal '+this.net.toFixed(2)+' sous le seuil '+this.x.toFixed(2):k===2?(this.dir>0?'achats':'ventes')+' en pause':k===5?'volatilité anormale (ATR ×'+this.x.toFixed(1)+')':HOLD_TXT[k];}});
 function evaluate(ind,ctx,weights,P){
-  const scores=agentScores(ind,ctx),cost=COSTS[ctx.market];
+  const scores=agentScores(ind,ctx),cost=ctx.cost||COSTS[ctx.market];
   let net=0;for(const a of VOTERS)net+=(weights[a]??1)*scores[a];
   if(FLEET.w>0&&ctx.opts.fleet!==false){scores.fleet=fleetVote(ind,ctx);net+=FLEET.w*(weights.fleet??1)*scores.fleet;}
   const dir=net>0?1:-1;
@@ -1292,10 +1340,11 @@ function btRun(D,prep,cfg){
   const exposure=()=>{let s=0;for(const p of positions)s+=p.qty*assets[p.ai].lastPx;return s;};
   const heat=()=>{let h=0;for(const p of positions)h+=Math.max(0,(assets[p.ai].lastPx-p.sl)*p.dir)*p.qty;return h;};
   const margin=()=>{let m=0;for(const p of positions)m+=marginOf(p);return m;};
-  function exitQty(p,qty,raw){const a=assets[p.ai],cost=COSTS[a.market],px=raw*(1-p.dir*cost.slip),fee=qty*px*cost.fee,pnl=(px-p.entry)*qty*p.dir-fee;capital+=pnl;fees+=fee;p.qty-=qty;p.realized+=pnl;return px;}
+  const PF=D.platform||'binance',BNB=!!D.bnb,CK=PF+(BNB?1:0),CST=a=>a._ck===CK?a._c:(a._ck=CK,a._c=platformCost(a.market,a.sym,PF,BNB));   // v19.1 : coûts de la plateforme choisie
+  function exitQty(p,qty,raw,t){const a=assets[p.ai],cost=CST(a),px=raw*(1-p.dir*cost.slip),fee=qty*px*cost.fee+(cost.fixed||0)+(cost.fund8h&&t?fundingCost(cost,qty*p.entry,p.dir,t-p.openT):0),pnl=(px-p.entry)*qty*p.dir-fee;capital+=pnl;fees+=fee;p.qty-=qty;p.realized+=pnl;return px;}
   function closeP(p,raw,reason,t){
     if(p.lev>1){const c=levClamp(p,raw);if(c!==raw||reason==='Liquidée'){raw=c;reason='Liquidée';liqN++;}}
-    const px=exitQty(p,p.qty,raw),total=p.realized,Rm=total/(p.risk0||1),win=total>0;
+    const px=exitQty(p,p.qty,raw,t),total=p.realized,Rm=total/(p.risk0||1),win=total>0;
     positions.splice(positions.indexOf(p),1);
     lossRun=win?0:lossRun+1;cooldown[p.ai]=t+cooldownOf(mode)*(win?1:2);
     trades.push({sym:assets[p.ai].sym,side:p.dir>0?'LONG':'SHORT',entry:p.entry,exit:px,pnl:total,R:Number.isFinite(Rm)?Rm:0,reason,openT:p.openT,closeT:t,lead:p.lead});
@@ -1308,7 +1357,7 @@ function btRun(D,prep,cfg){
     for(const e of pending){
       const a=assets[e.ai],i=a.idx.get(t);if(i==null)continue;
       if(positions.length>=maxPos||positions.some(p=>p.ai===e.ai))continue;
-      const k=a.cs[i],cost=COSTS[a.market],eq=capital+unreal(),fill=k.o*(1+e.dir*cost.slip);
+      const k=a.cs[i],cost=CST(a),eq=capital+unreal(),fill=k.o*(1+e.dir*cost.slip);
       const dd=peak>0?(peak-eq)/peak:0;
       let correlated=false;
       for(const p of positions){const b=assets[p.ai],j=b.idx.get(t);if(j==null||p.dir!==e.dir)continue;
@@ -1316,7 +1365,7 @@ function btRun(D,prep,cfg){
       const mult=riskMult(e.regime,dd,lossRun,a.market,correlated,e.atrRel);
       const qty=sizeQty(eq,fill,e.stopDist,cost,R,mult,NL?Infinity:Math.max(0,eq*R.heat-heat()),exposure(),LV>1?margin():0);
       if(!qty)continue;
-      const fee=qty*fill*cost.fee;capital-=fee;fees+=fee;
+      const fee=qty*fill*cost.fee+(cost.fixed||0);capital-=fee;fees+=fee;
       positions.push(Object.assign({id:seq++,ai:e.ai,dir:e.dir,entry:fill,qty,R:e.stopDist,sl:fill-e.dir*e.stopDist,tp1:fill+e.dir*e.stopDist*e.tp1R,tp:fill+e.dir*e.stopDist*e.tpR,
         peak:fill,partial:false,realized:-fee,sniper:e.isSniper,openedAt:t,openT:t,risk0:qty*(e.stopDist+2*(cost.fee+cost.slip)*fill),lead:e.lead,sup:e.sup,regime:e.regime,atr:e.atr},levFields(fill,e.dir,LV,qty*fill)));
       if(positions.length>maxOpen)maxOpen=positions.length;
@@ -1326,7 +1375,7 @@ function btRun(D,prep,cfg){
     // 2) gestion des positions sur cette bougie (même managePos que l'appli)
     for(const p of [...positions]){
       const a=assets[p.ai],i=a.idx.get(t);if(i==null)continue;
-      const k=a.cs[i],cost=COSTS[a.market],d=p.dir;
+      const k=a.cs[i],cost=CST(a),d=p.dir;
       const path=[k.o,d>0?k.l:k.h];
       if(!p.partial&&(d>0?k.h>=p.tp1:k.l<=p.tp1)&&(d>0?k.o<p.tp1:k.o>p.tp1))path.push(p.tp1);
       path.push(d>0?k.h:k.l,k.c);
@@ -1337,7 +1386,7 @@ function btRun(D,prep,cfg){
         if(p.lev>1&&levHit(p,px)&&(j===0||(p.sl-p.liq)*d<=0)){closeP(p,p.bk,'Liquidée',now);break;}   // liquidation avant le stop (stop au-delà, ou ouverture en gap)
         const act=managePos(p,px,atr,now,opts,cost);
         if(!act)continue;
-        if(act.type==='partial'){exitQty(p,p.qty*0.5,j===0?px:tp1B);continue;}
+        if(act.type==='partial'){exitQty(p,p.qty*0.5,j===0?px:tp1B,now);continue;}
         let fillPx=px;
         if(act.reason==='Objectif final')fillPx=j===0?px:tpB;
         else if(act.reason!=='Durée max')fillPx=j===0?px:slB;
@@ -1361,7 +1410,7 @@ function btRun(D,prep,cfg){
       const a=assets[ai],i=a.idx.get(t);if(i==null)continue;
       const ind=a.ind[i];if(!ind)continue;
       if(positions.some(p=>p.ai===ai)||(cooldown[ai]||0)>t+TF)continue;
-      const ctx={market:a.market,opts,inst:false,depthRatio:0,whale:0,funding:null,ls:null,fng:null,regime:MARKET_REF[a.market]?refDir:null,sideOff:{long:false,short:false}};
+      const ctx={market:a.market,cost:CST(a),opts,inst:false,depthRatio:0,whale:0,funding:null,ls:null,fng:null,regime:MARKET_REF[a.market]?refDir:null,sideOff:{long:false,short:false}};
       if(FLEET.w>0){ctx.btc=bInd;if(a.daily){const dt=dailyTrendAt(a.daily,t+TF);if(dt){ctx.d1=dt.d1;ctx.w1=dt.w1;}}
         const pb=PAIRS[a.sym]&&assets.find(x=>x.sym===PAIRS[a.sym]);if(pb){const j=pb.idx.get(t);if(j!=null)ctx.pairZ=pairZAt(a.cs,i,pb.cs,j,96);}}
       const ev=evaluate(ind,ctx,Wfor(a.market,regime,t+TF),P);
@@ -1391,16 +1440,17 @@ function btRunDaily(D,cfg){
   const mtm=()=>{let u=0;pos.forEach((p,ai)=>{if(p)u+=(last[ai]-p.entry)*p.qty*p.dir;});return capital+u;};
   const expo=()=>{let s=0;pos.forEach((p,ai)=>{if(p)s+=p.qty*last[ai];});return s;};
   const marg=()=>{let m=0;pos.forEach(p=>{if(p)m+=marginOf(p);});return m;};
-  const close=(ai,raw,reason,t)=>{const p=pos[ai],cost=COSTS[A[ai].market];if(p.lev>1){const c=levClamp(p,raw);if(c!==raw||reason==='Liquidée'){raw=c;reason='Liquidée';liqN++;}}const px=raw*(1-p.dir*cost.slip),fee=p.qty*px*cost.fee,pnl=(px-p.entry)*p.qty*p.dir-fee;
+  const PF=D.platform||'binance',BNB=!!D.bnb,CST=a=>platformCost(a.market,a.sym,PF,BNB);
+  const close=(ai,raw,reason,t)=>{const p=pos[ai],cost=CST(A[ai]);if(p.lev>1){const c=levClamp(p,raw);if(c!==raw||reason==='Liquidée'){raw=c;reason='Liquidée';liqN++;}}const px=raw*(1-p.dir*cost.slip),fee=p.qty*px*cost.fee+(cost.fixed||0)+(cost.fund8h?fundingCost(cost,p.qty*p.entry,p.dir,t-p.openT):0),pnl=(px-p.entry)*p.qty*p.dir-fee;
     capital+=pnl;fees+=fee;const total=p.realized+pnl;pos[ai]=null;
     trades.push({sym:A[ai].sym,side:p.dir>0?'LONG':'SHORT',entry:p.entry,exit:px,pnl:total,R:total/(p.risk0||1),reason,openT:p.openT,closeT:t,lead:'Tendance 1 j'});};
   for(const t of days){
-    for(const o of pending){const a=A[o.ai],i=a.idx.get(t);if(i==null)continue;const k=a.d[i],cost=COSTS[a.market];
+    for(const o of pending){const a=A[o.ai],i=a.idx.get(t);if(i==null)continue;const k=a.d[i],cost=CST(a);
       if(o.t==='c'){if(pos[o.ai])close(o.ai,k.o,o.reason,t);continue;}
       if(pos[o.ai]||killed)continue;
       const eq=mtm(),fill=k.o*(1+o.dir*cost.slip),per=o.stopDist+2*(cost.fee+cost.slip)*fill;
       let qty=Math.min(eq*R.risk/per,eq*R.posCap/fill,Math.max(0,eq*R.expo-expo())/fill);if(LV>1)qty=Math.min(qty,Math.max(0,eq-marg())*LV/fill);if(!(qty*fill>=10))continue;
-      const fee=qty*fill*cost.fee;capital-=fee;fees+=fee;
+      const fee=qty*fill*cost.fee+(cost.fixed||0);capital-=fee;fees+=fee;
       pos[o.ai]=Object.assign({dir:o.dir,qty,entry:fill,sl:fill-o.dir*o.stopDist,realized:-fee,risk0:qty*per,openT:t},levFields(fill,o.dir,LV,qty*fill));}
     pending=[];
     pos.forEach((p,ai)=>{if(!p)return;const a=A[ai],i=a.idx.get(t);if(i==null)return;const k=a.d[i],adv=p.dir>0?k.l:k.h;
@@ -1474,7 +1524,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='19.0',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='19.1',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1563,14 +1613,14 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:19,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
+  const st={v:19.1,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
     opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true,learnV2:true},huntDone:{},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
     agents:{},learn:{},learn2:learnFresh(),prices:{},consensus:{bull:0,bear:0,action:'HOLD',veto:false},regime:'range',ticks:0,seq:1,streak:0,
     killed:false,dayKey:'',dayStart:DEFAULT_START,dayHalt:false,lossRun:0,pauseUntil:0,cooldown:{},
     adapt:{thrAdd:0,stopMult:2,sideOff:{long:0,short:0},audits:0,lastAuditAt:0},feesPaid:0,
-    closedCount:0,lastEntry:{},openTimes:[],lastAutoOpen:0,funds:[],fxEUR:0,bt:{syms:['BTC','ETH'],days:30,compare:true}};
+    closedCount:0,lastEntry:{},openTimes:[],lastAutoOpen:0,funds:[],fxEUR:0,platform:'binance',bt:{syms:['BTC','ETH'],days:30,compare:true}};
   AGENTS.forEach(a=>{st.agents[a.id]={bias:'neutral',conf:0.5,pnl:0,trades:0,wins:0,sumR:0};});
   initPrices(st);return st;
 }
@@ -2090,10 +2140,10 @@ function animateProfitToWallet(amount,startRect,onDone,n=1,meta=null){
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.1,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
-    cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR}));}catch(x){}
+    cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR,platform:S.platform}));}catch(x){}
 }
 function loadState(){
   let saved=null,from='';
@@ -2102,7 +2152,8 @@ function loadState(){
   // Migration v11/v12 → v13 : on reprend tout ce qui est compatible, les nouveaux champs prennent leur valeur par défaut
   if(!(Number(saved.v)>=11))return;   // v19 : toute version connue ou plus récente est reprise (plus de perte si la liste n'est pas à jour)
   try{
-    for(const k of ['start','capital','closed','lessons','equityHist','peakEquity','maxDD','streak','seq','killed','dayKey','dayStart','dayHalt','lossRun','pauseUntil','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen','funds','fxEUR'])if(saved[k]!=null)S[k]=saved[k];
+    for(const k of ['start','capital','closed','lessons','equityHist','peakEquity','maxDD','streak','seq','killed','dayKey','dayStart','dayHalt','lossRun','pauseUntil','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen','funds','fxEUR','platform'])if(saved[k]!=null)S[k]=saved[k];
+    if(!PLATFORMS[S.platform])S.platform='binance';
     if(!Array.isArray(S.funds))S.funds=[];
     if(saved.closedCount==null)S.closedCount=Array.isArray(S.closed)?S.closed.length:0;
     if(!S.lastEntry||typeof S.lastEntry!=='object')S.lastEntry={};
@@ -2187,8 +2238,48 @@ function equity(){let eq=S.capital;for(const p of S.positions)eq+=unrealized(p);
 function exposure(){let s=0;for(const p of S.positions){const q=S.prices[p.sym];s+=p.qty*(q&&q.price>0?q.price:p.entry)*pfx(p);}return s;}
 function heat(){let h=0;for(const p of S.positions){const q=S.prices[p.sym],px=q&&q.price>0?q.price:p.entry;h+=Math.max(0,(px-p.sl)*p.dir)*p.qty*pfx(p);}return h;}
 
+/* ═══ v19.1 : PLATEFORME SIMULÉE — frais, glissement et prix public de la plateforme choisie (aucun compte, aucun ordre réel) ═══ */
+let COSTC={},COSTK='';
+function costOf(sym){const k=S.platform+(S.opts.bnb?1:0);if(k!==COSTK){COSTK=k;COSTC={};}return COSTC[sym]||(COSTC[sym]=platformCost(S.prices[sym].market,sym,S.platform,!!S.opts.bnb));}
+const VENUE={px:{},at:0,lat:0,err:'',feed:'',n:0,busy:false};
+const HL_NAME={PEPE:['kPEPE',1000],BONK:['kBONK',1000],SHIB:['kSHIB',1000],FLOKI:['kFLOKI',1000]};
+function venueFeed(){const P=PLATFORMS[S.platform];return P?P.feed:'binance';}
+function refPx(sym,px){   // prix de référence de l'exécution : prix public de la plateforme s'il est frais (< 15 s) et cohérent, sinon prix Binance
+  const v=VENUE.px[sym];if(v&&Date.now()-VENUE.at<15000&&venueFeed()===VENUE.feed&&px>0&&Math.abs(v/px-1)<0.03)return v;return px;}
+function venueSrc(sym,px){return refPx(sym,px)!==px?PLATFORMS[S.platform].label:'Binance';}
+async function venuePoll(){
+  const feed=venueFeed();if(feed==='binance'||document.hidden||VENUE.busy)return;
+  VENUE.busy=true;const t0=performance.now(),out={};
+  try{
+    const syms=activeSyms().filter(x=>CRYPTO_MKTS[S.prices[x].market]);for(const p of S.positions)if(CRYPTO_MKTS[S.prices[p.sym]?.market]&&!syms.includes(p.sym))syms.push(p.sym);
+    if(feed==='hyperliquid'){const r=await fetch('https://api.hyperliquid.xyz/info',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"type":"allMids"}'});if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();
+      for(const x of syms){const m=HL_NAME[x],v=+j[m?m[0]:x];if(v>0)out[x]=m?v/m[1]:v;}}
+    else if(feed==='binanceFut'){const r=await fetch('https://fapi.binance.com/fapi/v1/ticker/price');if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json(),mp={};for(const e of j)mp[e.symbol]=+e.price;
+      for(const x of syms){const b=S.prices[x].binanceSymbol;if(!b)continue;if(mp[b]>0)out[x]=mp[b];else if(mp['1000'+b]>0)out[x]=mp['1000'+b]/1000;}}
+    else if(feed==='jupiter'){const ids=syms.filter(x=>SOL_MINTS[x]);if(ids.length){const r=await fetch('https://lite-api.jup.ag/price/v3?ids='+ids.map(x=>SOL_MINTS[x]).join(','));if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();
+      for(const x of ids){const e=j[SOL_MINTS[x]];if(e&&e.usdPrice>0)out[x]=+e.usdPrice;}}}
+    VENUE.px=out;VENUE.at=Date.now();VENUE.feed=feed;VENUE.n=Object.keys(out).length;VENUE.lat=Math.round(performance.now()-t0);VENUE.err='';
+  }catch(e){VENUE.err=String(e.message||e).slice(0,60);}
+  finally{VENUE.busy=false;renderPfFeed();}
+}
+setInterval(venuePoll,4000);
+function pfFeeTxt(k){const P=PLATFORMS[k],pc=v=>(v*100).toLocaleString('fr-FR',{maximumFractionDigits:3})+' %';
+  return k==='binance'?`taker ${pc(P.fee)} · BNB ${pc(P.bnbFee)}`:k==='binanceFut'?`taker ${pc(P.fee)} · BNB ${pc(P.bnbFee)} · financement /8 h`:k==='hyperliquid'?`taker ${pc(P.fee)} · financement /h · sans compte`:k==='phantom'?'0,85 % Phantom + routage ≈0,1 % + réseau':'routage ≈0,1 % + réseau · 0 % plateforme';}
+function renderPfCard(){
+  const box=$('pfList');if(!box)return;
+  box.innerHTML=Object.entries(PLATFORMS).map(([k,P])=>`<button class="pf-item${S.platform===k?' on':''}" data-pf="${k}" style="--pf-c:${P.color}"><span class="pf-dot"></span><span class="pf-name">${escH(P.label)}${k==='binance'?' <i>par défaut</i>':''}</span><span class="pf-fee">${escH(pfFeeTxt(k))}${P.solOnly?' · jetons Solana':''}</span></button>`).join('');
+  $('opt-bnb').checked=!!S.opts.bnb;renderPfFeed();
+}
+function renderPfFeed(){
+  const b=$('pfFeed');if(!b)return;const feed=venueFeed();
+  if(feed==='binance'){b.textContent='PRIX BINANCE';b.className='src-badge live';return;}
+  const fresh=Date.now()-VENUE.at<15000&&VENUE.feed===feed;
+  b.textContent=VENUE.err&&!fresh?'PRIX : '+VENUE.err.toUpperCase():fresh?`${VENUE.n} PRIX · ${VENUE.lat} MS`:'CONNEXION…';b.className='src-badge '+(fresh?'live':VENUE.err?'stale':'connect');
+}
+function setPlatform(k){if(!PLATFORMS[k]||S.platform===k)return;S.platform=k;COSTK='';VENUE.px={};VENUE.at=0;saveState();renderPfCard();venuePoll();
+  const P=PLATFORMS[k];toast(`Plateforme simulée : ${P.label} · ${pfFeeTxt(k)}${P.solOnly?' (les autres cryptos restent sur Binance Spot)':''}`,'info');}
 function openPosition(sym,dir,ev,manual){
-  const q=S.prices[sym],R=RISK[S.risk],cost=COSTS[q.market],ind=indFor(sym);
+  const q=S.prices[sym],R=RISK[S.risk],cost=costOf(sym),ind=indFor(sym);
   if(!isFresh(q)){toast('Prix indisponible pour '+sym,'info');return false;}
   const ccy=ccyOf(sym),fx=fxRate(ccy);
   if(!(fx>0)){pushDecision('SKIP '+sym,'taux de change '+ccy+' indisponible');if(manual)toast('Taux de change '+ccy+' indisponible pour l\'instant','info');return false;}
@@ -2205,27 +2296,27 @@ function openPosition(sym,dir,ev,manual){
     mult=riskMult(S.regime,dd,S.lossRun,q.market,correlated);
   }
   const sideCut=!!(ev&&ev.sideCut);if(sideCut)mult*=0.5;   // v18.6 : côté en perte récente → taille ÷2 (plus de blocage)
-  const fill=q.price*(1+dir*cost.slip),LV=levOf(R);
+  const ref=refPx(sym,q.price),fill=ref*(1+dir*cost.slip),LV=levOf(R);
   const qty=sizeQty(eq,fill*fx,stopDist*fx,cost,R,mult,dt||noLim()?Infinity:Math.max(0,eq*R.heat*(manual?10:1)-heat()),noLim()?-Infinity:exposure(),LV>1?marginUsed():0);
   if(!qty){
     pushDecision('SKIP '+sym,LV>1?'marge libre insuffisante (levier ×'+LV+')':'taille nulle · heat ou exposition saturés');
     if(manual)toast(LV>1?'Marge libre insuffisante pour ce trade':'Taille trop petite ou limite d\'exposition atteinte','info');
     return false;
   }
-  const fee=qty*fill*fx*cost.fee;S.capital-=fee;S.feesPaid+=fee+qty*q.price*fx*cost.slip;
+  const fee=qty*fill*fx*cost.fee+(cost.fixed||0);S.capital-=fee;S.feesPaid+=fee+qty*ref*fx*cost.slip;
   const p={id:S.seq++,sym,dir,ccy,fx0:fx,fxLast:fx,entry:fill,qty,qty0:qty,notional:qty*fill*fx,feeIn:fee,sl:fill-dir*stopDist,R:stopDist,peak:fill,partial:false,realized:-fee,
     dt,hunt,huntUntil:hunt?Date.now()+HUNT_LIVE.maxBars*HUNT_LIVE.tfMs:0,sniper:!!(ev&&ev.isSniper),agentId:manual?'manual':ev.lead,agent:manual?'Manuel':dt?'Tendance 1 jour':hunt?'Chasseur 🎯':(AGENTS.find(a=>a.id===ev.lead)?.name||'—'),
     supporters:manual?[]:ev.supporters,risk0:qty*(stopDist+2*(cost.fee+cost.slip)*fill)*fx,openedAt:Date.now(),regime:S.regime,hist:[fill],
     tp1:dt||hunt?null:fill+dir*stopDist*(ev?ev.tp1R:2),tp:dt?null:hunt?fill+dir*stopDist*ev.tpR:fill+dir*stopDist*(ev?ev.tpR:(S.opts.trailing?5:3)),candleT:ind?ind.t:0};
-  Object.assign(p,levFields(fill,dir,LV,p.notional));
+  Object.assign(p,levFields(fill,dir,LV,p.notional));p.pf=S.platform;p.bnb=!!S.opts.bnb;p.venue=ref!==q.price?PLATFORMS[S.platform].label:'Binance';
   S.positions.push(p);saveState();vibrate(12);beep(dir>0?880:660,0.1,0.05);
   journalAdd(dir>0?'BUY':'SELL',sym,p.agent,null,hunt);teamPing(dt?'trend':hunt?'hunter':'exec');
   pushDecision((dir>0?'BUY ':'SELL ')+sym,manual?'manuel':hunt?`Chasseur 🎯 · cassure ${HUNT_LIVE.tf} · stop ${priceFmt(p.sl)} · objectif ${priceFmt(p.tp)} · risque ${money(p.risk0)} · expérimental`:dt?`Tendance 1 jour · croisement EMA ${DTREND.f}/${DTREND.s} · stop ${priceFmt(p.sl)} (${DTREND.k} ATR) · risque ${money(p.risk0)}`:`${p.agent} · score ${ev.net.toFixed(2)} · stop ${priceFmt(p.sl)} · objectif ${priceFmt(p.tp)} · risque ${money(p.risk0)}${regimeMult<1?' · '+Math.round((1-regimeMult)*100)+'% réduit ('+S.regime+')':''}${sideCut?' · taille ÷2 (côté en perte)':''}`+(p.lev>1?` · levier ×${p.lev} · marge ${money(p.margin)} · notionnel ${money(p.notional)}`:''));
   return true;
 }
 function fillExit(p,qty,reason){
-  const q=S.prices[p.sym],cost=COSTS[q.market],raw=reason==='Liquidée'?p.bk:levClamp(p,q&&q.price>0?q.price:p.entry);   // liquidation : toute la marge est perdue
-  const fx=pfx(p),px=raw*(1-p.dir*cost.slip),fee=qty*px*fx*cost.fee,pnl=(px-p.entry)*qty*p.dir*fx-fee;
+  const q=S.prices[p.sym],cost=p.pf?platformCost(q.market,p.sym,p.pf,p.bnb):costOf(p.sym),raw=reason==='Liquidée'?p.bk:levClamp(p,q&&q.price>0?(p.pf===S.platform?refPx(p.sym,q.price):q.price):p.entry);   // liquidation : toute la marge est perdue
+  const fx=pfx(p),px=raw*(1-p.dir*cost.slip),fee=qty*px*fx*cost.fee+(cost.fixed||0)+fundingCost(cost,qty*p.entry*fx,p.dir,Date.now()-p.openedAt),pnl=(px-p.entry)*qty*p.dir*fx-fee;
   S.capital+=pnl;S.feesPaid+=fee+qty*raw*fx*cost.slip;p.qty-=qty;p.realized+=pnl;
   return {px,pnl};
 }
@@ -2267,7 +2358,7 @@ function updatePositions(){
     if(levHit(p,q.price)){closePosition(p,'Liquidée');continue;}   // v18.6 : liquidation simulée (85 % de la marge perdue)
     if(p.dt){if((q.price-p.sl)*p.dir<=0)closePosition(p,'Stop ATR');continue;}
     if(p.hunt){if((q.price-p.sl)*p.dir<=0)closePosition(p,'Stop');else if((q.price-p.tp)*p.dir>=0)closePosition(p,'Objectif final');else if(now>=p.huntUntil)closePosition(p,'Durée max');continue;}   // chasseur : stop, objectif ou 64 h max   // Tendance 1 jour : seul le stop agit en continu
-    const ind=indFor(p.sym),act=managePos(p,q.price,ind?ind.atr:p.R/2,now,S.opts,COSTS[q.market]);
+    const ind=indFor(p.sym),act=managePos(p,q.price,ind?ind.atr:p.R/2,now,S.opts,p.pf?platformCost(q.market,p.sym,p.pf,p.bnb):costOf(p.sym));
     if(!act)continue;
     if(act.type==='partial'){
       const half=p.qty*0.5,{pnl}=fillExit(p,half,act.reason);
@@ -2391,7 +2482,7 @@ function renderFleet(){
 }
 function ctxBase(sym){
   const q=S.prices[sym],mk=MARKETS[q.market],now=Date.now();
-  return {market:q.market,opts:S.opts,inst:S.opts.instfilter,depthRatio:now-depthData.at<10000?depthData.ratio:0,whale:whaleNet(sym),
+  return {market:q.market,cost:costOf(sym),opts:S.opts,inst:S.opts.instfilter,depthRatio:now-depthData.at<10000?depthData.ratio:0,whale:whaleNet(sym),
     funding:now-instData.at<300000?instData.funding:null,ls:now-instData.at<300000?instData.longShort:null,fng:fngData.value,
     regime:mk.ref?(now-refRegime.at<900000?refRegime.dir:0):null,
     sideOff:{long:S.adapt.sideOff.long>now,short:S.adapt.sideOff.short>now},
@@ -3227,7 +3318,7 @@ function openSymbol(sym){
   let posHtml='';
   if(pos){
     const up=unrealized(pos);
-    posHtml=`<div class="card-flat p-3 mb-3"><div class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Position ouverte</div><div class="flex items-center justify-between"><span class="text-[12px] font-extrabold ${pos.dir>0?'text-emerald-400':'text-red-400'}">${pos.dir>0?'LONG':'SHORT'} · ${pos.agent}</span><span class="text-[13px] font-extrabold num ${up>=0?'green':'red'}">${signedMoney(up)}</span></div><div class="flex justify-between text-[10px] text-zinc-500 num mt-1"><span>Entrée ${priceFmt(pos.entry)}</span><span>SL ${priceFmt(pos.sl)} · risque ${money(pos.risk0)}</span></div>${pos.lev>1?`<div class="lev-sheet mt-2"><div><span>Levier</span><b>×${pos.lev}</b></div><div><span>Marge</span><b>${money(pos.margin)}</b></div><div><span>Notionnel</span><b>${money(pos.notional)}</b></div><div><span>Liquidation</span><b>${priceFmt(pos.liq)}</b></div><div><span>Gain/perte sur marge</span><b class="${up>=0?'green':'red'}">${(up/pos.margin*100>=0?'+':'')+(up/pos.margin*100).toFixed(1)}%</b></div></div>`:`<div class="text-[10px] text-zinc-600 num mt-1">Notionnel ${money(pos.notional||0)} · sans levier</div>`}</div>`;
+    posHtml=`<div class="card-flat p-3 mb-3"><div class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Position ouverte</div><div class="flex items-center justify-between"><span class="text-[12px] font-extrabold ${pos.dir>0?'text-emerald-400':'text-red-400'}">${pos.dir>0?'LONG':'SHORT'} · ${pos.agent}</span><span class="text-[13px] font-extrabold num ${up>=0?'green':'red'}">${signedMoney(up)}</span></div><div class="flex justify-between text-[10px] text-zinc-500 num mt-1"><span>Entrée ${priceFmt(pos.entry)}</span><span>SL ${priceFmt(pos.sl)} · risque ${money(pos.risk0)}</span></div><div class="text-[10px] text-zinc-600 num mt-0.5">Plateforme ${escH(PLATFORMS[pos.pf||'binance']?.label||'Binance Spot')} · prix d'entrée ${escH(pos.venue||'Binance')}</div>${pos.lev>1?`<div class="lev-sheet mt-2"><div><span>Levier</span><b>×${pos.lev}</b></div><div><span>Marge</span><b>${money(pos.margin)}</b></div><div><span>Notionnel</span><b>${money(pos.notional)}</b></div><div><span>Liquidation</span><b>${priceFmt(pos.liq)}</b></div><div><span>Gain/perte sur marge</span><b class="${up>=0?'green':'red'}">${(up/pos.margin*100>=0?'+':'')+(up/pos.margin*100).toFixed(1)}%</b></div></div>`:`<div class="text-[10px] text-zinc-600 num mt-1">Notionnel ${money(pos.notional||0)} · sans levier</div>`}</div>`;
   }else if(atMax){
     posHtml=`<div class="text-[11px] text-amber-400 font-semibold mb-3">Limite de positions atteinte (${maxPosFor()})</div>`;
   }else if(!isFresh(q)){
@@ -3374,7 +3465,7 @@ async function btStart(){
     };
     btWorker.onerror=ev=>{toast('Backtest : erreur du calcul','loss');btProgress(100,'Erreur : '+(ev.message||'calcul impossible'));btCancel();};
     btWorker.postMessage({type:'run',configs,data:{assets:need15?syms.map(x=>({sym:x,market:S.prices[x].market,cs:data[x]})):null,btc:data.BTC,
-      daily:isD?syms.map(x=>({sym:x,market:S.prices[x].market,d:dd[x]})):null,btcDaily:dd.BTC,startT,endT,risk:S.risk,mode:S.mode,start:DEFAULT_START,
+      daily:isD?syms.map(x=>({sym:x,market:S.prices[x].market,d:dd[x]})):null,btcDaily:dd.BTC,startT,endT,risk:S.risk,mode:S.mode,start:DEFAULT_START,platform:S.platform,bnb:!!S.opts.bnb,
       opts:{sniper:S.opts.sniper,devil:S.opts.devil,shorts:S.opts.shorts,trailing:S.opts.trailing,htf:S.opts.htf!==false}}});
   }catch(err){toast('Backtest impossible : '+(err.message||err),'loss');btProgress(100,'Erreur : '+(err.message||'réseau'));btCancel();}
 }
@@ -3520,7 +3611,7 @@ async function srvSyncSettings(){
   if(!srvOn()){toast('Connecte d\'abord le serveur','info');return;}
   const o=S.opts;
   try{const r=await srvFetch('/api/config',{method:'POST',body:{strategy:S.strategy,risk:S.risk,mode:S.mode,markets:S.markets.filter(m=>m==='crypto'||m==='meme'),
-      opts:{sniper:o.sniper,devil:o.devil,trailing:o.trailing,learning:o.learning,instfilter:o.instfilter,shorts:o.shorts,htf:o.htf,noLimit:o.noLimit!==false},
+      opts:{sniper:o.sniper,devil:o.devil,trailing:o.trailing,learning:o.learning,instfilter:o.instfilter,shorts:o.shorts,htf:o.htf,noLimit:o.noLimit!==false,bnb:!!o.bnb},platform:S.platform,
       trade:$('srv-trade').checked,notify:{closes:!!o.notifyClose,signals:true}}});
     toast('Réglages envoyés · '+(STRATS[r.strategy]?STRATS[r.strategy].label+' · ':'')+RISK[r.risk].label.toLowerCase()+' · '+MODES[r.mode].label.toLowerCase()+(r.trade?'':' · signaux seulement'),'info');srvRefresh(true);}
   catch(x){toast('Serveur : '+(x.message||x),'info');}
@@ -3654,6 +3745,9 @@ function initApp(){
   $('btnStart').onclick=startBot;
   $('btnStop').onclick=stopBot;
   $('btnReset').onclick=openResetModal;
+  $('pfList').addEventListener('click',e=>{const b=e.target.closest('[data-pf]');if(b)setPlatform(b.dataset.pf);});
+  $('opt-bnb').onchange=e=>{S.opts.bnb=e.target.checked;COSTK='';saveState();toast(e.target.checked?'Frais payés en BNB (Binance)':'Frais Binance sans BNB','info');};
+  renderPfCard();
   $('btnFunds').onclick=()=>openFunds('bot');$('btnFunds2').onclick=()=>openFunds('bot');wireFunds();
   $('btnExport').onclick=exportCSV;
   $('btnCloseAll').onclick=closeAllPositions;
