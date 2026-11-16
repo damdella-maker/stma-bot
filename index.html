@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#08080a" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v18.5</title>
+<title>STMA Bot · v18.6</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -123,6 +123,15 @@
   .seg-btn:active{ transform:scale(.96); }
   .seg-btn.on{ background:linear-gradient(180deg,var(--seg-c,#22c55e),var(--seg-c,#22c55e)); color:#04140b; border-color:rgba(255,255,255,.18); box-shadow:0 6px 18px -8px var(--seg-c,#22c55e), inset 0 1px 0 rgba(255,255,255,.3); }
   .seg-btn.on .seg-sub{ opacity:.9; color:rgba(0,0,0,.65); }
+  /* v18.6 : levier ×5 (néon fuchsia) */
+  .seg-btn.seg-lev{ grid-column:1/-1; flex-direction:row; justify-content:center; gap:8px; color:#f0abfc; border-color:rgba(232,121,249,.35); background:linear-gradient(90deg,rgba(232,121,249,.08),rgba(168,85,247,.08)); }
+  .seg-btn.seg-lev.on{ background:linear-gradient(90deg,#e879f9,#a855f7); color:#1a0420; box-shadow:0 0 18px -4px #e879f9, inset 0 1px 0 rgba(255,255,255,.35); }
+  .lev-badge{ font-size:9px; font-weight:900; padding:1px 5px; border-radius:5px; color:#f0abfc; background:rgba(232,121,249,.14); border:1px solid rgba(232,121,249,.5); box-shadow:0 0 8px rgba(232,121,249,.35); letter-spacing:.03em; }
+  .lev-line{ color:#d8b4fe; }
+  .lev-sheet{ display:grid; grid-template-columns:1fr 1fr; gap:4px 10px; font-size:10.5px; padding:8px 10px; border-radius:10px; background:rgba(232,121,249,.07); border:1px solid rgba(232,121,249,.3); }
+  .lev-sheet div{ display:flex; justify-content:space-between; gap:6px; } .lev-sheet span{ color:#a1a1aa; } .lev-sheet b{ font-weight:800; font-variant-numeric:tabular-nums; color:#f5d0fe; }
+  .lev-sheet div:last-child{ grid-column:1/-1; }
+  .big-bubble.liq{ box-shadow:0 0 60px 10px rgba(239,68,68,.6), 0 0 120px 30px rgba(232,121,249,.25); }
   .chip{ padding:7px 13px; border-radius:999px; font-size:11.5px; font-weight:700; background:#1c1c21; color:#8b8b95; border:1px solid transparent; transition:all .2s; cursor:pointer; }
   .chip:active{ transform:scale(.94); }
   .chip.on{ background:rgba(34,197,94,.16); color:#4ade80; border-color:rgba(34,197,94,.45); box-shadow:0 0 12px rgba(34,197,94,.15); }
@@ -355,7 +364,7 @@
     <div class="logo">S</div>
     <div>
       <div class="text-[15px] font-extrabold leading-tight tracking-tight">STMA Bot</div>
-      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v18.5</div>
+      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v18.6</div>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -620,7 +629,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v18.5</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v18.6</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -898,7 +907,6 @@ function evaluate(ind,ctx,weights,P){
   const isStrong=Math.abs(net)>=2.0;
   if(Math.abs(net)<P.thr)return hold(0,P.thr);
   if(dir<0&&!ctx.opts.shorts)return hold(1);
-  if(ctx.sideOff&&ctx.sideOff[dir>0?'long':'short'])return hold(2);
   if(ind.shock&&!isStrong)return hold(3);
   // Filtre de volatilité (ATR)
   if(ind.atrPct>0.05)return hold(4);
@@ -920,12 +928,14 @@ function evaluate(ind,ctx,weights,P){
   if(isSniper)lead='sniper';
   const supporters=VOTERS.filter(a=>scores[a]*dir>0.3);
   if(scores.fleet!==undefined&&FLEET.w*scores.fleet*dir>0.3)supporters.push('fleet');   // v18.5 : la flotte apprend comme un agent
-  return {action:'OPEN',isSniper,lead,supporters,costShare,conf:clampN(Math.abs(net)/(P.thr*2),0.5,0.99),isStrong,scores,net,dir,devilWhy:why,stopDist,tp1R,tpR,htf:ind.htf,atrRel:ind.atrRel};
+  const sideCut=!!(ctx.sideOff&&ctx.sideOff[dir>0?'long':'short']);   // v18.6 : côté en perte → taille ÷2, jamais de blocage
+  return {action:'OPEN',isSniper,lead,supporters,sideCut,costShare,conf:clampN(Math.abs(net)/(P.thr*2),0.5,0.99),isStrong,scores,net,dir,devilWhy:why,stopDist,tp1R,tpR,htf:ind.htf,atrRel:ind.atrRel};
 }
-function sizeQty(eq,price,stopDist,cost,R,mult,heatLeft,exposureNow){
+function sizeQty(eq,price,stopDist,cost,R,mult,heatLeft,exposureNow,marginNow){
   const perUnit=stopDist+2*(cost.fee+cost.slip)*price;
   const riskUsd=Math.min(eq*R.risk*mult,heatLeft);
-  const qty=Math.min(riskUsd/perUnit,eq*R.posCap/price,Math.max(0,eq*R.expo-exposureNow)/price);
+  let qty=Math.min(riskUsd/perUnit,eq*R.posCap/price,Math.max(0,eq*R.expo-exposureNow)/price);
+  if(R.lev>1)qty=Math.min(qty,Math.max(0,eq-(marginNow||0))*R.lev/(price*(1+R.lev*2*(cost.fee+cost.slip))));   // levier : la marge engagée ne dépasse pas l'équité (sinon taille réduite)
   return qty*price<10?0:qty;
 }
 function managePos(p,price,atr,now,opts,cost){
@@ -1110,8 +1120,17 @@ const RISK={
   low:{label:'Faible',risk:0.0025,maxPos:3,posCap:0.08,expo:0.5,dd:0.08,daily:0.02,heat:0.01,color:'#38bdf8'},
   medium:{label:'Moyen',risk:0.005,maxPos:4,posCap:0.15,expo:1.0,dd:0.12,daily:0.03,heat:0.02,color:'#22c55e'},
   high:{label:'Élevé',risk:0.01,maxPos:6,posCap:0.25,expo:1.5,dd:0.20,daily:0.05,heat:0.05,color:'#f59e0b'},
-  degen:{label:'Degen',risk:0.02,maxPos:8,posCap:0.40,expo:2.5,dd:0.35,daily:0.10,heat:0.10,color:'#ef4444'}
+  degen:{label:'Degen',risk:0.02,maxPos:8,posCap:0.40,expo:2.5,dd:0.35,daily:0.10,heat:0.10,color:'#ef4444'},
+  // v18.6 : levier ×5 SIMULÉ (argent fictif). Notionnel jusqu'à 2× le capital par position et 5× au total ; marge = notionnel / 5.
+  // Aucune limite de trades (noLimits) : si la marge libre manque, la taille est réduite. Liquidation simulée à 85 % de la marge perdue.
+  lev5:{label:'Levier ×5',risk:0.05,maxPos:12,posCap:2.0,expo:5.0,dd:1,daily:1,heat:1,lev:5,noLimits:true,color:'#e879f9'}
 };
+const LEV_LIQ=0.85;   // part de la marge perdue qui déclenche la liquidation
+function levOf(R){return R&&R.lev>1?R.lev:1;}
+function levFields(entry,dir,lev,notional){return lev>1?{lev,margin:notional/lev,liq:entry*(1-dir*LEV_LIQ/lev),bk:entry*(1-dir/lev)}:{};}   // bk = prix où 100 % de la marge est perdue
+function levHit(p,price){return p.lev>1&&(price-p.liq)*p.dir<=0;}
+function levClamp(p,raw){return p.lev>1&&(raw-p.bk)*p.dir<0?p.bk:raw;}   // marge isolée : la perte ne dépasse jamais la marge
+function marginOf(p){return p.margin!=null?p.margin:(p.notional||0);}
 const MODES={
   prudent:{label:'Prudent',cooldown:15*60e3,thrAdd:0.20,maxPosMult:1.0,erMin:0.30,allowCounter:false,color:'#38bdf8'},
   normal:{label:'Normal',cooldown:5*60e3,thrAdd:0,maxPosMult:1.5,erMin:0.15,allowCounter:false,color:'#22c55e'},
@@ -1200,7 +1219,7 @@ function btPrepare(assets,btc,startT,post){
 }
 function btRun(D,prep,cfg){
   const {assets,btc,startT,endT,risk,mode,start}=D;
-  const R=RISK[risk],M=MODES[mode],L=ENTRY_LIMITS[mode]||ENTRY_LIMITS.normal,maxPos=maxPosOf(risk,mode);
+  const R=RISK[risk],M=MODES[mode],L=ENTRY_LIMITS[mode]||ENTRY_LIMITS.normal,LV=levOf(R),NL=!!R.noLimits,maxPos=NL?1e9:maxPosOf(risk,mode);let liqN=0,maxOpen=0;
   const opts=Object.assign({},D.opts,cfg.opts);
   const P=paramsFor(mode,{thrAdd:0,stopMult:cfg.stopMult},opts.trailing);
   const LS={opts:{learning:!!cfg.learn,learnV2:cfg.learn==='v2'},learn:{},learn2:learnFresh()};let Wc={},Wkey='';
@@ -1212,14 +1231,16 @@ function btRun(D,prep,cfg){
   const unreal=()=>{let u=0;for(const p of positions)u+=(assets[p.ai].lastPx-p.entry)*p.qty*p.dir;return u;};
   const exposure=()=>{let s=0;for(const p of positions)s+=p.qty*assets[p.ai].lastPx;return s;};
   const heat=()=>{let h=0;for(const p of positions)h+=Math.max(0,(assets[p.ai].lastPx-p.sl)*p.dir)*p.qty;return h;};
+  const margin=()=>{let m=0;for(const p of positions)m+=marginOf(p);return m;};
   function exitQty(p,qty,raw){const a=assets[p.ai],cost=COSTS[a.market],px=raw*(1-p.dir*cost.slip),fee=qty*px*cost.fee,pnl=(px-p.entry)*qty*p.dir-fee;capital+=pnl;fees+=fee;p.qty-=qty;p.realized+=pnl;return px;}
   function closeP(p,raw,reason,t){
+    if(p.lev>1){const c=levClamp(p,raw);if(c!==raw||reason==='Liquidée'){raw=c;reason='Liquidée';liqN++;}}
     const px=exitQty(p,p.qty,raw),total=p.realized,Rm=total/(p.risk0||1),win=total>0;
     positions.splice(positions.indexOf(p),1);
     lossRun=win?0:lossRun+1;cooldown[p.ai]=t+cooldownOf(mode)*(win?1:2);
     trades.push({sym:assets[p.ai].sym,side:p.dir>0?'LONG':'SHORT',entry:p.entry,exit:px,pnl:total,R:Number.isFinite(Rm)?Rm:0,reason,openT:p.openT,closeT:t,lead:p.lead});
     if(cfg.learn){learnOnClose(LS,[...new Set([p.lead,...(p.sup||[])])],assets[p.ai].market,p.regime,Number.isFinite(Rm)?Rm:0,win,t-p.openT,t);Wkey='';}
-    if(!win&&lossRun>=6){lossRun=0;pauseUntil=t+3600000;}
+    if(!NL&&!win&&lossRun>=6){lossRun=0;pauseUntil=t+3600000;}
   }
   for(let ti=0;ti<times.length;ti++){
     const t=times[ti];
@@ -1233,11 +1254,12 @@ function btRun(D,prep,cfg){
       for(const p of positions){const b=assets[p.ai],j=b.idx.get(t);if(j==null||p.dir!==e.dir)continue;
         if(corrRet(a.cs.slice(Math.max(0,i-60),i),b.cs.slice(Math.max(0,j-60),j))>0.7){correlated=true;break;}}
       const mult=riskMult(e.regime,dd,lossRun,a.market,correlated,e.atrRel);
-      const qty=sizeQty(eq,fill,e.stopDist,cost,R,mult,Math.max(0,eq*R.heat-heat()),exposure());
+      const qty=sizeQty(eq,fill,e.stopDist,cost,R,mult,NL?Infinity:Math.max(0,eq*R.heat-heat()),exposure(),LV>1?margin():0);
       if(!qty)continue;
       const fee=qty*fill*cost.fee;capital-=fee;fees+=fee;
-      positions.push({id:seq++,ai:e.ai,dir:e.dir,entry:fill,qty,R:e.stopDist,sl:fill-e.dir*e.stopDist,tp1:fill+e.dir*e.stopDist*e.tp1R,tp:fill+e.dir*e.stopDist*e.tpR,
-        peak:fill,partial:false,realized:-fee,sniper:e.isSniper,openedAt:t,openT:t,risk0:qty*(e.stopDist+2*(cost.fee+cost.slip)*fill),lead:e.lead,sup:e.sup,regime:e.regime,atr:e.atr});
+      positions.push(Object.assign({id:seq++,ai:e.ai,dir:e.dir,entry:fill,qty,R:e.stopDist,sl:fill-e.dir*e.stopDist,tp1:fill+e.dir*e.stopDist*e.tp1R,tp:fill+e.dir*e.stopDist*e.tpR,
+        peak:fill,partial:false,realized:-fee,sniper:e.isSniper,openedAt:t,openT:t,risk0:qty*(e.stopDist+2*(cost.fee+cost.slip)*fill),lead:e.lead,sup:e.sup,regime:e.regime,atr:e.atr},levFields(fill,e.dir,LV,qty*fill)));
+      if(positions.length>maxOpen)maxOpen=positions.length;
       openTimes.push(t);
     }
     pending=[];
@@ -1252,6 +1274,7 @@ function btRun(D,prep,cfg){
       for(let j=0;j<path.length;j++){
         const px=path[j],slB=p.sl,tpB=p.tp,tp1B=p.tp1;
         const now=j===path.length-1?t+TF:t+j*(TF/path.length);
+        if(p.lev>1&&levHit(p,px)&&(j===0||(p.sl-p.liq)*d<=0)){closeP(p,p.bk,'Liquidée',now);break;}   // liquidation avant le stop (stop au-delà, ou ouverture en gap)
         const act=managePos(p,px,atr,now,opts,cost);
         if(!act)continue;
         if(act.type==='partial'){exitQty(p,p.qty*0.5,j===0?px:tp1B);continue;}
@@ -1268,8 +1291,8 @@ function btRun(D,prep,cfg){
     // 4) coupe-circuits (comme riskGate)
     const day=new Date(t+TF).toISOString().slice(0,10);
     if(day!==dayKey){dayKey=day;dayStart=eq;dayHalt=false;}
-    if(!killed&&dd>=R.dd){killed=true;for(const p of [...positions])closeP(p,assets[p.ai].lastPx,'Arrêt de sécurité',t+TF);}
-    if(!dayHalt&&dayStart>0&&(dayStart-eq)/dayStart>=R.daily)dayHalt=true;
+    if(!NL&&!killed&&dd>=R.dd){killed=true;for(const p of [...positions])closeP(p,assets[p.ai].lastPx,'Arrêt de sécurité',t+TF);}
+    if(!NL&&!dayHalt&&dayStart>0&&(dayStart-eq)/dayStart>=R.daily)dayHalt=true;
     if(killed||dayHalt||pauseUntil>t||positions.length>=maxPos)continue;
     // 5) décisions à la clôture de la bougie (données closes uniquement)
     const bInd=prep.btcInd.get(t),refDir=prep.refDirs.get(t)??0,regime=regimeOf(bInd,refDir);
@@ -1286,7 +1309,7 @@ function btRun(D,prep,cfg){
     }
     opens.sort((x,y)=>Math.abs(y.net)-Math.abs(x.net));
     while(openTimes.length&&t+TF-openTimes[0]>=3600000)openTimes.shift();
-    let room=Math.min(maxPos-positions.length,L.perHour-openTimes.length);
+    let room=NL?Infinity:Math.min(maxPos-positions.length,L.perHour-openTimes.length);
     for(const o of opens){if(room<=0)break;pending.push(o);room--;}
   }
   const endTime=times.length?times[times.length-1]+TF:endT;
@@ -1295,19 +1318,20 @@ function btRun(D,prep,cfg){
   const n=trades.length,wins=trades.filter(x=>x.pnl>0),gw=wins.reduce((s,x)=>s+x.pnl,0),gl=Math.abs(trades.filter(x=>x.pnl<=0).reduce((s,x)=>s+x.pnl,0));
   const sumR=trades.reduce((s,x)=>s+x.R,0);
   return {label:cfg.label,key:cfg.key,n,winrate:n?wins.length/n*100:0,pnl:finalEq-start,pnlPct:(finalEq-start)/start*100,sumR,pf:gl>0?gw/gl:(gw>0?Infinity:0),
-    maxDD:maxDD*100,expectancy:n?(finalEq-start)/n:0,expR:n?sumR/n:0,fees,killed,curve,trades:cfg.keepTrades?trades:[],longs:trades.filter(x=>x.side==='LONG').length};
+    maxDD:maxDD*100,expectancy:n?(finalEq-start)/n:0,expR:n?sumR/n:0,fees,killed,curve,trades:cfg.keepTrades?trades:[],longs:trades.filter(x=>x.side==='LONG').length,liq:liqN,maxPos:maxOpen};
 }
 /* ── Backtest « Tendance 1 jour » : bougies journalières, décision à la clôture, exécution à l'ouverture du jour suivant,
    stop vérifié avec le plus bas/plus haut du jour (ouverture au-delà du stop → sortie à l'ouverture) ── */
 function btRunDaily(D,cfg){
-  const P=Object.assign({},DTREND,cfg.dt||{}),R=RISK[D.risk],A=D.daily,btc=D.btcDaily;
+  const P=Object.assign({},DTREND,cfg.dt||{}),R=RISK[D.risk],A=D.daily,btc=D.btcDaily,LV=levOf(R),NL=!!R.noLimits;let liqN=0;
   for(const a of A){a.idx=new Map();a.d.forEach((k,i)=>a.idx.set(k.t,i));}
   const bIdx=new Map();btc.forEach((k,i)=>bIdx.set(k.t,i));
   const days=btc.filter(k=>k.t>=D.startT&&k.t<D.endT).map(k=>k.t);
   let capital=D.start,peak=capital,maxDD=0,fees=0,killed=false;const pos=new Array(A.length).fill(null),trades=[],curve=[],last=new Array(A.length).fill(0);let pending=[];
   const mtm=()=>{let u=0;pos.forEach((p,ai)=>{if(p)u+=(last[ai]-p.entry)*p.qty*p.dir;});return capital+u;};
   const expo=()=>{let s=0;pos.forEach((p,ai)=>{if(p)s+=p.qty*last[ai];});return s;};
-  const close=(ai,raw,reason,t)=>{const p=pos[ai],cost=COSTS[A[ai].market],px=raw*(1-p.dir*cost.slip),fee=p.qty*px*cost.fee,pnl=(px-p.entry)*p.qty*p.dir-fee;
+  const marg=()=>{let m=0;pos.forEach(p=>{if(p)m+=marginOf(p);});return m;};
+  const close=(ai,raw,reason,t)=>{const p=pos[ai],cost=COSTS[A[ai].market];if(p.lev>1){const c=levClamp(p,raw);if(c!==raw||reason==='Liquidée'){raw=c;reason='Liquidée';liqN++;}}const px=raw*(1-p.dir*cost.slip),fee=p.qty*px*cost.fee,pnl=(px-p.entry)*p.qty*p.dir-fee;
     capital+=pnl;fees+=fee;const total=p.realized+pnl;pos[ai]=null;
     trades.push({sym:A[ai].sym,side:p.dir>0?'LONG':'SHORT',entry:p.entry,exit:px,pnl:total,R:total/(p.risk0||1),reason,openT:p.openT,closeT:t,lead:'Tendance 1 j'});};
   for(const t of days){
@@ -1315,15 +1339,16 @@ function btRunDaily(D,cfg){
       if(o.t==='c'){if(pos[o.ai])close(o.ai,k.o,o.reason,t);continue;}
       if(pos[o.ai]||killed)continue;
       const eq=mtm(),fill=k.o*(1+o.dir*cost.slip),per=o.stopDist+2*(cost.fee+cost.slip)*fill;
-      const qty=Math.min(eq*R.risk/per,eq*R.posCap/fill,Math.max(0,eq*R.expo-expo())/fill);if(!(qty*fill>=10))continue;
+      let qty=Math.min(eq*R.risk/per,eq*R.posCap/fill,Math.max(0,eq*R.expo-expo())/fill);if(LV>1)qty=Math.min(qty,Math.max(0,eq-marg())*LV/fill);if(!(qty*fill>=10))continue;
       const fee=qty*fill*cost.fee;capital-=fee;fees+=fee;
-      pos[o.ai]={dir:o.dir,qty,entry:fill,sl:fill-o.dir*o.stopDist,realized:-fee,risk0:qty*per,openT:t};}
+      pos[o.ai]=Object.assign({dir:o.dir,qty,entry:fill,sl:fill-o.dir*o.stopDist,realized:-fee,risk0:qty*per,openT:t},levFields(fill,o.dir,LV,qty*fill));}
     pending=[];
     pos.forEach((p,ai)=>{if(!p)return;const a=A[ai],i=a.idx.get(t);if(i==null)return;const k=a.d[i],adv=p.dir>0?k.l:k.h;
-      if((k.o-p.sl)*p.dir<=0)close(ai,k.o,'Stop ATR',t+DAY);else if((adv-p.sl)*p.dir<=0)close(ai,p.sl,'Stop ATR',t+DAY);});
+      if(p.lev>1&&levHit(p,adv)&&(levHit(p,k.o)||(p.sl-p.liq)*p.dir<=0))close(ai,p.bk,'Liquidée',t+DAY);
+      else if((k.o-p.sl)*p.dir<=0)close(ai,k.o,'Stop ATR',t+DAY);else if((adv-p.sl)*p.dir<=0)close(ai,p.sl,'Stop ATR',t+DAY);});
     A.forEach((a,ai)=>{const i=a.idx.get(t);if(i!=null)last[ai]=a.d[i].c;});
     const eq=mtm();peak=Math.max(peak,eq);const dd=peak>0?(peak-eq)/peak:0;maxDD=Math.max(maxDD,dd);curve.push([t+DAY,eq]);
-    if(!killed&&dd>=R.dd){killed=true;pos.forEach((p,ai)=>{if(p)close(ai,last[ai],'Arrêt de sécurité',t+DAY);});}
+    if(!NL&&!killed&&dd>=R.dd){killed=true;pos.forEach((p,ai)=>{if(p)close(ai,last[ai],'Arrêt de sécurité',t+DAY);});}
     if(killed)continue;
     const bi=bIdx.get(t);if(bi==null)continue;const bD=btc.slice(Math.max(0,bi-399),bi+1);
     A.forEach((a,ai)=>{const i=a.idx.get(t);if(i==null)return;const sig=dtEval(a.d.slice(Math.max(0,i-399),i+1),bD,P);if(!sig)return;
@@ -1336,7 +1361,7 @@ function btRunDaily(D,cfg){
   curve.push([endTime,capital]);
   const n=trades.length,wins=trades.filter(x=>x.pnl>0),gw=wins.reduce((s,x)=>s+x.pnl,0),gl=Math.abs(trades.filter(x=>x.pnl<=0).reduce((s,x)=>s+x.pnl,0)),sumR=trades.reduce((s,x)=>s+x.R,0);
   return {label:cfg.label,key:cfg.key,n,winrate:n?wins.length/n*100:0,pnl:capital-D.start,pnlPct:(capital-D.start)/D.start*100,sumR,pf:gl>0?gw/gl:(gw>0?Infinity:0),
-    maxDD:maxDD*100,expectancy:n?(capital-D.start)/n:0,expR:n?sumR/n:0,fees,killed,curve,trades:cfg.keepTrades?trades:[],longs:trades.filter(x=>x.side==='LONG').length};
+    maxDD:maxDD*100,expectancy:n?(capital-D.start)/n:0,expR:n?sumR/n:0,fees,killed,curve,trades:cfg.keepTrades?trades:[],longs:trades.filter(x=>x.side==='LONG').length,liq:liqN};
 }
 self.onmessage=ev=>{
   const m=ev.data;if(m.type!=='run')return;
@@ -1389,7 +1414,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='18.5',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='18.6',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1458,7 +1483,8 @@ async function hunterTick(){
     }
   }finally{huntBusy=false;}
 }
-function noLim(){return S.opts.noLimit!==false;}
+function noLim(){return S.opts.noLimit!==false||!!(RISK[S.risk]&&RISK[S.risk].noLimits);}   // v18.6 : levier ×5 = jamais de limite
+function marginUsed(){let m=0;for(const p of S.positions)m+=marginOf(p);return m;}
 function maxPosFor(){return maxPosOf(S.risk,S.mode);}
 function cooldownFor(){return cooldownOf(S.mode);}
 function scheduleRender(){if(rafPending)return;rafPending=true;requestAnimationFrame(()=>{rafPending=false;flushRender();});}
@@ -1477,7 +1503,7 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:18.5,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
+  const st={v:18.6,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
     opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true,learnV2:true},huntDone:{},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
@@ -1992,7 +2018,8 @@ function animateProfitToWallet(amount,startRect,onDone,n=1,meta=null){
     if(win){const wi=$('walletIcon');if(wi){wi.classList.remove('bounce');void wi.offsetWidth;wi.classList.add('bounce');}}};
   if(reduceMotion()){bubbleSound(isLoss);flashEq();onDone&&onDone();return;}   // version allégée : flash du solde + son
   const b=document.createElement('div');b.className='big-bubble '+(win?'win':'loss')+(meta&&meta.hunter?' hunter':'');
-  const sub=n>1?n+' trades clôturés':meta&&meta.hunter?(win?'🎯 Chasseur a attrapé '+meta.sym:'🎯 Chasseur · '+meta.sym):win?'Gain':'Perte';
+  if(meta&&meta.liq)b.classList.add('liq');
+  const sub=n>1?n+' trades clôturés':meta&&meta.liq?'💥 Liquidée ×'+meta.lev+' · '+meta.sym:meta&&meta.hunter?(win?'🎯 Chasseur a attrapé '+meta.sym:'🎯 Chasseur · '+meta.sym):win?'Gain':'Perte';
   b.innerHTML=`<div class="bb-amt">${escH(label)}</div><div class="bb-sub">${escH(sub)}</div>`;
   document.body.appendChild(b);
   const popAt=win?820:620;
@@ -2003,7 +2030,7 @@ function animateProfitToWallet(amount,startRect,onDone,n=1,meta=null){
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:18.5,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:18.6,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
     cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen}));}catch(x){}
@@ -2013,7 +2040,7 @@ function loadState(){
   try{for(const k of [STORE_KEY,...LEGACY_KEYS]){const raw=localStorage.getItem(k);if(raw){saved=JSON.parse(raw);from=k;break;}}}catch(x){}
   S=freshState();if(!saved)return;
   // Migration v11/v12 → v13 : on reprend tout ce qui est compatible, les nouveaux champs prennent leur valeur par défaut
-  if(![11,12,13,14,15,16,17,18,18.1,18.2,18.3,18.4,18.5].includes(saved.v))return;
+  if(![11,12,13,14,15,16,17,18,18.1,18.2,18.3,18.4,18.5,18.6].includes(saved.v))return;
   try{
     for(const k of ['start','capital','closed','lessons','equityHist','peakEquity','maxDD','streak','seq','killed','dayKey','dayStart','dayHalt','lossRun','pauseUntil','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen'])if(saved[k]!=null)S[k]=saved[k];
     if(saved.closedCount==null)S.closedCount=Array.isArray(S.closed)?S.closed.length:0;
@@ -2116,11 +2143,12 @@ function openPosition(sym,dir,ev,manual){
     const correlated=S.positions.some(p=>p.dir===dir&&corrRet(mine,candles.get(p.sym)?.cs)>0.7);
     mult=riskMult(S.regime,dd,S.lossRun,q.market,correlated);
   }
-  const fill=q.price*(1+dir*cost.slip);
-  const qty=sizeQty(eq,fill*fx,stopDist*fx,cost,R,mult,dt||noLim()?Infinity:Math.max(0,eq*R.heat*(manual?10:1)-heat()),noLim()?-Infinity:exposure());
+  const sideCut=!!(ev&&ev.sideCut);if(sideCut)mult*=0.5;   // v18.6 : côté en perte récente → taille ÷2 (plus de blocage)
+  const fill=q.price*(1+dir*cost.slip),LV=levOf(R);
+  const qty=sizeQty(eq,fill*fx,stopDist*fx,cost,R,mult,dt||noLim()?Infinity:Math.max(0,eq*R.heat*(manual?10:1)-heat()),noLim()?-Infinity:exposure(),LV>1?marginUsed():0);
   if(!qty){
-    pushDecision('SKIP '+sym,'taille nulle · heat ou exposition saturés');
-    if(manual)toast('Taille trop petite ou limite d\'exposition atteinte','info');
+    pushDecision('SKIP '+sym,LV>1?'marge libre insuffisante (levier ×'+LV+')':'taille nulle · heat ou exposition saturés');
+    if(manual)toast(LV>1?'Marge libre insuffisante pour ce trade':'Taille trop petite ou limite d\'exposition atteinte','info');
     return false;
   }
   const fee=qty*fill*fx*cost.fee;S.capital-=fee;S.feesPaid+=fee+qty*q.price*fx*cost.slip;
@@ -2128,13 +2156,14 @@ function openPosition(sym,dir,ev,manual){
     dt,hunt,huntUntil:hunt?Date.now()+HUNT_LIVE.maxBars*HUNT_LIVE.tfMs:0,sniper:!!(ev&&ev.isSniper),agentId:manual?'manual':ev.lead,agent:manual?'Manuel':dt?'Tendance 1 jour':hunt?'Chasseur 🎯':(AGENTS.find(a=>a.id===ev.lead)?.name||'—'),
     supporters:manual?[]:ev.supporters,risk0:qty*(stopDist+2*(cost.fee+cost.slip)*fill)*fx,openedAt:Date.now(),regime:S.regime,hist:[fill],
     tp1:dt||hunt?null:fill+dir*stopDist*(ev?ev.tp1R:2),tp:dt?null:hunt?fill+dir*stopDist*ev.tpR:fill+dir*stopDist*(ev?ev.tpR:(S.opts.trailing?5:3)),candleT:ind?ind.t:0};
+  Object.assign(p,levFields(fill,dir,LV,p.notional));
   S.positions.push(p);saveState();vibrate(12);beep(dir>0?880:660,0.1,0.05);
   journalAdd(dir>0?'BUY':'SELL',sym,p.agent,null,hunt);teamPing(dt?'trend':hunt?'hunter':'exec');
-  pushDecision((dir>0?'BUY ':'SELL ')+sym,manual?'manuel':hunt?`Chasseur 🎯 · cassure ${HUNT_LIVE.tf} · stop ${priceFmt(p.sl)} · objectif ${priceFmt(p.tp)} · risque ${money(p.risk0)} · expérimental`:dt?`Tendance 1 jour · croisement EMA ${DTREND.f}/${DTREND.s} · stop ${priceFmt(p.sl)} (${DTREND.k} ATR) · risque ${money(p.risk0)}`:`${p.agent} · score ${ev.net.toFixed(2)} · stop ${priceFmt(p.sl)} · objectif ${priceFmt(p.tp)} · risque ${money(p.risk0)}${regimeMult<1?' · '+Math.round((1-regimeMult)*100)+'% réduit ('+S.regime+')':''}`);
+  pushDecision((dir>0?'BUY ':'SELL ')+sym,manual?'manuel':hunt?`Chasseur 🎯 · cassure ${HUNT_LIVE.tf} · stop ${priceFmt(p.sl)} · objectif ${priceFmt(p.tp)} · risque ${money(p.risk0)} · expérimental`:dt?`Tendance 1 jour · croisement EMA ${DTREND.f}/${DTREND.s} · stop ${priceFmt(p.sl)} (${DTREND.k} ATR) · risque ${money(p.risk0)}`:`${p.agent} · score ${ev.net.toFixed(2)} · stop ${priceFmt(p.sl)} · objectif ${priceFmt(p.tp)} · risque ${money(p.risk0)}${regimeMult<1?' · '+Math.round((1-regimeMult)*100)+'% réduit ('+S.regime+')':''}${sideCut?' · taille ÷2 (côté en perte)':''}`+(p.lev>1?` · levier ×${p.lev} · marge ${money(p.margin)} · notionnel ${money(p.notional)}`:''));
   return true;
 }
 function fillExit(p,qty,reason){
-  const q=S.prices[p.sym],cost=COSTS[q.market],raw=q&&q.price>0?q.price:p.entry;
+  const q=S.prices[p.sym],cost=COSTS[q.market],raw=reason==='Liquidée'?p.bk:levClamp(p,q&&q.price>0?q.price:p.entry);   // liquidation : toute la marge est perdue
   const fx=pfx(p),px=raw*(1-p.dir*cost.slip),fee=qty*px*fx*cost.fee,pnl=(px-p.entry)*qty*p.dir*fx-fee;
   S.capital+=pnl;S.feesPaid+=fee+qty*raw*fx*cost.slip;p.qty-=qty;p.realized+=pnl;
   return {px,pnl};
@@ -2146,7 +2175,7 @@ function closePosition(p,reason){
   S.lossRun=win?0:S.lossRun+1;S.cooldown[p.sym]=Date.now()+cooldownFor()*(win?1:2);   // pause doublée après une perte (anti-revanche)
   const market=S.prices[p.sym].market;
   S.closed.unshift({id:p.id,sym:p.sym,market,side:p.dir>0?'LONG':'SHORT',agent:p.agent,agentId:p.agentId,pnl:total,R:Number.isFinite(Rm)?Rm:0,reason,entry:p.entry,exit:px,
-    notional:p.notional,at:Date.now(),heldMs:Date.now()-p.openedAt,regime:p.regime});
+    notional:p.notional,lev:p.lev||1,margin:p.lev>1?p.margin:undefined,at:Date.now(),heldMs:Date.now()-p.openedAt,regime:p.regime});
   if(S.closed.length>200)S.closed.pop();
   const lead=S.agents[p.agentId];if(lead){lead.pnl+=total;lead.trades++;lead.sumR+=Number.isFinite(Rm)?Rm:0;if(win)lead.wins++;}
   if(S.opts.learning&&p.agentId!=='manual'&&!p.dt&&!p.hunt){
@@ -2157,10 +2186,12 @@ function closePosition(p,reason){
   if(total/S.start*100>1.5)confetti();
   const el=posEls.get(p.id),er=el?el.getBoundingClientRect():null,tk=tickerEls.get(p.sym);
   if(er)miniBubbleAt(er,total);if(tk)miniBubbleAt(tk.el.getBoundingClientRect(),total);
-  queueMoneyBubble(total,er,p.hunt?{hunter:true,sym:p.sym}:null);
+  const liq=reason==='Liquidée';
+  queueMoneyBubble(total,er,p.hunt?{hunter:true,sym:p.sym}:liq?{liq:true,sym:p.sym,lev:p.lev}:null);
+  if(liq)pushLesson(`💥 ${p.sym} ${p.dir>0?'LONG':'SHORT'} ×${p.lev} liquidée · marge perdue ${money(p.margin)}`,'bad');
   journalAdd(p.dir>0?'SELL':'BUY',p.sym,p.agent,total,p.hunt);teamPing(p.hunt?'hunter':p.dt?'trend':'exec');
   if(p.hunt)toast(win?`🎯 Le Chasseur a attrapé ${p.sym} · ${signedMoney(total)}`:`🎯 Le Chasseur a raté ${p.sym} · ${signedMoney(total)} · ${reason}`,win?'win hunt':'loss hunt');
-  else toast(`${p.dir>0?'LONG':'SHORT'} ${p.sym} · ${signedMoney(total)} · ${reason}`,win?'win':'loss');
+  else toast(`${liq?'💥 ':''}${p.dir>0?'LONG':'SHORT'}${p.lev>1?' ×'+p.lev:''} ${p.sym} · ${signedMoney(total)} · ${reason}`,win?'win':'loss');
   vibrate(win?[20,50,20]:[30,100,30]);   // le son est joué par la bulle (2 notes montantes = gain, 1 note grave = perte)
   pushDecision('CLOSE '+p.sym,`${reason} · ${signedMoney(total)} (${Rm>=0?'+':''}${Rm.toFixed(1)}R)`);
   S.closedCount=(S.closedCount||0)+1;if(S.closedCount%20===0)audit();   // compteur dédié : l'historique est plafonné à 200
@@ -2172,6 +2203,7 @@ function updatePositions(){
   for(const p of [...S.positions]){
     const q=S.prices[p.sym];
     if(!isFresh(q))continue;            // jamais de décision sur un prix périmé (la carte affiche « prix périmé »)
+    if(levHit(p,q.price)){closePosition(p,'Liquidée');continue;}   // v18.6 : liquidation simulée (85 % de la marge perdue)
     if(p.dt){if((q.price-p.sl)*p.dir<=0)closePosition(p,'Stop ATR');continue;}
     if(p.hunt){if((q.price-p.sl)*p.dir<=0)closePosition(p,'Stop');else if((q.price-p.tp)*p.dir>=0)closePosition(p,'Objectif final');else if(now>=p.huntUntil)closePosition(p,'Durée max');continue;}   // chasseur : stop, objectif ou 64 h max   // Tendance 1 jour : seul le stop agit en continu
     const ind=indFor(p.sym),act=managePos(p,q.price,ind?ind.atr:p.R/2,now,S.opts,COSTS[q.market]);
@@ -2213,7 +2245,7 @@ function audit(){
   if(sumR<-2&&A.thrAdd<1){A.thrAdd=Math.min(1,A.thrAdd+0.15);found.push(`20 derniers perdants (${sumR.toFixed(1)}R) → seuil relevé`);}
   else if(sumR>3&&A.thrAdd>0){A.thrAdd=Math.max(0,A.thrAdd-0.05);found.push(`résultats positifs (+${sumR.toFixed(1)}R) → seuil détendu`);}
   for(const [side,key] of [['LONG','long'],['SHORT','short']]){
-    const s=t.filter(x=>x.side===side);if(s.length>=6&&s.reduce((a,b)=>a+b.R,0)<-3){A.sideOff[key]=now+2*3600000;found.push(`${side==='LONG'?'achats':'ventes'} en perte → pause 2h`);}
+    const s=t.filter(x=>x.side===side);if(s.length>=6&&s.reduce((a,b)=>a+b.R,0)<-3){A.sideOff[key]=now+2*3600000;found.push(`${side==='LONG'?'achats':'ventes'} en perte → taille ÷2 pendant 2h`);}
   }
   pushLesson(`Audit n°${A.audits} · `+(found.length?found.join(' ; '):`aucune faille nette (${wins.length}W/${losses.length}L, ${sumR>=0?'+':''}${sumR.toFixed(1)}R)`),found.length?'bad':'good');
 }
@@ -2656,7 +2688,7 @@ function renderHero(){
   setText($('peakLine'),'Pic '+money(S.peakEquity)+' · frais '+money(S.feesPaid));
   const mc=$('multChip');const newMult=(eq/S.start).toFixed(2)+'×';if(mc.textContent!==newMult){mc.textContent=newMult;mc.classList.remove('bump');void mc.offsetWidth;mc.classList.add('bump');}
   const cfg=RISK[S.risk];setText($('posCount'),`${S.positions.length} / ${noLim()?'∞':maxPosFor()}`);setText($('riskTag'),'Risque '+cfg.label.toLowerCase());
-  const eqv=eq>0?exposure()/eq*100:0;setText($('exposureLine'),'Expo '+eqv.toFixed(0)+'%');
+  const eqv=eq>0?exposure()/eq*100:0;setText($('exposureLine'),'Expo '+eqv.toFixed(0)+'%'+(cfg.lev>1?' · marge '+(eq>0?marginUsed()/eq*100:0).toFixed(0)+'%':''));
   const hero=$('heroCard');hero.classList.toggle('up',pnl>50);hero.classList.toggle('down',pnl<-50);
   const sk=S.equityHist.length+'|'+S.equityHist[S.equityHist.length-1]+'|'+S.peakEquity+'|'+S.start;
   if(heroMemo.spark!==sk){heroMemo.spark=sk;const {line,area,refY,peakY}=sparkPath(S.equityHist,100,26,3);
@@ -2691,7 +2723,7 @@ function createPositionEl(p){
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2 min-w-0">
         <span class="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md ${isLong?'bg-emerald-500/15 text-emerald-400':'bg-red-500/15 text-red-400'}">${isLong?'LONG':'SHORT'}</span>
-        <span class="text-[13px] font-extrabold">${escH(p.sym)}</span>${ccyTag(p.sym)}${p.hunt?'<span class="hunt-badge">🎯 CHASSEUR</span>':''}
+        <span class="text-[13px] font-extrabold">${escH(p.sym)}</span>${ccyTag(p.sym)}${p.lev>1?`<span class="lev-badge">x${p.lev}</span>`:''}${p.hunt?'<span class="hunt-badge">🎯 CHASSEUR</span>':''}
         <span class="text-[10px] text-zinc-500 truncate">${escH(p.agent)}</span>
         <span class="pos-age text-[9px] text-zinc-600"></span><span class="pos-stale stale-tag hidden-tab">prix périmé</span>
       </div>
@@ -2705,12 +2737,12 @@ function createPositionEl(p){
     <div class="flex justify-between text-[9.5px] text-zinc-500 num font-medium">
       <span>${priceFmt(p.entry)} → <span class="pos-price text-zinc-300">${priceFmt(p.entry)}</span></span>
       <span>SL <span class="pos-sl">${priceFmt(p.sl)}</span> · TP <span class="pos-tp">${priceFmt(p.tp)}</span></span>
-    </div>`;
+    </div>${p.lev>1?`<div class="flex justify-between text-[9.5px] num font-medium mt-0.5 lev-line"><span>Marge ${money(p.margin)} · notionnel ${money(p.notional)}</span><span>Liq. ${priceFmt(p.liq)}</span></div>`:''}`;
   return el;
 }
 function updatePositionEl(el,p){
   const q=S.prices[p.sym],price=q?q.price:p.entry;if(!price||price<=0)return;
-  const up=unrealized(p),upPct=p.notional?(up/p.notional)*100:0;
+  const up=unrealized(p),upPct=p.lev>1&&p.margin?(up/p.margin)*100:p.notional?(up/p.notional)*100:0;   // levier : % de la marge
   const tgt=p.tp??(p.entry+p.dir*p.R*2),progress=clamp((price-p.sl)/((tgt-p.sl)||1)*100,0,100);
   el.querySelector('.pos-sl').textContent=priceFmt(p.sl);el.querySelector('.pos-tp').textContent=priceFmt(tgt);
   el.querySelector('.pos-stale').classList.toggle('hidden-tab',isFresh(q));
@@ -2858,7 +2890,7 @@ function renderAgents(){
     memoEl(ab).innerHTML=`
       <div class="flex justify-between py-0.5"><span class="text-zinc-500">Seuil d'entrée</span><span class="num font-bold">+${A.thrAdd.toFixed(2)}</span></div>
       <div class="flex justify-between py-0.5"><span class="text-zinc-500">Multiplicateur de stop</span><span class="num font-bold">${A.stopMult.toFixed(2)} ATR</span></div>
-      <div class="flex justify-between py-0.5"><span class="text-zinc-500">Achats / ventes en pause</span><span class="num font-bold">${A.sideOff.long>Date.now()?'achats ':''}${A.sideOff.short>Date.now()?'ventes ':''}${(A.sideOff.long>Date.now()||A.sideOff.short>Date.now())?'':'aucun'}</span></div>
+      <div class="flex justify-between py-0.5"><span class="text-zinc-500">Achats / ventes réduits (÷2)</span><span class="num font-bold">${A.sideOff.long>Date.now()?'achats ':''}${A.sideOff.short>Date.now()?'ventes ':''}${(A.sideOff.long>Date.now()||A.sideOff.short>Date.now())?'':'aucun'}</span></div>
       <div class="flex justify-between py-0.5"><span class="text-zinc-500">Audits effectués</span><span class="num font-bold">${A.audits}</span></div>`;
   }
 }
@@ -2946,12 +2978,13 @@ function confetti(){
 
 /* ═══════════ UI ═══════════ */
 function buildRiskSeg(){
-  $('riskSeg').innerHTML=Object.entries(RISK).map(([k,v])=>`<button class="seg-btn" data-risk="${k}" style="--seg-c:${v.color}">${v.label}<span class="seg-sub">${(v.risk*100).toFixed(2)}% · ${v.maxPos}</span></button>`).join('');
+  $('riskSeg').innerHTML=Object.entries(RISK).map(([k,v])=>`<button class="seg-btn${v.lev>1?' seg-lev':''}" data-risk="${k}" style="--seg-c:${v.color}">${v.label}<span class="seg-sub">${v.lev>1?'simulé · sans limite · liquidation −85 % de la marge':(v.risk*100).toFixed(2)+'% · '+v.maxPos}</span></button>`).join('');
   $('riskSeg').querySelectorAll('[data-risk]').forEach(b=>{b.onclick=()=>setRisk(b.dataset.risk);});
   syncRiskSeg();
 }
 function syncRiskSeg(){$('riskSeg').querySelectorAll('[data-risk]').forEach(b=>b.classList.toggle('on',b.dataset.risk===S.risk));}
-function setRisk(r){if(!RISK[r])return;S.risk=r;syncRiskSeg();renderHero();saveState();vibrate(10);}
+function setRisk(r){if(!RISK[r])return;const was=S.risk;S.risk=r;syncRiskSeg();renderHero();saveState();vibrate(10);
+  if(r!==was&&RISK[r].lev>1)toast(`Levier ×${RISK[r].lev} simulé : positions jusqu'à ${RISK[r].posCap*100} % du capital en notionnel, liquidation si ${Math.round(LEV_LIQ*100)} % de la marge est perdue · argent fictif`,'info');}
 const STRATS={daily:{label:'Tendance 1 jour',sub:'v16 · validée',color:'#22c55e'},agents:{label:'Agents 15 min',sub:'v15',color:'#f59e0b'}};
 function buildStratSeg(){
   $('stratSeg').innerHTML=Object.entries(STRATS).map(([k,v])=>`<button class="seg-btn" data-strat="${k}" style="--seg-c:${v.color}">${v.label}<span class="seg-sub">${v.sub}</span></button>`).join('');
@@ -3047,7 +3080,7 @@ function openSymbol(sym){
   let posHtml='';
   if(pos){
     const up=unrealized(pos);
-    posHtml=`<div class="card-flat p-3 mb-3"><div class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Position ouverte</div><div class="flex items-center justify-between"><span class="text-[12px] font-extrabold ${pos.dir>0?'text-emerald-400':'text-red-400'}">${pos.dir>0?'LONG':'SHORT'} · ${pos.agent}</span><span class="text-[13px] font-extrabold num ${up>=0?'green':'red'}">${signedMoney(up)}</span></div><div class="flex justify-between text-[10px] text-zinc-500 num mt-1"><span>Entrée ${priceFmt(pos.entry)}</span><span>SL ${priceFmt(pos.sl)} · risque ${money(pos.risk0)}</span></div></div>`;
+    posHtml=`<div class="card-flat p-3 mb-3"><div class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Position ouverte</div><div class="flex items-center justify-between"><span class="text-[12px] font-extrabold ${pos.dir>0?'text-emerald-400':'text-red-400'}">${pos.dir>0?'LONG':'SHORT'} · ${pos.agent}</span><span class="text-[13px] font-extrabold num ${up>=0?'green':'red'}">${signedMoney(up)}</span></div><div class="flex justify-between text-[10px] text-zinc-500 num mt-1"><span>Entrée ${priceFmt(pos.entry)}</span><span>SL ${priceFmt(pos.sl)} · risque ${money(pos.risk0)}</span></div>${pos.lev>1?`<div class="lev-sheet mt-2"><div><span>Levier</span><b>×${pos.lev}</b></div><div><span>Marge</span><b>${money(pos.margin)}</b></div><div><span>Notionnel</span><b>${money(pos.notional)}</b></div><div><span>Liquidation</span><b>${priceFmt(pos.liq)}</b></div><div><span>Gain/perte sur marge</span><b class="${up>=0?'green':'red'}">${(up/pos.margin*100>=0?'+':'')+(up/pos.margin*100).toFixed(1)}%</b></div></div>`:`<div class="text-[10px] text-zinc-600 num mt-1">Notionnel ${money(pos.notional||0)} · sans levier</div>`}</div>`;
   }else if(atMax){
     posHtml=`<div class="text-[11px] text-amber-400 font-semibold mb-3">Limite de positions atteinte (${maxPosFor()})</div>`;
   }else if(!isFresh(q)){
@@ -3059,7 +3092,7 @@ function openSymbol(sym){
     <svg viewBox="0 0 100 26" preserveAspectRatio="none" style="width:100%;height:70px;display:block;margin-bottom:12px;"><defs><linearGradient id="symFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${pct>=0?'#22c55e':'#ef4444'}" stop-opacity=".25"/><stop offset="100%" stop-color="${pct>=0?'#22c55e':'#ef4444'}" stop-opacity="0"/></linearGradient></defs><path d="${path.trim()} L100,26 L0,26 Z" fill="url(#symFill)"/><path d="${path.trim()}" fill="none" stroke="${pct>=0?'#22c55e':'#ef4444'}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
     <div class="text-[10.5px] text-zinc-500 mb-3">${srcInfo(q)}</div>
     ${posHtml}
-    ${canTrade?`<div class="grid grid-cols-2 gap-2"><button class="btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#03130a" onclick="manualTrade('${sym}',1)">▲ LONG</button><button class="btn" style="background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff" onclick="manualTrade('${sym}',-1)">▼ SHORT</button></div><div class="text-[10px] text-zinc-600 text-center mt-2">Trade manuel · risque ${(RISK[S.risk].risk*100).toFixed(2)}%</div>`:''}`;
+    ${canTrade?`<div class="grid grid-cols-2 gap-2"><button class="btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#03130a" onclick="manualTrade('${sym}',1)">▲ LONG</button><button class="btn" style="background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff" onclick="manualTrade('${sym}',-1)">▼ SHORT</button></div><div class="text-[10px] text-zinc-600 text-center mt-2">Trade manuel · risque ${(RISK[S.risk].risk*100).toFixed(2)}%${RISK[S.risk].lev>1?` · <span style="color:#f0abfc">levier ×${RISK[S.risk].lev} simulé</span>`:''}</div>`:''}`;
   $('symbolModal').classList.add('open');
 }
 function srcInfo(q){
@@ -3422,7 +3455,7 @@ function initApp(){
   });
 
   $('positionsList').addEventListener('click',e=>{
-    const btn=e.target.closest('[data-close]');if(!btn)return;
+    const btn=e.target.closest('[data-close]');if(!btn){const c=e.target.closest('.pos[data-id]');const pp=c&&S.positions.find(x=>x.id===Number(c.dataset.id));if(pp)openSymbol(pp.sym);return;}
     const id=Number(btn.dataset.close),p=S.positions.find(x=>x.id===id);if(!p)return;
     if(!isFresh(S.prices[p.sym])){toast('Prix périmé pour '+p.sym+' : clôture refusée, réessaie quand le prix est à jour','info');return;}
     closePosition(p,'Manuel');saveState();

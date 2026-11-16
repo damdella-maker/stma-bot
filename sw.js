@@ -3,7 +3,7 @@
    - met en cache les bibliothèques CDN (Tailwind, polices)
    - ne met JAMAIS en cache les données de marché (Binance, Yahoo, relais, Fear & Greed…)
    - affiche / gère le clic sur les notifications */
-const VERSION = 'stma-v18.5';
+const VERSION = 'stma-v18.6';
 const SHELL_CACHE = VERSION + '-shell';
 const CDN_CACHE = VERSION + '-cdn';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
