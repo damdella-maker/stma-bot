@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#08080a" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v18.1</title>
+<title>STMA Bot · v18.2</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -82,6 +82,25 @@
     background:radial-gradient(circle, rgba(34,197,94,1), rgba(34,197,94,0)); animation:trailFade .8s ease forwards; }
   .money-trail.loss{ background:radial-gradient(circle, rgba(239,68,68,1), rgba(239,68,68,0)); }
   @keyframes trailFade{ 0%{transform:scale(1);opacity:1} 100%{transform:scale(0);opacity:0} }
+  .fx-canvas{ position:fixed; inset:0; width:100vw; height:100vh; z-index:160; pointer-events:none; }
+  .big-bubble{ position:fixed; left:50%; top:44%; z-index:161; pointer-events:none; width:min(58vw,230px); aspect-ratio:1; border-radius:50%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; transform:translate(-50%,-50%) scale(.2); opacity:0; will-change:transform,opacity; }
+  .big-bubble.win{ background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.85) 0 6%,rgba(134,239,172,.95) 14%,#22c55e 48%,#15803d 100%);
+    box-shadow:0 0 0 6px rgba(34,197,94,.25),0 0 60px rgba(34,197,94,.85),inset 0 -12px 30px rgba(0,0,0,.25); animation:bbWin .82s cubic-bezier(.3,1.4,.5,1) forwards; }
+  .big-bubble.loss{ background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.75) 0 6%,rgba(252,165,165,.95) 14%,#ef4444 50%,#991b1b 100%);
+    box-shadow:0 0 0 6px rgba(239,68,68,.25),0 0 55px rgba(239,68,68,.8),inset 0 -12px 30px rgba(0,0,0,.3); animation:bbLoss .62s cubic-bezier(.3,1.3,.5,1) forwards; }
+  .big-bubble .bb-amt{ font-size:clamp(26px,9vw,38px); font-weight:900; letter-spacing:-.02em; font-variant-numeric:tabular-nums; text-shadow:0 2px 8px rgba(0,0,0,.35); }
+  .big-bubble .bb-sub{ font-size:12px; font-weight:800; opacity:.9; text-transform:uppercase; letter-spacing:.08em; margin-top:2px; }
+  .big-bubble.pop{ animation:bbPop .26s ease-out forwards !important; }
+  @keyframes bbWin{ 0%{transform:translate(-50%,-50%) scale(.2);opacity:0} 30%{transform:translate(-50%,-50%) scale(1);opacity:1} 55%{transform:translate(-50%,-50%) scale(.94)} 80%{transform:translate(-50%,-50%) scale(1.12)} 100%{transform:translate(-50%,-50%) scale(1.22);opacity:1} }
+  @keyframes bbLoss{ 0%{transform:translate(-50%,-50%) scale(.2);opacity:0} 40%{transform:translate(-50%,-50%) scale(1);opacity:1} 70%{transform:translate(-50%,-50%) scale(1.06) rotate(-3deg)} 85%{transform:translate(-50%,-50%) scale(1.04) rotate(3deg)} 100%{transform:translate(-50%,-50%) scale(1.1) rotate(0)} }
+  @keyframes bbPop{ 0%{transform:translate(-50%,-50%) scale(1.22);opacity:1;filter:brightness(1.4)} 100%{transform:translate(-50%,-50%) scale(1.75);opacity:0;filter:brightness(2)} }
+  .fx-flash{ position:fixed; inset:0; z-index:159; pointer-events:none; animation:fxFlash .85s ease-out forwards; }
+  .fx-flash.win{ background:radial-gradient(circle at 50% 44%,rgba(34,197,94,.45),rgba(34,197,94,.12) 55%,transparent 80%); }
+  .fx-flash.loss{ background:radial-gradient(circle at 50% 44%,rgba(239,68,68,.25),rgba(239,68,68,.35) 70%,rgba(127,29,29,.5)); }
+  @keyframes fxFlash{ 0%{opacity:0} 15%{opacity:1} 100%{opacity:0} }
+  .fx-shake{ animation:fxShake .45s cubic-bezier(.36,.07,.19,.97); }
+  @keyframes fxShake{ 10%,90%{transform:translateX(-2px)} 20%,80%{transform:translateX(4px)} 30%,50%,70%{transform:translateX(-6px)} 40%,60%{transform:translateX(6px)} }
   .mini-bubble{ position:fixed; z-index:152; pointer-events:none; padding:2px 7px; border-radius:999px; font-size:10.5px; font-weight:900; color:#fff;
     background:linear-gradient(135deg,#22c55e,#16a34a); box-shadow:0 4px 12px rgba(34,197,94,.55); white-space:nowrap; font-variant-numeric:tabular-nums; will-change:transform,opacity; }
   .mini-bubble.loss{ background:linear-gradient(135deg,#ef4444,#b91c1c); box-shadow:0 4px 12px rgba(239,68,68,.55); }
@@ -263,7 +282,7 @@
     <div class="logo">S</div>
     <div>
       <div class="text-[15px] font-extrabold leading-tight tracking-tight">STMA Bot</div>
-      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v18.1</div>
+      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v18.2</div>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -463,6 +482,7 @@
     </div>
     <div class="card p-4 mb-3">
       <div class="text-[13px] font-extrabold mb-3">Options avancées</div>
+      <div class="set-row flex items-center justify-between py-2.5 border-b border-white/5"><div><div class="text-[13px] font-semibold">Sans limite</div><div class="text-[10.5px] text-zinc-500">Aucun maximum de trades ni de pause après des pertes. Le stop de chaque trade et le refus des prix périmés restent actifs.</div></div><label class="sw"><input type="checkbox" id="opt-noLimit"><span></span></label></div>
       <div class="set-row flex items-center justify-between py-2.5 border-b border-white/5"><div><div class="text-[13px] font-semibold">Sniper mode</div><div class="text-[10.5px] text-zinc-500">Entrées sur démarrage de mouvement</div></div><label class="sw"><input type="checkbox" id="opt-sniper"><span></span></label></div>
       <div class="set-row flex items-center justify-between py-2.5 border-b border-white/5"><div><div class="text-[13px] font-semibold">Avocat du diable</div><div class="text-[10.5px] text-zinc-500">Pénalise les trades étirés, chers ou face à un obstacle</div></div><label class="sw"><input type="checkbox" id="opt-devil"><span></span></label></div>
       <div class="set-row flex items-center justify-between py-2.5 border-b border-white/5"><div><div class="text-[13px] font-semibold">Trailing stop</div><div class="text-[10.5px] text-zinc-500">Sécurise les gains en suivant le prix</div></div><label class="sw"><input type="checkbox" id="opt-trailing"><span></span></label></div>
@@ -510,7 +530,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v18.1</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v18.2</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -964,7 +984,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='18.1',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='18.2',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -983,6 +1003,10 @@ function signedMoney(v){return (v>=0?'+':'-')+'$'+Math.abs(v).toLocaleString('en
 function priceFmt(p){if(!p||p<=0||!Number.isFinite(p))return '—';if(p>=1000)return p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});if(p>=1)return p.toFixed(2);if(p>=0.01)return p.toFixed(4);return p.toFixed(8);}
 function ago(ts){const s=Math.max(0,Math.floor((Date.now()-ts)/1000));if(s<60)return s+'s';if(s<3600)return Math.floor(s/60)+'m';return Math.floor(s/3600)+'h';}
 function vibrate(ms){if(navigator.vibrate&&(!navigator.userActivation||navigator.userActivation.hasBeenActive)){try{navigator.vibrate(ms);}catch(e){}}}
+// v18.2 « Sans limite » (activé par défaut) : plus de maximum de positions, d'entrées par heure ou par bougie, de pause par actif,
+// de pause après une série de pertes, de coupe-circuit journalier ou drawdown, ni de plafond global d'exposition.
+// Restent : le stop de chaque trade (stratégie), la taille max d'UN trade (% du capital) et le refus de trader sur un prix périmé.
+function noLim(){return S.opts.noLimit!==false;}
 function maxPosFor(){return maxPosOf(S.risk,S.mode);}
 function cooldownFor(){return cooldownOf(S.mode);}
 function scheduleRender(){if(rafPending)return;rafPending=true;requestAnimationFrame(()=>{rafPending=false;flushRender();});}
@@ -1001,9 +1025,9 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:18.1,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
+  const st={v:18.2,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
-    opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true},
+    opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
     agents:{},learn:{},prices:{},consensus:{bull:0,bear:0,action:'HOLD',veto:false},regime:'range',ticks:0,seq:1,streak:0,
     killed:false,dayKey:'',dayStart:DEFAULT_START,dayHalt:false,lossRun:0,pauseUntil:0,cooldown:{},
@@ -1467,7 +1491,7 @@ function processBubbleQueue(){
   if(bubbleBusy||!bubbleQueue.length||document.hidden)return;
   bubbleBusy=true;const it=bubbleQueue.shift();let fin=false;
   const done=()=>{if(fin)return;fin=true;clearTimeout(bubbleWatch);bubbleBusy=false;setTimeout(processBubbleQueue,150);};
-  bubbleWatch=setTimeout(done,2600);
+  bubbleWatch=setTimeout(done,2400);
   try{animateProfitToWallet(it.amount,it.rect,done,it.n);}catch(e){done();}
 }
 function bubbleSound(isLoss){if(isLoss)beep(196,0.2,0.05);else{beep(988,0.09,0.05);setTimeout(()=>beep(1319,0.12,0.04),95);}}
@@ -1479,46 +1503,53 @@ function miniBubbleAt(rect,amount){
   const an=m.animate([{transform:'translate(-50%,0) scale(.6)',opacity:0},{transform:'translate(-50%,-12px) scale(1)',opacity:1,offset:.2},{transform:'translate(-50%,-16px) scale(1)',opacity:1,offset:.7},{transform:'translate(-50%,-28px) scale(.9)',opacity:0}],{duration:1500,easing:'ease-out',fill:'forwards'});
   an.onfinish=()=>m.remove();setTimeout(()=>m.remove(),2200);
 }
+/* v18.2 : grosse animation au centre de l'écran (CSS + canvas, aucune bibliothèque)
+   Gain : bulle verte qui gonfle puis explose en confettis et particules vertes, flash vert.
+   Perte : bulle rouge qui éclate en éclats rouges, léger tremblement de l'écran, flash rouge. ≈ 1,5 s, jamais bloquant (pointer-events:none). */
+let fxCanvas=null,fxCtx=null,fxParts=[],fxRaf=0,fxDpr=1;
+function fxEnsure(){
+  if(fxCanvas&&fxCanvas.isConnected)return;
+  fxCanvas=document.createElement('canvas');fxCanvas.className='fx-canvas';document.body.appendChild(fxCanvas);fxCtx=fxCanvas.getContext('2d');
+  const size=()=>{fxDpr=Math.min(2,window.devicePixelRatio||1);fxCanvas.width=Math.round(innerWidth*fxDpr);fxCanvas.height=Math.round(innerHeight*fxDpr);};size();addEventListener('resize',size);
+}
+function fxBurst(x,y,win){
+  fxEnsure();const G=['#22c55e','#4ade80','#86efac','#facc15','#ffffff','#16a34a'],Rd=['#ef4444','#f87171','#b91c1c','#fca5a5','#7f1d1d'];
+  const n=win?110:60;
+  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=win?(3+Math.random()*9):(2+Math.random()*6),conf=win&&i%2===0;
+    fxParts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-(win?3:1),g:win?0.22:0.3,life:0,max:(win?55:40)+Math.random()*30,
+      c:(win?G:Rd)[i%(win?G.length:Rd.length)],kind:conf?'conf':win?'dot':'shard',w:conf?6+Math.random()*5:win?2.5+Math.random()*3:3+Math.random()*6,h:conf?3+Math.random()*3:0,rot:Math.random()*6,vr:(Math.random()-0.5)*0.4});}
+  if(!fxRaf)fxRaf=requestAnimationFrame(fxStep);
+}
+function fxStep(){
+  const c=fxCtx,W=fxCanvas.width,H=fxCanvas.height;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,W,H);c.setTransform(fxDpr,0,0,fxDpr,0,0);
+  fxParts=fxParts.filter(p=>p.life<p.max);
+  for(const p of fxParts){p.life++;p.vx*=0.985;p.vy=p.vy*0.985+p.g;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;const al=Math.max(0,1-p.life/p.max);c.globalAlpha=al;c.fillStyle=p.c;
+    if(p.kind==='conf'){c.save();c.translate(p.x,p.y);c.rotate(p.rot);c.fillRect(-p.w/2,-p.h/2,p.w,p.h*Math.abs(Math.cos(p.rot*2)));c.restore();}
+    else if(p.kind==='shard'){c.save();c.translate(p.x,p.y);c.rotate(p.rot);c.beginPath();c.moveTo(0,-p.w);c.lineTo(p.w*0.5,p.w*0.6);c.lineTo(-p.w*0.5,p.w*0.6);c.closePath();c.fill();c.restore();}
+    else{c.beginPath();c.arc(p.x,p.y,p.w,0,Math.PI*2);c.fill();}}
+  c.globalAlpha=1;
+  if(fxParts.length)fxRaf=requestAnimationFrame(fxStep);else{fxRaf=0;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,W,H);}
+}
+function screenFlash(win){const f=document.createElement('div');f.className='fx-flash '+(win?'win':'loss');document.body.appendChild(f);setTimeout(()=>f.remove(),900);}
+function screenShake(){for(const el of [document.querySelector('main'),document.querySelector('header')]){if(!el)continue;el.classList.remove('fx-shake');void el.offsetWidth;el.classList.add('fx-shake');setTimeout(()=>el.classList.remove('fx-shake'),500);}}
 function animateProfitToWallet(amount,startRect,onDone,n=1){
-  const eqEl=$('equity'),er=eqEl.getBoundingClientRect(),isLoss=amount<0;
-  const label=`${isLoss?'-':'+'}$${Math.abs(amount).toFixed(2)}${n>1?` · ${n} trades`:''}`;
-  const land=()=>{
-    bubbleSound(isLoss);
-    eqEl.classList.remove('flash','flash-loss');void eqEl.offsetWidth;eqEl.classList.add(isLoss?'flash-loss':'flash');
-    if(!isLoss){const wi=$('walletIcon');if(wi){wi.classList.remove('bounce');void wi.offsetWidth;wi.classList.add('bounce');}}
-  };
-  if(er.width===0||reduceMotion()||!document.body.animate){land();onDone&&onDone();return;}
-  const sr=startRect&&Number.isFinite(startRect.left)&&startRect.width>0?startRect:{left:innerWidth/2,top:innerHeight*0.55,width:0,height:0};
-  const sx=sr.left+sr.width/2,sy=sr.top+sr.height/2,ex=er.left+er.width/2,ey=er.top+er.height/2;
-  // arc de Bézier cubique : la bulle monte, puis retombe en douceur sur le solde
-  const dx=ex-sx,lift=Math.max(70,Math.min(170,Math.abs(dx)*0.35+80));
-  const c1x=sx+dx*0.1,c1y=Math.min(sy,ey)-lift,c2x=ex-dx*0.3,c2y=ey-lift*0.55;
-  const B=t=>{const u=1-t;return [u*u*u*sx+3*u*u*t*c1x+3*u*t*t*c2x+t*t*t*ex,u*u*u*sy+3*u*u*t*c1y+3*u*t*t*c2y+t*t*t*ey];};
-  const b=document.createElement('div');b.className='money-bubble'+(isLoss?' loss':'');
-  b.innerHTML=`<span class="bubble-coin">${isLoss?'💸':'💰'}</span><span>${escH(label)}</span>`;
-  b.style.cssText='left:0;top:0;animation:none;transform:translate3d(-999px,-999px,0)';document.body.appendChild(b);
-  const hw=b.offsetWidth/2,hh=b.offsetHeight/2,N=30,fr=[],D=1000,ease='cubic-bezier(.4,0,.3,1)';
-  for(let i=0;i<=N;i++){const t=i/N,[x,y]=B(t),sc=t<0.12?0.55+t/0.12*0.6:t>0.8?1.15-(t-0.8)/0.2*0.75:1.15-(t-0.12)*0.12;
-    fr.push({transform:`translate3d(${(x-hw).toFixed(1)}px,${(y-hh).toFixed(1)}px,0) scale(${sc.toFixed(3)})`,opacity:t>0.93?(1-t)/0.07:1,offset:t});}
-  const anim=b.animate(fr,{duration:D,easing:ease,fill:'forwards'});
-  // traînée : billes qui suivent exactement la même courbe avec un petit retard
-  for(let i=1;i<=7;i++){const d=document.createElement('div');d.className='money-trail'+(isLoss?' loss':'');d.style.cssText='left:0;top:0;animation:none;opacity:0';document.body.appendChild(d);
-    const tf=[];for(let k=0;k<=16;k++){const t=k/16,[x,y]=B(t);tf.push({transform:`translate3d(${(x-3).toFixed(1)}px,${(y-3).toFixed(1)}px,0) scale(${(1.1-i*0.11).toFixed(2)})`,opacity:(0.9-i*0.1)*(t>0.88?(1-t)/0.12:1),offset:t});}
-    const ta=d.animate(tf,{duration:D,delay:i*38,easing:ease,fill:'forwards'});ta.onfinish=()=>d.remove();setTimeout(()=>d.remove(),D+800);}
-  let landed=false;
-  const finish=()=>{if(landed)return;landed=true;b.remove();
-    // éclat : 12 particules régulières autour du solde
-    for(let i=0;i<12;i++){const ang=Math.PI*2*i/12,dist=i%2?34:22,q=document.createElement('div');q.className='money-particle';
-      q.style.cssText=`left:${ex-4}px;top:${ey-4}px;animation:none;background:radial-gradient(circle,${isLoss?'#f87171':'#4ade80'},transparent)`;document.body.appendChild(q);
-      const pa=q.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${(Math.cos(ang)*dist).toFixed(1)}px,${(Math.sin(ang)*dist).toFixed(1)}px) scale(.15)`,opacity:0}],{duration:700,easing:'cubic-bezier(.2,.8,.3,1)',fill:'forwards'});
-      pa.onfinish=()=>q.remove();setTimeout(()=>q.remove(),1200);}
-    land();onDone&&onDone();};
-  anim.onfinish=finish;anim.oncancel=finish;
+  const eqEl=$('equity'),isLoss=amount<0,win=!isLoss;
+  const label=`${isLoss?'-':'+'}$${Math.abs(amount).toFixed(2)}`;
+  const flashEq=()=>{eqEl.classList.remove('flash','flash-loss');void eqEl.offsetWidth;eqEl.classList.add(isLoss?'flash-loss':'flash');
+    if(win){const wi=$('walletIcon');if(wi){wi.classList.remove('bounce');void wi.offsetWidth;wi.classList.add('bounce');}}};
+  if(reduceMotion()){bubbleSound(isLoss);flashEq();onDone&&onDone();return;}   // version allégée : flash du solde + son
+  const b=document.createElement('div');b.className='big-bubble '+(win?'win':'loss');
+  b.innerHTML=`<div class="bb-amt">${escH(label)}</div><div class="bb-sub">${n>1?escH(n+' trades clôturés'):win?'Gain':'Perte'}</div>`;
+  document.body.appendChild(b);
+  const popAt=win?820:620;
+  setTimeout(()=>{const r=b.getBoundingClientRect();b.classList.add('pop');fxBurst(r.left+r.width/2,r.top+r.height/2,win);screenFlash(win);if(isLoss)screenShake();bubbleSound(isLoss);flashEq();},popAt);
+  setTimeout(()=>b.remove(),popAt+260);
+  setTimeout(()=>{onDone&&onDone();},1500);
 }
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:18.1,strategy:S.strategy,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:18.2,strategy:S.strategy,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
     cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen}));}catch(x){}
@@ -1528,7 +1559,7 @@ function loadState(){
   try{for(const k of [STORE_KEY,...LEGACY_KEYS]){const raw=localStorage.getItem(k);if(raw){saved=JSON.parse(raw);from=k;break;}}}catch(x){}
   S=freshState();if(!saved)return;
   // Migration v11/v12 → v13 : on reprend tout ce qui est compatible, les nouveaux champs prennent leur valeur par défaut
-  if(![11,12,13,14,15,16,17,18,18.1].includes(saved.v))return;
+  if(![11,12,13,14,15,16,17,18,18.1,18.2].includes(saved.v))return;
   try{
     for(const k of ['start','capital','closed','lessons','equityHist','peakEquity','maxDD','streak','seq','killed','dayKey','dayStart','dayHalt','lossRun','pauseUntil','feesPaid','closedCount','lastEntry','openTimes','lastAutoOpen'])if(saved[k]!=null)S[k]=saved[k];
     if(saved.closedCount==null)S.closedCount=Array.isArray(S.closed)?S.closed.length:0;
@@ -1626,7 +1657,7 @@ function openPosition(sym,dir,ev,manual){
     mult=riskMult(S.regime,dd,S.lossRun,q.market,correlated);
   }
   const fill=q.price*(1+dir*cost.slip);
-  const qty=sizeQty(eq,fill*fx,stopDist*fx,cost,R,mult,dt?Infinity:Math.max(0,eq*R.heat*(manual?10:1)-heat()),exposure());
+  const qty=sizeQty(eq,fill*fx,stopDist*fx,cost,R,mult,dt||noLim()?Infinity:Math.max(0,eq*R.heat*(manual?10:1)-heat()),noLim()?-Infinity:exposure());
   if(!qty){
     pushDecision('SKIP '+sym,'taille nulle · heat ou exposition saturés');
     if(manual)toast('Taille trop petite ou limite d\'exposition atteinte','info');
@@ -1671,7 +1702,7 @@ function closePosition(p,reason){
       }
     }
   }
-  if(!win&&S.lossRun>=6){S.lossRun=0;S.pauseUntil=Date.now()+3600000;pushLesson('6 pertes d\'affilée · pause d\'une heure','bad');}
+  if(!noLim()&&!win&&S.lossRun>=6){S.lossRun=0;S.pauseUntil=Date.now()+3600000;pushLesson('6 pertes d\'affilée · pause d\'une heure','bad');}
   if(total/S.start*100>1.5)confetti();
   const el=posEls.get(p.id),er=el?el.getBoundingClientRect():null,tk=tickerEls.get(p.sym);
   if(er)miniBubbleAt(er,total);if(tk)miniBubbleAt(tk.el.getBoundingClientRect(),total);
@@ -1703,6 +1734,7 @@ function updatePositions(){
 function riskGate(){
   const R=RISK[S.risk],eq=equity(),now=Date.now(),day=new Date().toISOString().slice(0,10);
   if(S.dayKey!==day){S.dayKey=day;S.dayStart=eq;S.dayHalt=false;}
+  if(noLim())return '';
   if(S.killed)return 'arrêt drawdown';
   const dd=S.peakEquity>0?(S.peakEquity-eq)/S.peakEquity:0;
   if(dd>=R.dd){
@@ -1760,8 +1792,8 @@ function tickStrategy(trade,quiet){
     if(!best||Math.abs(ev.net)>Math.abs(best.ev.net))best={sym,ev};
     if(ev.action!=='OPEN'){block(ev.reason);continue;}
     if(S.positions.some(p=>p.sym===sym))continue;
-    if((S.cooldown[sym]||0)>now){block('pause après clôture');continue;}
-    if(S.lastEntry[sym]===ind.t){block('déjà tradé sur cette bougie');continue;}   // un seul trade par actif et par bougie 15 min
+    if(!noLim()&&(S.cooldown[sym]||0)>now){block('pause après clôture');continue;}
+    if(!noLim()&&S.lastEntry[sym]===ind.t){block('déjà tradé sur cette bougie');continue;}   // un seul trade par actif et par bougie 15 min
     opens.push({sym,ev,ind});
   }
   while(analyses.length&&now-analyses[0]>60000)analyses.shift();
@@ -1777,9 +1809,9 @@ function tickStrategy(trade,quiet){
   const L=ENTRY_LIMITS[S.mode]||ENTRY_LIMITS.normal;
   let opened=0,limitMsg='';
   for(const o of opens){
-    if(S.positions.length>=maxPosFor())break;
-    if(S.openTimes.length>=L.perHour){limitMsg=`limite de ${L.perHour} entrées/heure (anti-surtrading)`;break;}
-    if(now-(S.lastAutoOpen||0)<L.gap){limitMsg=`attente ${Math.ceil((L.gap-(now-(S.lastAutoOpen||0)))/1000)} s entre deux entrées`;break;}
+    if(!noLim()&&S.positions.length>=maxPosFor())break;
+    if(!noLim()&&S.openTimes.length>=L.perHour){limitMsg=`limite de ${L.perHour} entrées/heure (anti-surtrading)`;break;}
+    if(!noLim()&&now-(S.lastAutoOpen||0)<L.gap){limitMsg=`attente ${Math.ceil((L.gap-(now-(S.lastAutoOpen||0)))/1000)} s entre deux entrées`;break;}
     if(openPosition(o.sym,o.ev.dir,o.ev,false)){
       opened++;S.lastEntry[o.sym]=o.ind.t;S.openTimes.push(now);S.lastAutoOpen=now;
       S.consensus.action=o.ev.dir>0?'BUY':'SELL';maybeAlert(o,true);
@@ -1809,7 +1841,7 @@ function dtTick(trade){
   const syms=dtSyms();for(const x of syms)ensureDaily(x);
   const bD=dailyFor('BTC');if(!bD){holdNote('Tendance 1 jour · chargement des bougies journalières…');return;}
   const dayNow=Math.floor(Date.now()/DAY)*DAY,notes=[];
-  if(trade&&S.killed){holdNote('veto · arrêt drawdown');return;}
+  if(trade&&S.killed&&!noLim()){holdNote('veto · arrêt drawdown');return;}
   for(const sym of syms){
     const d=dailyFor(sym),q=S.prices[sym];if(!d||!q)continue;
     const sig=dtEval(d,bD);if(!sig)continue;
@@ -1899,7 +1931,7 @@ function renderStrategyBox(){
     box.innerHTML=rows.map(r=>`<div class="flex justify-between gap-3"><span class="text-zinc-500">${r[0]}</span><span class="font-bold text-right num">${r[1]}</span></div>`).join('');return;}
   const P=params(),L=ENTRY_LIMITS[S.mode]||ENTRY_LIMITS.normal,M=MODES[S.mode];
   const rows=[['Seuil de signal',P.thr.toFixed(2)],['Stop',P.stopMult.toFixed(2)+' × ATR'],['Objectif 1 (moitié vendue)',P.tp1R+' R · puis stop au point mort'],['Objectif final',P.tpR+' R'+(S.opts.trailing?` · stop suiveur ${String(STRAT.trailAtr).replace('.',',')} ATR dès +${STRAT.trailAct} R`:'')],
-    ['Filtre volatilité','ATR entre 0,45× et 2,2× sa moyenne'],['Frais','≤ 35 % du risque, objectif ≥ 3× les frais'],['Anti-surtrading',`${L.perHour}/h max · ${Math.round(L.gap/1000)} s entre entrées · 1 par bougie`],['Pause après clôture',`${Math.round(cooldownFor()/3600e3)} h par actif (×2 après une perte)`],['Tendance','1h et marché de référence dans le sens du trade']];
+    ['Filtre volatilité','ATR entre 0,45× et 2,2× sa moyenne'],['Frais','≤ 35 % du risque, objectif ≥ 3× les frais'],['Anti-surtrading',noLim()?'aucune limite (Sans limite)':`${L.perHour}/h max · ${Math.round(L.gap/1000)} s entre entrées · 1 par bougie`],['Pause après clôture',noLim()?'aucune (Sans limite)':`${Math.round(cooldownFor()/3600e3)} h par actif (×2 après une perte)`],['Tendance','1h et marché de référence dans le sens du trade']];
   box.innerHTML=rows.map(r=>`<div class="flex justify-between gap-3"><span class="text-zinc-500">${r[0]}</span><span class="font-bold text-right num">${r[1]}</span></div>`).join('');
 }
 function holdNote(reason){
@@ -1956,7 +1988,7 @@ function renderHero(){
   pl.textContent=`${signedMoney(pnl)} · ${pct>=0?'+':''}${pct.toFixed(2)}%`;pl.className='text-[13px] font-bold mt-1 num '+(pnl>=0?'text-emerald-300':'text-red-300');
   $('peakLine').textContent='Pic '+money(S.peakEquity)+' · frais '+money(S.feesPaid);
   const mc=$('multChip');const newMult=(eq/S.start).toFixed(2)+'×';if(mc.textContent!==newMult){mc.textContent=newMult;mc.classList.remove('bump');void mc.offsetWidth;mc.classList.add('bump');}
-  const cfg=RISK[S.risk];$('posCount').textContent=`${S.positions.length} / ${maxPosFor()}`;$('riskTag').textContent='Risque '+cfg.label.toLowerCase();
+  const cfg=RISK[S.risk];$('posCount').textContent=`${S.positions.length} / ${noLim()?'∞':maxPosFor()}`;$('riskTag').textContent='Risque '+cfg.label.toLowerCase();
   const eqv=eq>0?exposure()/eq*100:0;$('exposureLine').textContent='Expo '+eqv.toFixed(0)+'%';
   const hero=$('heroCard');hero.classList.toggle('up',pnl>50);hero.classList.toggle('down',pnl<-50);
   const {line,area,refY,peakY}=sparkPath(S.equityHist,100,26,3);
@@ -2261,7 +2293,7 @@ function syncOpts(){
   $('opt-trailing').checked=S.opts.trailing;$('opt-shorts').checked=S.opts.shorts;
   $('opt-sound').checked=S.opts.sound;$('opt-learning').checked=S.opts.learning;
   if($('opt-instfilter'))$('opt-instfilter').checked=S.opts.instfilter;
-  for(const k of ['htf','alertSound','vibrate','alertIdle','notifyClose']){const el=$('opt-'+k);if(el)el.checked=!!S.opts[k];}
+  for(const k of ['htf','alertSound','vibrate','alertIdle','notifyClose','noLimit']){const el=$('opt-'+k);if(el)el.checked=!!S.opts[k];}
   renderNotifStatus();renderStrategyBox();
 }
 function startBot(){
@@ -2302,7 +2334,7 @@ function openSymbol(sym){
   const pct=q.changePct24h??0,pctCls=pct>=0?'text-emerald-400':'text-red-400';
   const pos=S.positions.find(p=>p.sym===sym);
   const used=new Set(S.positions.filter(p=>S.prices[p.sym]?.market===q.market).map(p=>p.sym));
-  const atMax=S.positions.length>=maxPosFor();
+  const atMax=!noLim()&&S.positions.length>=maxPosFor();
   const canTrade=!pos&&(used.size===0||!used.has(sym))&&!atMax&&isFresh(q);
   let posHtml='';
   if(pos){
@@ -2332,7 +2364,7 @@ function srcInfo(q){
 }
 function closeSymbol(){$('symbolModal').classList.remove('open');}
 function manualTrade(sym,dir){
-  if(S.positions.length>=maxPosFor()){toast('Limite de positions atteinte','info');return;}
+  if(!noLim()&&S.positions.length>=maxPosFor()){toast('Limite de positions atteinte','info');return;}
   if(dir<0&&!S.opts.shorts){toast('Ventes à découvert désactivées','info');return;}
   if(openPosition(sym,dir,null,true)){closeSymbol();renderAll();saveState();toast(`${dir>0?'LONG':'SHORT'} ${sym} · manuel`,'info');}
 }
@@ -2599,7 +2631,7 @@ async function srvSyncSettings(){
   if(!srvOn()){toast('Connecte d\'abord le serveur','info');return;}
   const o=S.opts;
   try{const r=await srvFetch('/api/config',{method:'POST',body:{strategy:S.strategy,risk:S.risk,mode:S.mode,markets:S.markets.filter(m=>m==='crypto'||m==='meme'),
-      opts:{sniper:o.sniper,devil:o.devil,trailing:o.trailing,learning:o.learning,instfilter:o.instfilter,shorts:o.shorts,htf:o.htf},
+      opts:{sniper:o.sniper,devil:o.devil,trailing:o.trailing,learning:o.learning,instfilter:o.instfilter,shorts:o.shorts,htf:o.htf,noLimit:o.noLimit!==false},
       trade:$('srv-trade').checked,notify:{closes:!!o.notifyClose,signals:true}}});
     toast('Réglages envoyés · '+(STRATS[r.strategy]?STRATS[r.strategy].label+' · ':'')+RISK[r.risk].label.toLowerCase()+' · '+MODES[r.mode].label.toLowerCase()+(r.trade?'':' · signaux seulement'),'info');srvRefresh(true);}
   catch(x){toast('Serveur : '+(x.message||x),'info');}
@@ -2667,7 +2699,7 @@ function initApp(){
   document.querySelectorAll('.filter-btn').forEach(b=>{
     b.onclick=()=>{tradeFilter=b.dataset.filter;document.querySelectorAll('.filter-btn').forEach(x=>x.classList.toggle('on',x===b));renderClosed();};
   });
-  const optMap={'opt-sniper':'sniper','opt-devil':'devil','opt-trailing':'trailing','opt-shorts':'shorts','opt-sound':'sound','opt-learning':'learning','opt-instfilter':'instfilter','opt-htf':'htf','opt-alertSound':'alertSound','opt-vibrate':'vibrate','opt-alertIdle':'alertIdle','opt-notifyClose':'notifyClose'};
+  const optMap={'opt-noLimit':'noLimit','opt-sniper':'sniper','opt-devil':'devil','opt-trailing':'trailing','opt-shorts':'shorts','opt-sound':'sound','opt-learning':'learning','opt-instfilter':'instfilter','opt-htf':'htf','opt-alertSound':'alertSound','opt-vibrate':'vibrate','opt-alertIdle':'alertIdle','opt-notifyClose':'notifyClose'};
   Object.entries(optMap).forEach(([elId,key])=>{
     const el=$(elId);if(!el)return;
     el.onchange=e=>{
