@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#0A0A0A" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v19.6</title>
+<title>STMA Bot · v19.7</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -503,7 +503,7 @@
   <div class="logo" aria-hidden="true">S</div>
   <div class="hdr-mid">
     <div class="hdr-title">STMA Bot</div>
-    <div class="hdr-sub">GrokBot V19.6</div>
+    <div class="hdr-sub">GrokBot V19.7</div>
   </div>
   <div class="hdr-right">
     <div class="hdr-acct">Paper</div>
@@ -829,7 +829,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v19.6</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v19.7</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -857,7 +857,7 @@
   <div class="sess-box">
     <button type="button" class="sess-x" id="sessClose" aria-label="Fermer">✕</button>
     <div class="sess-kicker" id="sessKicker">Résumé de session</div>
-    <div class="sess-sub" id="sessSub">STMA Bot · GrokBot V19.6</div>
+    <div class="sess-sub" id="sessSub">STMA Bot · GrokBot V19.7</div>
     <div class="sess-lbl">Profit total</div>
     <div id="sessProfit" class="sess-profit">+$0.00</div>
     <div id="sessPath" class="sess-path"></div>
@@ -1670,7 +1670,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='19.6',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='19.7',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1759,7 +1759,7 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:19.6,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',pauseNew:{agents:true,lev5:true,copy:true},
+  const st={v:19.7,strategy:'daily',dtDone:{},running:false,userWantsOn:true,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',pauseNew:{agents:true,lev5:true,copy:true},
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
     opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true,learnV2:true},huntDone:{},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
@@ -2300,10 +2300,15 @@ function migratePauseNew(S){
   if(S.pauseNew.lev5&&S.risk==='lev5')S.risk='high'; // positions ouvertes gardent p.lev
   return S;
 }
+function migrateUserWantsOn(S,saved){
+  // v19.7 : si le champ manque (v19.6 et avant), on considère que l'utilisateur veut le bot allumé
+  S.userWantsOn=!(saved&&saved.userWantsOn===false);
+  return S;
+}
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.6,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,pauseNew:S.pauseNew,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.7,strategy:S.strategy,userWantsOn:S.userWantsOn!==false,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,pauseNew:S.pauseNew,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
     cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR,platform:S.platform,hiddenAt:S.hiddenAt,relayOut:S.relayOut}));}catch(x){}
@@ -2350,6 +2355,7 @@ function loadState(){
     }
     if(saved.pauseNew&&typeof saved.pauseNew==='object')S.pauseNew=saved.pauseNew;
     migratePauseNew(S);   // v19.5 : lev5 → high si en pause (sauvegarde v18 inchangée sinon)
+    migrateUserWantsOn(S,saved);   // v19.7 : intention persistée, allumé par défaut pour les sauvegardes plus anciennes
     S.migratedFrom=from!==STORE_KEY?from:'';
   }catch(x){S=freshState();}
   purgeState();
@@ -2543,7 +2549,7 @@ function riskGate(){
   const dd=S.peakEquity>0?(S.peakEquity-eq)/S.peakEquity:0;
   if(dd>=R.dd){
     S.killed=true;for(const p of [...S.positions])if(isFresh(S.prices[p.sym]))closePosition(p,'Arrêt de sécurité');
-    stopBot();pushLesson(`Drawdown de ${Math.round(R.dd*100)} % atteint · tout est vendu, bot arrêté`,'bad');
+    stopBot({keepIntent:true});pushLesson(`Drawdown de ${Math.round(R.dd*100)} % atteint · tout est vendu, bot arrêté`,'bad');
     return 'arrêt drawdown';
   }
   if(!S.dayHalt&&S.dayStart>0&&(S.dayStart-eq)/S.dayStart>=R.daily){S.dayHalt=true;pushLesson(`Perte de ${Math.round(R.daily*100)} % sur la journée · plus d'achat jusqu'à demain`,'bad');}
@@ -3394,7 +3400,7 @@ function openSessionSummary(kind,extra){
   const profit=trades.reduce((a,c)=>a+(+c.pnl||0),0),wins=trades.filter(c=>c.pnl>0).length,n=trades.length;
   const eq=equity(),start=kind==='stop'&&sessionEq0?sessionEq0:S.start;
   $('sessKicker').textContent=kind==='away'?'Pendant ton absence':'Résumé de session';
-  $('sessSub').textContent=kind==='away'&&extra&&extra.dur?('STMA Bot · GrokBot V19.6 · '+extra.dur):'STMA Bot · GrokBot V19.6';
+  $('sessSub').textContent=kind==='away'&&extra&&extra.dur?('STMA Bot · GrokBot V19.7 · '+extra.dur):'STMA Bot · GrokBot V19.7';
   const sp=$('sessProfit');sp.textContent=signedMoney(profit);sp.className='sess-profit'+(profit<0?' neg':'');
   setText($('sessPath'),money(start)+' → '+money(eq)+' · '+(eq/start).toFixed(2)+'x');
   setText($('sessTrades'),String(n));
@@ -3468,22 +3474,33 @@ function syncOpts(){
   renderNotifStatus();renderStrategyBox();
 }
 let sessionAt=0,sessionEq0=0;
-function startBot(){
+function startBot(opts){
+  const silent=!!(opts&&opts.silent);
   if(S.running)return;
-  if(S.killed){S.killed=false;S.peakEquity=equity();pushLesson('Coupe-circuit réarmé · nouveau point de référence pour le drawdown','');}
-  S.running=true;sessionAt=Date.now();sessionEq0=equity();
+  if(silent&&S.killed)return;   // coupe-circuit : seul un appui sur Démarrer le réarme
+  if(!silent){
+    S.userWantsOn=true;
+    if(S.killed){S.killed=false;S.peakEquity=equity();pushLesson('Coupe-circuit réarmé · nouveau point de référence pour le drawdown','');}
+    sessionAt=Date.now();sessionEq0=equity();
+  }
+  S.running=true;
   $('btnStart').classList.add('hidden-tab');$('btnStop').classList.remove('hidden-tab');   // v18.4 : retour visuel d'abord
   $('liveDot').classList.add('on');$('liveTxt').textContent='Live';$('liveTxt').style.color='#4ade80';
-  vibrate([20,50,20]);initAudio();
-  setTimeout(()=>toast('Bot démarré · '+RISK[S.risk].label.toLowerCase()+' · '+MODES[S.mode].label.toLowerCase(),'info'),0);
+  saveState();
+  if(!silent){vibrate([20,50,20]);initAudio();setTimeout(()=>toast('Bot démarré · '+RISK[S.risk].label.toLowerCase()+' · '+MODES[S.mode].label.toLowerCase(),'info'),0);}
 }
-function stopBot(){
-  if(!S.running)return;
+function stopBot(opts){
+  const fromUser=!(opts&&opts.keepIntent);
+  if(fromUser)S.userWantsOn=false;
+  if(!S.running){saveState();return;}
   S.running=false;
   $('btnStart').classList.remove('hidden-tab');$('btnStop').classList.add('hidden-tab');
   $('liveDot').classList.remove('on');$('liveDot').style.background='';$('liveTxt').textContent='Off';$('liveTxt').style.color='#71717a';
-  saveState();renderAll();toast('Bot arrêté','info');vibrate(20);
-  openSessionSummary('stop');
+  saveState();renderAll();
+  if(fromUser){toast('Bot arrêté','info');vibrate(20);openSessionSummary('stop');}
+}
+function applyAutoStart(){
+  if(S&&S.userWantsOn&&!S.running&&!S.killed)startBot({silent:true});
 }
 /* ═══ v19 : CAPITAL FICTIF (bot de l'appareil, serveur 24h/24, portefeuille copie) ═══
    Saisie en euros (converti au cours EUR/USD en direct) ou en dollars. Un apport ou un retrait ne compte jamais comme gain ou perte :
@@ -3577,7 +3594,7 @@ function doReset(){
   stopBot();try{localStorage.removeItem(STORE_KEY);for(const k of LEGACY_KEYS)localStorage.removeItem(k);}catch(e){}
   $('ticker').innerHTML='';$('positionsList').innerHTML='';
   S=freshState();fleetSync();applyBinValid();posEls.clear();tickerEls.clear();inds.clear();candles.clear();whaleFeed=[];whaleFlow={};alerted.clear();
-  buildStratSeg();buildRiskSeg();buildModeSeg();syncMarketChips();syncOpts();renderAll();renderWhaleFeed();closeResetModal();connectWs();saveState();
+  buildStratSeg();buildRiskSeg();buildModeSeg();syncMarketChips();syncOpts();renderAll();renderWhaleFeed();closeResetModal();connectWs();saveState();applyAutoStart();
   toast('Simulation réinitialisée','info');
 }
 function closeAllPositions(){
@@ -3935,7 +3952,7 @@ function awaySummary(out,done){
 }
 function renderRelayChip(){
   const c=$('relayChip');if(!c)return;let t,k;
-  if(!srvOn()){t='📴 Sans serveur : le bot s\'arrête quand tu quittes l\'appli';k='off';}
+  if(!srvOn()){t='📴 Sans serveur : tes positions ne sont pas surveillées hors de l\'appli';k='off';}
   else if(srvErr){t='⚠️ Serveur injoignable : relais indisponible';k='err';}
   else if(!srvData){t='☁️ Serveur…';k='wait';}
   else{const lr=srvData.lastRun,fresh=lr&&Date.now()-lr.at<180000;
@@ -4162,7 +4179,7 @@ function initApp(){
   const goBackground=()=>{relayHandoff();saveState();wsShouldConnect=false;closeWs();clearTimeout(restTimer);};
   const resume=()=>{
     wsShouldConnect=true;wsFails=0;restPollCrypto();connectWs();if(restActive)restLoop();
-    relayResume();srvRefresh(true);lastYahooQuote=0;pollYahooQuotes(true);lastChartCycle=0;lastWhalePoll=0;lastInstPoll=Math.min(lastInstPoll,Date.now()-55000);
+    relayResume();applyAutoStart();srvRefresh(true);lastYahooQuote=0;pollYahooQuotes(true);lastChartCycle=0;lastWhalePoll=0;lastInstPoll=Math.min(lastInstPoll,Date.now()-55000);
     for(const sym of activeSyms())ensureCandles(sym);updateSrcMode();scheduleRender();
   };
   window.addEventListener('pagehide',goBackground);
@@ -4176,6 +4193,8 @@ function initApp(){
   }
 
   renderAll();renderWhaleFeed();updateSrcMode();
+  if(S.relayOut)relayResume();   // v19.7 : rejouer les sorties du relais aussi au chargement (pas seulement au retour d'onglet)
+  applyAutoStart();
 
   // Premier prix en REST (≈0,5 s) pendant que le WebSocket s'ouvre
   loadBinValid().finally(()=>{restPollCrypto();for(const sym of activeSyms())ensureCandles(sym);});
