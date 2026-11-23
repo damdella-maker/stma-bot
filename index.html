@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="STMA Bot" />
 <meta name="theme-color" content="#08080a" />
 <meta name="color-scheme" content="dark" />
-<title>STMA Bot · v19.4</title>
+<title>STMA Bot · v19.5</title>
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -401,7 +401,7 @@
     <div class="logo">S</div>
     <div>
       <div class="text-[15px] font-extrabold leading-tight tracking-tight">STMA Bot</div>
-      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v19.4</div>
+      <div class="text-[10px] text-zinc-500 font-medium">Multi-marchés · v19.5</div>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -581,7 +581,7 @@
     <div class="card neo-card p-4 mb-3">
       <div class="flex items-center justify-between">
         <div><div class="text-[15px] font-extrabold">🎯 Copie memecoins <span class="cp-badge">EXPÉRIMENTAL</span></div>
-          <div class="text-[10.5px] text-zinc-500 mt-0.5">Solana · copie automatique des meilleurs traders · argent fictif</div></div>
+          <div class="text-[10.5px] text-zinc-500 mt-0.5" id="cpSub">Solana · copie automatique des meilleurs traders · argent fictif · en pause : pas d'avantage validé</div></div>
         <label class="sw" aria-label="Activer la copie"><input type="checkbox" id="cpOn" checked><span></span></label>
       </div>
       <div id="cpStatus" class="text-[11px] text-zinc-400 mt-2.5 leading-snug">—</div>
@@ -712,7 +712,7 @@
         Les résultats passés ou simulés ne garantissent aucun gain réel.
       </p>
       <div class="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-zinc-600">
-        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v19.4</span>
+        <span class="px-2 py-1 rounded-md bg-white/5" id="verTag">v19.5</span>
         <span class="px-2 py-1 rounded-md bg-white/5">~117 actifs</span>
         <span class="px-2 py-1 rounded-md bg-white/5">4 modes</span>
         <span class="px-2 py-1 rounded-md bg-white/5">12 agents</span>
@@ -1535,7 +1535,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='19.4',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='19.5',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1624,7 +1624,7 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:19.4,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',
+  const st={v:19.5,strategy:'daily',dtDone:{},running:false,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',pauseNew:{agents:true,lev5:true,copy:true},
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
     opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true,learnV2:true},huntDone:{},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
@@ -2148,10 +2148,17 @@ function animateProfitToWallet(amount,startRect,onDone,n=1,meta=null){
   setTimeout(()=>b.remove(),popAt+260);
   setTimeout(()=>{onDone&&onDone();},1500);
 }
+/* v19.5 : nouvelles entrées en pause (pas d'avantage validé). Réversible : S.pauseNew.agents / .lev5 / .copy = false */
+function pauseNewOf(p){p=p&&typeof p==='object'?p:{};return {agents:p.agents!==false,lev5:p.lev5!==false,copy:p.copy!==false};}
+function migratePauseNew(S){
+  S.pauseNew=pauseNewOf(S.pauseNew);
+  if(S.pauseNew.lev5&&S.risk==='lev5')S.risk='high'; // positions ouvertes gardent p.lev
+  return S;
+}
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.4,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.5,strategy:S.strategy,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,pauseNew:S.pauseNew,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
     cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR,platform:S.platform,hiddenAt:S.hiddenAt,relayOut:S.relayOut}));}catch(x){}
@@ -2196,6 +2203,8 @@ function loadState(){
         if(p.tp==null)p.tp=p.entry+p.dir*p.R*(S.opts.trailing?5:3);
       }
     }
+    if(saved.pauseNew&&typeof saved.pauseNew==='object')S.pauseNew=saved.pauseNew;
+    migratePauseNew(S);   // v19.5 : lev5 → high si en pause (sauvegarde v18 inchangée sinon)
     S.migratedFrom=from!==STORE_KEY?from:'';
   }catch(x){S=freshState();}
   purgeState();
@@ -2552,6 +2561,7 @@ function tickStrategy0(trade,quiet){
   S.consensus={bull,bear,action:'HOLD',veto:!!gate,vetoReason:gate};
   opens.sort((a,b)=>Math.abs(b.ev.net)-Math.abs(a.ev.net));
   if(!trade){if(!quiet)for(const o of opens.slice(0,3))maybeAlert(o,false);return;}   // mode surveillance : alerte sans trader
+  if(pauseNewOf(S.pauseNew).agents){holdNote('Agents 15 min · en pause : pas d\'avantage validé');return;}
   if(!seen){holdNote('aucune donnée réelle exploitable');return;}
   if(gate){holdNote('veto · '+gate);return;}
   S.openTimes=(S.openTimes||[]).filter(t=>now-t<3600000);
@@ -3146,17 +3156,18 @@ function buildRiskSeg(){
   $('riskSeg').querySelectorAll('[data-risk]').forEach(b=>{b.onclick=()=>setRisk(b.dataset.risk);});
   syncRiskSeg();
 }
-function syncRiskSeg(){$('riskSeg').querySelectorAll('[data-risk]').forEach(b=>b.classList.toggle('on',b.dataset.risk===S.risk));}
-function setRisk(r){if(!RISK[r])return;const was=S.risk;S.risk=r;syncRiskSeg();renderHero();saveState();vibrate(10);
+function syncRiskSeg(){$('riskSeg').querySelectorAll('[data-risk]').forEach(b=>{b.classList.toggle('on',b.dataset.risk===S.risk);if(b.dataset.risk==='lev5'){const s=b.querySelector('.seg-sub');if(s)s.textContent=pauseNewOf(S.pauseNew).lev5?'en pause : pas d\'avantage validé':'simulé · sans limite · liquidation −85 % de la marge';}});}
+function setRisk(r){if(!RISK[r])return;if(r==='lev5'&&pauseNewOf(S.pauseNew).lev5){toast('Levier ×5 · en pause : pas d\'avantage validé','info');syncRiskSeg();return;}
+  const was=S.risk;S.risk=r;syncRiskSeg();renderHero();saveState();vibrate(10);
   if(r!==was&&RISK[r].lev>1)toast(`Levier ×${RISK[r].lev} simulé : positions jusqu'à ${RISK[r].posCap*100} % du capital en notionnel, liquidation si ${Math.round(LEV_LIQ*100)} % de la marge est perdue · argent fictif`,'info');}
 const STRATS={daily:{label:'Tendance 1 jour',sub:'v16 · validée',color:'#22c55e'},agents:{label:'Agents 15 min',sub:'v15',color:'#f59e0b'}};
 function buildStratSeg(){
   $('stratSeg').innerHTML=Object.entries(STRATS).map(([k,v])=>`<button class="seg-btn" data-strat="${k}" style="--seg-c:${v.color}">${v.label}<span class="seg-sub">${v.sub}</span></button>`).join('');
   $('stratSeg').querySelectorAll('[data-strat]').forEach(b=>{b.onclick=()=>setStrategy(b.dataset.strat);});syncStratSeg();
 }
-function syncStratSeg(){$('stratSeg').querySelectorAll('[data-strat]').forEach(b=>b.classList.toggle('on',b.dataset.strat===S.strategy));
-  $('stratNote').textContent=S.strategy==='daily'?`Croisement EMA ${DTREND.f}/${DTREND.s} sur bougies journalières · stop ${DTREND.k} ATR · ${DTREND.syms.join(', ')} · peu de trades (une décision par jour, à ${new Date(Math.floor(Date.now()/DAY)*DAY+DAY).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} heure locale)`:'Agents sur bougies 15 min · nombreux signaux · « Fréquence de trading » s\'applique ici';}
-function setStrategy(k){if(!STRATS[k])return;S.strategy=k;syncStratSeg();renderStrategyBox();saveState();srvSendStrategy();vibrate(10);toast('Stratégie · '+STRATS[k].label,'info');}
+function syncStratSeg(){$('stratSeg').querySelectorAll('[data-strat]').forEach(b=>{b.classList.toggle('on',b.dataset.strat===S.strategy);if(b.dataset.strat==='agents'){const s=b.querySelector('.seg-sub');if(s)s.textContent=pauseNewOf(S.pauseNew).agents?'en pause : pas d\'avantage validé':'v15';}});
+  $('stratNote').textContent=S.strategy==='daily'?`Croisement EMA ${DTREND.f}/${DTREND.s} sur bougies journalières · stop ${DTREND.k} ATR · ${DTREND.syms.join(', ')} · peu de trades (une décision par jour, à ${new Date(Math.floor(Date.now()/DAY)*DAY+DAY).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} heure locale)`:pauseNewOf(S.pauseNew).agents?'Agents sur bougies 15 min · en pause : pas d\'avantage validé':'Agents sur bougies 15 min · nombreux signaux · « Fréquence de trading » s\'applique ici';}
+function setStrategy(k){if(!STRATS[k])return;S.strategy=k;syncStratSeg();renderStrategyBox();saveState();srvSendStrategy();vibrate(10);toast(k==='agents'&&pauseNewOf(S.pauseNew).agents?'Agents 15 min · en pause : pas d\'avantage validé':'Stratégie · '+STRATS[k].label,'info');}
 function buildModeSeg(){
   $('modeSeg').innerHTML=Object.entries(MODES).map(([k,v])=>`<button class="seg-btn" data-mode="${k}" style="--seg-c:${v.color}">${v.label}<span class="seg-sub">seuil ${v.thrAdd>0?'+':''}${v.thrAdd.toFixed(1)} · ×${v.maxPosMult}</span></button>`).join('');
   $('modeSeg').querySelectorAll('[data-mode]').forEach(b=>{b.onclick=()=>setMode(b.dataset.mode);});
@@ -3740,12 +3751,13 @@ function renderCopy(){
   const st=$('cpStatus');if(!st)return;
   if(!srvOn()){st.innerHTML='Connecte le serveur dans <b>Réglages › Serveur 24h/24</b> (adresse + jeton) : la copie tourne sur le serveur, même appli fermée.';return;}
   if(!cpData){st.textContent=cpErr?'Serveur : '+cpErr:'Chargement…';return;}
-  const d=cpData,sig=JSON.stringify([d.now&&Math.floor(d.now/5000),d.journal[0]&&d.journal[0].t,d.equity,d.on,cpErr]);
+  const d=cpData,paused=d.pauseNew===true||(d.cfg&&d.cfg.pauseNew!==false),sig=JSON.stringify([d.now&&Math.floor(d.now/5000),d.journal[0]&&d.journal[0].t,d.equity,d.on,paused,cpErr]);
   if(sig===cpSig)return;cpSig=sig;
   cpRenderAgents(d);
   $('cpOn').checked=!!d.on;
+  const sub=$('cpSub');if(sub)sub.textContent='Solana · copie automatique des meilleurs traders · argent fictif'+(paused?' · en pause : pas d\'avantage validé':'');
   const act=d.tiers?d.tiers.copied:d.wallets.filter(w=>w.act).length;
-  st.innerHTML=`${d.on?'<b class="green">Active</b>':'<b class="text-zinc-400">En pause</b>'} · ${act} trader(s) copié(s), ${((d.tiers&&d.tiers.watched)||d.wallets.length)-act} surveillé(s) · dernier signal Helius ${d.hook.last?'il y a '+cpAgo(d.hook.last):'—'} · ${d.hook.today} transaction(s) reçue(s) aujourd'hui${d.stopAt?' · stops vérifiés il y a '+cpAgo(d.stopAt):''}${cpErr?' · <span class="red">'+escH(cpErr)+'</span>':''}`;
+  st.innerHTML=`${d.on?'<b class="green">Active</b>':'<b class="text-zinc-400">En pause</b>'}${paused?' · en pause : pas d\'avantage validé':''} · ${act} trader(s) copié(s), ${((d.tiers&&d.tiers.watched)||d.wallets.length)-act} surveillé(s) · dernier signal Helius ${d.hook.last?'il y a '+cpAgo(d.hook.last):'—'} · ${d.hook.today} transaction(s) reçue(s) aujourd'hui${d.stopAt?' · stops vérifiés il y a '+cpAgo(d.stopAt):''}${cpErr?' · <span class="red">'+escH(cpErr)+'</span>':''}`;
   $('cpEq').textContent=cpMoney(d.equity);
   const pnl=d.equity-d.start;$('cpPnl').textContent=(pnl>=0?'+':'')+cpMoney(pnl);$('cpPnl').className='text-[14px] font-extrabold num '+(pnl>=0?'green':'red');
   $('cpWin').textContent=d.stats.closed?`${Math.round(100*d.stats.wins/d.stats.closed)} % gagnants · frais ${cpMoney(d.stats.fees)}`:'aucune vente encore';
