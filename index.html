@@ -742,6 +742,25 @@
     <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-1">Positions</div><div id="etfPos" class="text-[11.5px] text-zinc-500">—</div></div>
     <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-1">Historique</div><div id="etfTrades" class="text-[11.5px] text-zinc-500">—</div></div>
     <div class="card p-4 mb-3 border border-white/10"><div class="text-[11px] text-zinc-400 leading-relaxed">Signal : rendement des 12 derniers mois en sautant le mois le plus récent, on détient les 5 ETF les plus forts, poids égaux, frais 0,05 % + 0,05 % par side. Décision à la clôture US du dernier jour de bourse du mois, exécution à cette clôture (ou à la prochaine ouverture si on arrive en cours de mois). Interrupteur réversible : à l’arrêt, les positions sont vendues à la prochaine ouverture US. Papier uniquement.</div></div>
+
+    <!-- v19.12 : rotation ETF HEBDOMADAIRE — essai papier séparé, NON VALIDÉ -->
+    <div id="etfwBox" class="card neo-card p-4 mb-3 mt-5 border border-amber-400/30">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <div class="text-[15px] font-extrabold">🧪 Rotation ETF hebdo <span class="cp-badge">ARGENT FICTIF</span> <span class="cp-badge">ESSAI NON VALIDÉ</span></div>
+          <div class="text-[10.5px] text-zinc-500 mt-0.5 leading-snug">Même signal que la rotation ci-dessus (12-1 · top 5 · 28 ETF) mais vérifié chaque semaine · trade seulement si la liste change · capital séparé de 10 000 $ · test en conditions réelles, pas une stratégie validée</div>
+        </div>
+        <label class="sw" aria-label="Activer la rotation ETF hebdo"><input type="checkbox" id="etfwOn" checked><span></span></label>
+      </div>
+      <div id="etfwStatus" class="text-[11px] text-zinc-400 mt-2.5 leading-snug">—</div>
+    </div>
+    <div class="card p-4 mb-3">
+      <div class="flex items-end justify-between"><div><div class="text-[10.5px] text-zinc-500 font-semibold">Portefeuille ETF hebdo (séparé)</div><div id="etfwEq" class="text-[26px] font-extrabold num">—</div></div><div class="text-right"><div id="etfwPnl" class="text-[14px] font-extrabold num">—</div><div id="etfwWin" class="text-[10.5px] text-zinc-500">—</div></div></div>
+      <div class="grid grid-cols-3 gap-2 mt-3 text-center text-[10.5px]"><div><div class="text-zinc-500">Trades</div><div id="etfwN" class="font-extrabold num">—</div></div><div><div class="text-zinc-500">Drawdown</div><div id="etfwDd" class="font-extrabold num">—</div></div><div><div class="text-zinc-500">Prochaine vérification</div><div id="etfwNext" class="font-extrabold text-[11px] leading-tight">—</div></div></div>
+    </div>
+    <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-1">Positions (hebdo)</div><div id="etfwPos" class="text-[11.5px] text-zinc-500">—</div></div>
+    <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-1">Historique (hebdo)</div><div id="etfwTrades" class="text-[11.5px] text-zinc-500">—</div></div>
+    <div class="card p-4 mb-3 border border-white/10"><div class="text-[11px] text-zinc-400 leading-relaxed">Essai expérimental : dans les tests, la version hebdomadaire a fait mieux que la mensuelle, mais ce n’était pas le réglage choisi à l’avance, donc ce peut être de la chance. Signal identique à la rotation mensuelle (12 mois en sautant le dernier, top 5 des 28 ETF, poids égaux). Décision à la clôture US du dernier jour de bourse de la semaine, exécution à l’ouverture suivante, et seulement si la liste des 5 change. Les 28 ETF doivent être à jour après la clôture avant tout signal. Frais 0,05 % + 0,05 % par side. À l’arrêt, les positions sont vendues à la prochaine ouverture US. Papier uniquement.</div></div>
   </section>
 
   <section id="tab-sectrs" class="hidden-tab">
@@ -1733,7 +1752,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='19.11',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='19.12',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -2383,13 +2402,18 @@ function migrateCmdt(S){
   if(!S.cmdtLocal||typeof S.cmdtLocal!=='object')S.cmdtLocal={v:1};
   return S;
 }
+function migrateEtfw(S){
+  // v19.12 : la rotation ETF hebdo (essai) vit sur le serveur (capital séparé). Marqueur local seulement ; rien n'est mélangé au crypto ni aux autres livres.
+  if(!S.etfwLocal||typeof S.etfwLocal!=='object')S.etfwLocal={v:1};
+  return S;
+}
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.11,strategy:S.strategy,userWantsOn:S.userWantsOn!==false,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,pauseNew:S.pauseNew,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.12,strategy:S.strategy,userWantsOn:S.userWantsOn!==false,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,pauseNew:S.pauseNew,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
-    cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR,platform:S.platform,hiddenAt:S.hiddenAt,relayOut:S.relayOut,etfLocal:S.etfLocal||{v:1},sectrsLocal:S.sectrsLocal||{v:1},cmdtLocal:S.cmdtLocal||{v:1}}));}catch(x){}
+    cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR,platform:S.platform,hiddenAt:S.hiddenAt,relayOut:S.relayOut,etfLocal:S.etfLocal||{v:1},sectrsLocal:S.sectrsLocal||{v:1},cmdtLocal:S.cmdtLocal||{v:1},etfwLocal:S.etfwLocal||{v:1}}));}catch(x){}
 }
 function loadState(){
   let saved=null,from='';
@@ -2440,6 +2464,8 @@ function loadState(){
     migrateSectrs(S);     // v19.9 : marqueur local ; le capital secteurs n'entre pas dans S.positions / S.closed ni dans le livre ETF
     if(saved.cmdtLocal&&typeof saved.cmdtLocal==='object')S.cmdtLocal=saved.cmdtLocal;
     migrateCmdt(S);       // v19.10 : marqueur local ; le capital matières n'entre pas dans S.positions / S.closed ni dans les livres ETF / secteurs
+    if(saved.etfwLocal&&typeof saved.etfwLocal==='object')S.etfwLocal=saved.etfwLocal;
+    migrateEtfw(S);       // v19.12 : marqueur local ; l'ETF hebdo n'entre pas dans S.positions / S.closed ni dans les autres livres
     S.migratedFrom=from!==STORE_KEY?from:'';
   }catch(x){S=freshState();}
   purgeState();
@@ -3437,7 +3463,9 @@ const STRAT_CARD_DEF=[
   {id:'sectrs',title:'Secteurs ETF',desc:'Force relative · top 2 · mensuel',pause:()=>sectrsData&&sectrsData.on===false,go:()=>showTab('sectrs'),
     ico:'<svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M10 19V9"/><path d="M16 19V7"/><path d="M22 19V3"/></svg>'},
   {id:'cmdt',title:'Matières ETF',desc:'Momentum 126 j · GLD SLV USO',pause:()=>cmdtData&&cmdtData.on===false,go:()=>showTab('cmdt'),
-    ico:'<svg viewBox="0 0 24 24"><path d="M12 3l7 4v6c0 4.4-3 8.4-7 9.5C8 21.4 5 17.4 5 13V7l7-4z"/></svg>'}
+    ico:'<svg viewBox="0 0 24 24"><path d="M12 3l7 4v6c0 4.4-3 8.4-7 9.5C8 21.4 5 17.4 5 13V7l7-4z"/></svg>'},
+  {id:'etfw',title:'ETF hebdo (essai)',desc:'Même signal · chaque semaine · non validé',pause:()=>etfwData&&etfwData.on===false,go:()=>{showTab('etf');setTimeout(()=>{const b=$('etfwBox');if(b)b.scrollIntoView({block:'start',behavior:reduceMotion()?'auto':'smooth'});},60);},
+    ico:'<svg viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/><path d="M7.5 15h9"/></svg>'}
 ];
 let stratGridSig='',stratHot={};
 function pulseStratCard(id){if(!id)return;stratHot[id]=Date.now();stratGridSig='';renderStratGrid();}
@@ -3453,12 +3481,14 @@ function renderStratGrid(){
   if(sectrsData){sectrsP=sectrsData.pnl;sectrsN=(sectrsData.stats&&sectrsData.stats.closed)||0;}
   let cmdtP=null,cmdtN=null;
   if(cmdtData){cmdtP=cmdtData.pnl;cmdtN=(cmdtData.stats&&cmdtData.stats.closed)||0;}
+  let etfwP=null,etfwN=null;
+  if(etfwData){etfwP=etfwData.pnl;etfwN=(etfwData.stats&&etfwData.stats.closed)||0;}
   const now=Date.now();
-  const sig=S.closed.length+'|'+(S.closed[0]&&S.closed[0].id)+'|'+copyP+'|'+copyN+'|'+etfP+'|'+etfN+'|'+(etfData&&etfData.on)+'|'+sectrsP+'|'+sectrsN+'|'+(sectrsData&&sectrsData.on)+'|'+cmdtP+'|'+cmdtN+'|'+(cmdtData&&cmdtData.on)+'|'+pauseNewOf(S.pauseNew).agents+pauseNewOf(S.pauseNew).lev5+pauseNewOf(S.pauseNew).copy+'|'+(now-(stratHot.daily||0)<4000)+'|'+(now-(stratHot.agents||0)<4000)+'|'+(now-(stratHot.lev5||0)<4000)+'|'+(now-(stratHot.copy||0)<4000);
+  const sig=S.closed.length+'|'+(S.closed[0]&&S.closed[0].id)+'|'+copyP+'|'+copyN+'|'+etfP+'|'+etfN+'|'+(etfData&&etfData.on)+'|'+sectrsP+'|'+sectrsN+'|'+(sectrsData&&sectrsData.on)+'|'+cmdtP+'|'+cmdtN+'|'+(cmdtData&&cmdtData.on)+'|'+etfwP+'|'+etfwN+'|'+(etfwData&&etfwData.on)+'|'+(now-(stratHot.etfw||0)<4000)+'|'+pauseNewOf(S.pauseNew).agents+pauseNewOf(S.pauseNew).lev5+pauseNewOf(S.pauseNew).copy+'|'+(now-(stratHot.daily||0)<4000)+'|'+(now-(stratHot.agents||0)<4000)+'|'+(now-(stratHot.lev5||0)<4000)+'|'+(now-(stratHot.copy||0)<4000);
   if(sig===stratGridSig&&box.childElementCount)return;stratGridSig=sig;
   box.innerHTML=STRAT_CARD_DEF.map(d=>{
     const paused=!!d.pause();
-    const st=d.id==='copy'?{pnl:copyP,n:copyN}:d.id==='etf'?{pnl:etfP,n:etfN}:d.id==='sectrs'?{pnl:sectrsP,n:sectrsN}:d.id==='cmdt'?{pnl:cmdtP,n:cmdtN}:acc[d.id];
+    const st=d.id==='copy'?{pnl:copyP,n:copyN}:d.id==='etf'?{pnl:etfP,n:etfN}:d.id==='sectrs'?{pnl:sectrsP,n:sectrsN}:d.id==='cmdt'?{pnl:cmdtP,n:cmdtN}:d.id==='etfw'?{pnl:etfwP,n:etfwN}:acc[d.id];
     const has=st&&st.n!=null&&st.pnl!=null;
     const pnlCls=has?(st.pnl<0?'neg':''):'na';
     const hot=now-(stratHot[d.id]||0)<4000;
@@ -3570,20 +3600,21 @@ function syncOpts(){
   renderNotifStatus();renderStrategyBox();
 }
 let sessionAt=0,sessionEq0=0;
-/* v19.11 : Démarrer / Arrêter = maître des 4 livres actifs (crypto Tendance 1 jour, ETF, secteurs, matières).
+/* v19.11 : Démarrer / Arrêter = maître des livres actifs (crypto Tendance 1 jour, ETF, secteurs, matières ; v19.12 : + ETF hebdo, essai).
    L'auto-démarrage silencieux (v19.7) ne force pas les livres : un interrupteur individuel reste honoré après un rechargement.
    pauseNew (agents / lev5 / copie) n'est jamais modifié ici. Le jeton est celui de l'appli (srvFetch) ; l'appel ne passe pas par le jeton de la box. */
 function setMasterBooks(on){
   const want=!!on;
-  const etfEl=$('etfOn'),sEl=$('sectrsOn'),cEl=$('cmdtOn'),tEl=$('srv-trade');
+  const etfEl=$('etfOn'),sEl=$('sectrsOn'),cEl=$('cmdtOn'),wEl=$('etfwOn'),tEl=$('srv-trade');
   if(etfEl)etfEl.checked=want;
+  if(wEl)wEl.checked=want;
   if(sEl)sEl.checked=want;
   if(cEl)cEl.checked=want;
   if(tEl)tEl.checked=want;
   if(!srvOn())return;
   srvFetch('/api/config',{method:'POST',body:{master:want,trade:want},timeout:8000}).then(()=>{
-    etfSig='';sectrsSig='';cmdtSig='';
-    etfFetch(true);sectrsFetch(true);cmdtFetch(true);srvRefresh(true);
+    etfSig='';sectrsSig='';cmdtSig='';etfwSig='';
+    etfFetch(true);sectrsFetch(true);cmdtFetch(true);etfwFetch(true);srvRefresh(true);
   }).catch(x=>toast('Serveur : interrupteur maître non appliqué ('+(x.message||x)+')','info'));
 }
 function startBot(opts){
@@ -3609,7 +3640,7 @@ function stopBot(opts){
   $('btnStart').classList.remove('hidden-tab');$('btnStop').classList.add('hidden-tab');
   $('liveDot').classList.remove('on');$('liveDot').style.background='';$('liveTxt').textContent='Off';$('liveTxt').style.color='#71717a';
   saveState();renderAll();
-  if(fromUser){setMasterBooks(false);toast('Bot arrêté · ETF, secteurs et matières vendus à la prochaine ouverture US','info');vibrate(20);openSessionSummary('stop');}
+  if(fromUser){setMasterBooks(false);toast('Bot arrêté · ETF, ETF hebdo, secteurs et matières vendus à la prochaine ouverture US','info');vibrate(20);openSessionSummary('stop');}
 }
 function applyAutoStart(){
   if(S&&S.userWantsOn&&!S.running&&!S.killed)startBot({silent:true});
@@ -3780,7 +3811,7 @@ function showTab(name){
   if(name==='settings'){renderNotifStatus();renderStrategyBox();renderServer();}
   if(name==='trades')srvRefresh(true);
   if(name==='copy'){renderCopy();cpFetch(true);}
-  if(name==='etf'){renderEtf();etfFetch(true);}
+  if(name==='etf'){renderEtf();etfFetch(true);renderEtfw();etfwFetch(true);}
   if(name==='sectrs'){renderSectrs();sectrsFetch(true);}
   if(name==='cmdt'){renderCmdt();cmdtFetch(true);}
   if(name==='backtest')btBuildUI();
@@ -4218,6 +4249,49 @@ async function cmdtSetOn(on){
   try{await srvFetch('/api/cmdt/config',{method:'POST',body:{on:!!on}});toast(on?'Matières ETF allumés (papier, capital séparé)':'Matières ETF arrêtés · vente à la prochaine ouverture US','info');cmdtSig='';cmdtFetch(true);}
   catch(x){toast('Serveur : '+(x.message||x),'info');}
 }
+/* ═══════════ v19.12 · ROTATION ETF HEBDO (essai non validé, serveur ; capital papier séparé) ═══════════ */
+let etfwData=null,etfwErr='',etfwLastFetch=0,etfwBusy=false,etfwTimer=0,etfwSig='';
+async function etfwFetch(force){
+  if(!srvOn()||document.hidden||etfwBusy)return;
+  const onTab=document.querySelector('.tab-btn.on')?.dataset.tab==='etf';
+  if(!force&&Date.now()-etfwLastFetch<(onTab?8000:25000))return;
+  etfwBusy=true;etfwLastFetch=Date.now();
+  const prevFill=etfwData&&etfwData.lastFillT;
+  try{etfwData=await srvFetch('/api/etfw',{timeout:8000});etfwErr='';}
+  catch(x){etfwErr=x.status===401?'jeton refusé':x.status===404?'serveur pas encore à jour (v19.12)':String(x.message||x);}
+  finally{etfwBusy=false;}
+  if(prevFill!=null&&etfwData&&etfwData.lastFillT&&etfwData.lastFillT!==prevFill)pulseStratCard('etfw');   // nouveau trade hebdo : la carte s'illumine
+  renderStratGrid();
+  if(document.querySelector('.tab-btn.on')?.dataset.tab==='etf')renderEtfw();
+}
+function renderEtfw(){
+  const st=$('etfwStatus'),eq=$('etfwEq');if(!eq)return;
+  if(!etfwData){if(st)st.textContent=etfwErr?'Serveur : '+etfwErr:(srvOn()?'Chargement…':'Connecte le serveur dans Réglages pour faire tourner l\'essai hebdo même appli fermée.');return;}
+  const d=etfwData,sig=JSON.stringify([d.equity,d.on,d.lastFillT,d.pending,d.stats,etfwErr]);
+  const onEl=$('etfwOn');if(onEl)onEl.checked=d.on!==false;
+  if(st){
+    if(!d.on)st.textContent='À l\'arrêt · les positions éventuelles sont vendues à la prochaine ouverture US · réversible';
+    else if(d.pending)st.textContent=(d.pending.kind==='flatten'?'Vente programmée':'Changement de liste programmé')+' · '+(d.pending.top&&d.pending.top.length?d.pending.top.join(', '):'')+' · '+etfParis(d.nextRebalance);
+    else if(!d.positions.length)st.textContent='En attente du premier signal hebdo · '+etfParis(d.nextRebalance);
+    else st.textContent='En place · prochaine vérification '+etfParis(d.nextRebalance)+' · trade seulement si la liste change';
+  }
+  if(sig===etfwSig)return;etfwSig=sig;
+  eq.textContent=money(d.equity);
+  const pn=$('etfwPnl');if(pn){pn.textContent=signedMoney(d.pnl)+' · '+(d.pnlPct>=0?'+':'')+(+d.pnlPct).toFixed(2)+' %';pn.className='text-[14px] font-extrabold num '+(d.pnl>=0?'green':'red');}
+  const wn=$('etfwWin');if(wn)wn.textContent=(d.stats&&d.stats.closed)?((d.wr!=null?Math.round(d.wr)+' % gagnants':'')+' · '+d.stats.closed+' trade'+(d.stats.closed>1?'s':'')):'aucun trade encore';
+  setText($('etfwN'),d.stats&&d.stats.closed!=null?String(d.stats.closed):'0');
+  setText($('etfwDd'),d.maxDD!=null?((d.maxDD*100).toFixed(2)+' %'):'—');
+  setText($('etfwNext'),etfParis(d.nextRebalance));
+  const pos=$('etfwPos');
+  if(pos)pos.innerHTML=d.positions&&d.positions.length?d.positions.map(p=>`<div class="flex justify-between py-1 border-b border-white/5"><span class="font-extrabold text-zinc-200">${escH(p.sym)}</span><span class="num text-zinc-400">${(+p.qty).toFixed(4)} · ${money(p.val)} · <b class="${p.pnl>=0?'green':'red'}">${signedMoney(p.pnl)}</b></span></div>`).join(''):'<div class="text-zinc-500">Aucune position (cash en attente du signal hebdo).</div>';
+  const tr=$('etfwTrades');
+  if(tr)tr.innerHTML=d.trades&&d.trades.length?d.trades.map(c=>`<div class="flex justify-between py-1 border-b border-white/5"><div><b class="text-zinc-200">${escH(c.sym)}</b> <span class="text-zinc-500">${escH(c.reason||'')} · ${etfParis(c.t)}</span></div><span class="num ${c.pnl>=0?'green':'red'}">${signedMoney(c.pnl)}</span></div>`).join(''):'<div class="text-zinc-500">Aucun trade clôturé.</div>';
+}
+async function etfwSetOn(on){
+  if(!srvOn()){toast('Connecte le serveur dans Réglages','info');const el=$('etfwOn');if(el)el.checked=!on;return;}
+  try{await srvFetch('/api/etfw/config',{method:'POST',body:{on:!!on}});toast(on?'ETF hebdo allumé (essai papier, capital séparé)':'ETF hebdo arrêté · vente à la prochaine ouverture US','info');etfwSig='';etfwFetch(true);}
+  catch(x){toast('Serveur : '+(x.message||x),'info');}
+}
 
 /* ═══════════ v18.7 · COPIE MEMECOINS (serveur : webhook Helius → D1 ; appli : affichage + réglages) ═══════════
    L'appli ne fait qu'un petit appel réseau toutes les 5 s quand l'onglet est ouvert (20 s sinon, appli visible),
@@ -4323,6 +4397,9 @@ function cpInit(){
   clearInterval(cmdtTimer);cmdtTimer=setInterval(()=>cmdtFetch(false),20000);
   setTimeout(()=>cmdtFetch(true),3700);
   const cmdtOnEl=$('cmdtOn');if(cmdtOnEl)cmdtOnEl.onchange=()=>cmdtSetOn(cmdtOnEl.checked);
+  clearInterval(etfwTimer);etfwTimer=setInterval(()=>etfwFetch(false),20000);
+  setTimeout(()=>etfwFetch(true),3800);
+  const etfwOnEl=$('etfwOn');if(etfwOnEl)etfwOnEl.onchange=()=>etfwSetOn(etfwOnEl.checked);
   if(new URLSearchParams(location.search).get('tab')==='copy')showTab('copy');
 }
 function srvStratLabel(d){return (STRATS[d.stratMode]?STRATS[d.stratMode].label:'Agents 15 min')+' (code v'+(d.strategy&&d.strategy.appVersion)+')';}
