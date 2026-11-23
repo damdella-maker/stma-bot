@@ -503,7 +503,7 @@
   <div class="logo" aria-hidden="true">S</div>
   <div class="hdr-mid">
     <div class="hdr-title">STMA Bot</div>
-    <div class="hdr-sub">GrokBot V19.10</div>
+    <div class="hdr-sub">GrokBot V19.11</div>
   </div>
   <div class="hdr-right">
     <div class="hdr-acct">Paper</div>
@@ -920,7 +920,7 @@
   <div class="sess-box">
     <button type="button" class="sess-x" id="sessClose" aria-label="Fermer">✕</button>
     <div class="sess-kicker" id="sessKicker">Résumé de session</div>
-    <div class="sess-sub" id="sessSub">STMA Bot · GrokBot V19.10</div>
+    <div class="sess-sub" id="sessSub">STMA Bot · GrokBot V19.11</div>
     <div class="sess-lbl">Profit total</div>
     <div id="sessProfit" class="sess-profit">+$0.00</div>
     <div id="sessPath" class="sess-path"></div>
@@ -1733,7 +1733,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='19.10',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='19.11',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1822,7 +1822,7 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:19.10,strategy:'daily',dtDone:{},running:false,userWantsOn:true,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',pauseNew:{agents:true,lev5:true,copy:true},
+  const st={v:19.11,strategy:'daily',dtDone:{},running:false,userWantsOn:true,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',pauseNew:{agents:true,lev5:true,copy:true},
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
     opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true,learnV2:true},huntDone:{},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
@@ -2386,7 +2386,7 @@ function migrateCmdt(S){
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.10,strategy:S.strategy,userWantsOn:S.userWantsOn!==false,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,pauseNew:S.pauseNew,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.11,strategy:S.strategy,userWantsOn:S.userWantsOn!==false,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,pauseNew:S.pauseNew,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
     cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR,platform:S.platform,hiddenAt:S.hiddenAt,relayOut:S.relayOut,etfLocal:S.etfLocal||{v:1},sectrsLocal:S.sectrsLocal||{v:1},cmdtLocal:S.cmdtLocal||{v:1}}));}catch(x){}
@@ -3496,7 +3496,7 @@ function openSessionSummary(kind,extra){
   const profit=trades.reduce((a,c)=>a+(+c.pnl||0),0),wins=trades.filter(c=>c.pnl>0).length,n=trades.length;
   const eq=equity(),start=kind==='stop'&&sessionEq0?sessionEq0:S.start;
   $('sessKicker').textContent=kind==='away'?'Pendant ton absence':'Résumé de session';
-  $('sessSub').textContent=kind==='away'&&extra&&extra.dur?('STMA Bot · GrokBot V19.10 · '+extra.dur):'STMA Bot · GrokBot V19.10';
+  $('sessSub').textContent=kind==='away'&&extra&&extra.dur?('STMA Bot · GrokBot V19.11 · '+extra.dur):'STMA Bot · GrokBot V19.11';
   const sp=$('sessProfit');sp.textContent=signedMoney(profit);sp.className='sess-profit'+(profit<0?' neg':'');
   setText($('sessPath'),money(start)+' → '+money(eq)+' · '+(eq/start).toFixed(2)+'x');
   setText($('sessTrades'),String(n));
@@ -3570,6 +3570,22 @@ function syncOpts(){
   renderNotifStatus();renderStrategyBox();
 }
 let sessionAt=0,sessionEq0=0;
+/* v19.11 : Démarrer / Arrêter = maître des 4 livres actifs (crypto Tendance 1 jour, ETF, secteurs, matières).
+   L'auto-démarrage silencieux (v19.7) ne force pas les livres : un interrupteur individuel reste honoré après un rechargement.
+   pauseNew (agents / lev5 / copie) n'est jamais modifié ici. Le jeton est celui de l'appli (srvFetch) ; l'appel ne passe pas par le jeton de la box. */
+function setMasterBooks(on){
+  const want=!!on;
+  const etfEl=$('etfOn'),sEl=$('sectrsOn'),cEl=$('cmdtOn'),tEl=$('srv-trade');
+  if(etfEl)etfEl.checked=want;
+  if(sEl)sEl.checked=want;
+  if(cEl)cEl.checked=want;
+  if(tEl)tEl.checked=want;
+  if(!srvOn())return;
+  srvFetch('/api/config',{method:'POST',body:{master:want,trade:want},timeout:8000}).then(()=>{
+    etfSig='';sectrsSig='';cmdtSig='';
+    etfFetch(true);sectrsFetch(true);cmdtFetch(true);srvRefresh(true);
+  }).catch(x=>toast('Serveur : interrupteur maître non appliqué ('+(x.message||x)+')','info'));
+}
 function startBot(opts){
   const silent=!!(opts&&opts.silent);
   if(S.running)return;
@@ -3583,17 +3599,17 @@ function startBot(opts){
   $('btnStart').classList.add('hidden-tab');$('btnStop').classList.remove('hidden-tab');   // v18.4 : retour visuel d'abord
   $('liveDot').classList.add('on');$('liveTxt').textContent='Live';$('liveTxt').style.color='#4ade80';
   saveState();
-  if(!silent){vibrate([20,50,20]);initAudio();setTimeout(()=>toast('Bot démarré · '+RISK[S.risk].label.toLowerCase()+' · '+MODES[S.mode].label.toLowerCase(),'info'),0);}
+  if(!silent){setMasterBooks(true);vibrate([20,50,20]);initAudio();setTimeout(()=>toast('Bot démarré · tous les livres allumés · '+RISK[S.risk].label.toLowerCase()+' · '+MODES[S.mode].label.toLowerCase(),'info'),0);}
 }
 function stopBot(opts){
   const fromUser=!(opts&&opts.keepIntent);
   if(fromUser)S.userWantsOn=false;
-  if(!S.running){saveState();return;}
+  if(!S.running){if(fromUser)setMasterBooks(false);saveState();return;}
   S.running=false;
   $('btnStart').classList.remove('hidden-tab');$('btnStop').classList.add('hidden-tab');
   $('liveDot').classList.remove('on');$('liveDot').style.background='';$('liveTxt').textContent='Off';$('liveTxt').style.color='#71717a';
   saveState();renderAll();
-  if(fromUser){toast('Bot arrêté','info');vibrate(20);openSessionSummary('stop');}
+  if(fromUser){setMasterBooks(false);toast('Bot arrêté · ETF, secteurs et matières vendus à la prochaine ouverture US','info');vibrate(20);openSessionSummary('stop');}
 }
 function applyAutoStart(){
   if(S&&S.userWantsOn&&!S.running&&!S.killed)startBot({silent:true});
