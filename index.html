@@ -503,7 +503,7 @@
   <div class="logo" aria-hidden="true">S</div>
   <div class="hdr-mid">
     <div class="hdr-title">STMA Bot</div>
-    <div class="hdr-sub">GrokBot V19.9</div>
+    <div class="hdr-sub">GrokBot V19.10</div>
   </div>
   <div class="hdr-right">
     <div class="hdr-acct">Paper</div>
@@ -764,6 +764,26 @@
     <div class="card p-4 mb-3 border border-white/10"><div class="text-[11px] text-zinc-400 leading-relaxed">Signal : rendement des 12 derniers mois (y compris le mois le plus récent), on classe XLE, XLF, XLK, XLV, XLY et VNQ, on détient les 2 plus forts dont le rendement 12 mois est positif, poids égaux, sinon 100 % cash. Frais 0,05 % + 0,05 % par side. Décision à la clôture US du dernier jour de bourse du mois, exécution à cette clôture (ou à la prochaine ouverture si on arrive en cours de mois). Univers complet exigé avant tout signal. Interrupteur réversible : à l’arrêt, les positions sont vendues à la prochaine ouverture US. Papier uniquement.</div></div>
   </section>
 
+  <section id="tab-cmdt" class="hidden-tab">
+    <div class="card neo-card p-4 mb-3">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <div class="text-[15px] font-extrabold">🛢️ Matières ETF <span class="cp-badge">ARGENT FICTIF</span></div>
+          <div class="text-[10.5px] text-zinc-500 mt-0.5 leading-snug">Momentum 126 jours · GLD SLV USO · poids égaux si rendement &gt; 0, sinon cash · rééquilibrage mensuel · capital séparé de 10 000 $ · ne mélange rien avec le bot crypto, la rotation ETF ni les secteurs</div>
+        </div>
+        <label class="sw" aria-label="Activer les matières ETF"><input type="checkbox" id="cmdtOn" checked><span></span></label>
+      </div>
+      <div id="cmdtStatus" class="text-[11px] text-zinc-400 mt-2.5 leading-snug">—</div>
+    </div>
+    <div class="card p-4 mb-3">
+      <div class="flex items-end justify-between"><div><div class="text-[10.5px] text-zinc-500 font-semibold">Portefeuille matières (séparé)</div><div id="cmdtEq" class="text-[26px] font-extrabold num">—</div></div><div class="text-right"><div id="cmdtPnl" class="text-[14px] font-extrabold num">—</div><div id="cmdtWin" class="text-[10.5px] text-zinc-500">—</div></div></div>
+      <div class="grid grid-cols-3 gap-2 mt-3 text-center text-[10.5px]"><div><div class="text-zinc-500">Trades</div><div id="cmdtN" class="font-extrabold num">—</div></div><div><div class="text-zinc-500">Drawdown</div><div id="cmdtDd" class="font-extrabold num">—</div></div><div><div class="text-zinc-500">Prochain rééquilibrage</div><div id="cmdtNext" class="font-extrabold text-[11px] leading-tight">—</div></div></div>
+    </div>
+    <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-1">Positions</div><div id="cmdtPos" class="text-[11.5px] text-zinc-500">—</div></div>
+    <div class="card p-4 mb-3"><div class="text-[13px] font-extrabold mb-1">Historique</div><div id="cmdtTrades" class="text-[11.5px] text-zinc-500">—</div></div>
+    <div class="card p-4 mb-3 border border-white/10"><div class="text-[11px] text-zinc-400 leading-relaxed">Signal : rendement sur 126 jours de bourse (close[t] / close[t−126] − 1) de GLD, SLV et USO ; on détient à poids égaux ceux dont le rendement est positif, sinon 100 % cash. Frais 0,05 % + 0,05 % par side. Décision à la clôture US du dernier jour de bourse du mois, exécution à cette clôture (ou à la prochaine ouverture si on arrive en cours de mois). Univers complet exigé avant tout signal. Interrupteur réversible : à l’arrêt, les positions sont vendues à la prochaine ouverture US. Papier uniquement.</div></div>
+  </section>
+
   <section id="tab-trades" class="hidden-tab">
     <div id="srvTradesCard" class="card p-3.5 mb-3 hidden-tab"></div>
     <div class="grid grid-cols-2 gap-2 mb-3">
@@ -886,6 +906,7 @@
   <button class="tab-btn" data-tab="copy"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg><span>Copie</span></button>
   <button class="tab-btn" data-tab="etf"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16l4-5 3 3 5-7"/></svg><span>ETF</span></button>
   <button class="tab-btn" data-tab="sectrs"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M10 19V9"/><path d="M16 19V7"/><path d="M22 19V3"/></svg><span>Secteurs</span></button>
+  <button class="tab-btn" data-tab="cmdt"><svg viewBox="0 0 24 24"><path d="M12 3l7 4v6c0 4.4-3 8.4-7 9.5C8 21.4 5 17.4 5 13V7l7-4z"/></svg><span>Matières</span></button>
   <button class="tab-btn" data-tab="trades"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Trades</span></button>
   <button class="tab-btn" data-tab="backtest"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><path d="M3.05 11a9 9 0 1 1 .5 4"/><path d="M3 4v7h7"/></svg><span>Backtest</span></button>
   <button class="tab-btn" data-tab="settings"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></svg><span>Réglages</span></button>
@@ -899,7 +920,7 @@
   <div class="sess-box">
     <button type="button" class="sess-x" id="sessClose" aria-label="Fermer">✕</button>
     <div class="sess-kicker" id="sessKicker">Résumé de session</div>
-    <div class="sess-sub" id="sessSub">STMA Bot · GrokBot V19.9</div>
+    <div class="sess-sub" id="sessSub">STMA Bot · GrokBot V19.10</div>
     <div class="sess-lbl">Profit total</div>
     <div id="sessProfit" class="sess-profit">+$0.00</div>
     <div id="sessPath" class="sess-path"></div>
@@ -1712,7 +1733,7 @@ const AGENTS=[
 const REGIME_LABELS={trendUp:{label:'Tendance ↑',color:'#22c55e'},trendDn:{label:'Tendance ↓',color:'#ef4444'},range:{label:'Range',color:'#71717a'},volatile:{label:'Volatile',color:'#f59e0b'}};
 
 /* ═══════════ ÉTAT ═══════════ */
-const APP_VERSION='19.9',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
+const APP_VERSION='19.10',STORE_KEY='stma.bot.v18',LEGACY_KEYS=['stma.bot.v17','stma.bot.v16','stma.bot.v15','stma.bot.v14','stma.bot.v13','stma.bot.v12','stma.bot.v11'],DEFAULT_START=10000;
 const FRESH_WS=30000,FRESH_YH=150000,ANALYSE_EVERY=4,bootAt=Date.now();
 let S=null,loopId=null,audioCtx=null,tradeFilter='all',swReg=null;
 let displayedEquity=null,equityAnimId=null,bubbleQueue=[],bubbleBusy=false;
@@ -1801,7 +1822,7 @@ function flushRender(){
 let renderPending=false,univAt=0;
 
 function freshState(){
-  const st={v:19.9,strategy:'daily',dtDone:{},running:false,userWantsOn:true,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',pauseNew:{agents:true,lev5:true,copy:true},
+  const st={v:19.10,strategy:'daily',dtDone:{},running:false,userWantsOn:true,start:DEFAULT_START,capital:DEFAULT_START,risk:'medium',mode:'normal',pauseNew:{agents:true,lev5:true,copy:true},
     markets:Object.keys(MARKETS),   // v18.1 : toutes les classes actives d'office
     opts:{sniper:true,devil:true,trailing:true,sound:true,learning:true,instfilter:true,shorts:true,htf:true,notify:false,alertSound:true,vibrate:true,alertIdle:false,notifyClose:true,noLimit:true,hunter:true,learnV2:true},huntDone:{},
     positions:[],closed:[],decisions:[],lessons:[],equityHist:[DEFAULT_START],peakEquity:DEFAULT_START,maxDD:0,
@@ -2357,13 +2378,18 @@ function migrateSectrs(S){
   if(!S.sectrsLocal||typeof S.sectrsLocal!=='object')S.sectrsLocal={v:1};
   return S;
 }
+function migrateCmdt(S){
+  // v19.10 : le livre matières (CMDT_L126) vit sur le serveur (capital séparé). Marqueur local seulement ; rien n'est mélangé au crypto, à la rotation ETF ni aux secteurs.
+  if(!S.cmdtLocal||typeof S.cmdtLocal!=='object')S.cmdtLocal={v:1};
+  return S;
+}
 /* ═══════════ PERSISTANCE ═══════════ */
 function saveState(){
   if(!S)return;
-  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.9,strategy:S.strategy,userWantsOn:S.userWantsOn!==false,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,pauseNew:S.pauseNew,positions:S.positions,
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({v:19.10,strategy:S.strategy,userWantsOn:S.userWantsOn!==false,huntDone:S.huntDone,dtDone:S.dtDone,bt:S.bt,start:S.start,capital:S.capital,risk:S.risk,mode:S.mode,markets:S.markets,opts:S.opts,pauseNew:S.pauseNew,positions:S.positions,
     closed:S.closed.slice(0,150),lessons:S.lessons.slice(0,20),equityHist:S.equityHist.slice(-120),peakEquity:S.peakEquity,maxDD:S.maxDD,streak:S.streak,
     agents:S.agents,learn:S.learn,learn2:S.learn2,seq:S.seq,killed:S.killed,dayKey:S.dayKey,dayStart:S.dayStart,dayHalt:S.dayHalt,lossRun:S.lossRun,pauseUntil:S.pauseUntil,
-    cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR,platform:S.platform,hiddenAt:S.hiddenAt,relayOut:S.relayOut,etfLocal:S.etfLocal||{v:1},sectrsLocal:S.sectrsLocal||{v:1}}));}catch(x){}
+    cooldown:S.cooldown,adapt:S.adapt,feesPaid:S.feesPaid,closedCount:S.closedCount,lastEntry:S.lastEntry,openTimes:S.openTimes,lastAutoOpen:S.lastAutoOpen,funds:S.funds,fxEUR:S.fxEUR,platform:S.platform,hiddenAt:S.hiddenAt,relayOut:S.relayOut,etfLocal:S.etfLocal||{v:1},sectrsLocal:S.sectrsLocal||{v:1},cmdtLocal:S.cmdtLocal||{v:1}}));}catch(x){}
 }
 function loadState(){
   let saved=null,from='';
@@ -2412,6 +2438,8 @@ function loadState(){
     migrateEtf(S);        // v19.8 : marqueur local ; le capital ETF n'entre pas dans S.positions / S.closed
     if(saved.sectrsLocal&&typeof saved.sectrsLocal==='object')S.sectrsLocal=saved.sectrsLocal;
     migrateSectrs(S);     // v19.9 : marqueur local ; le capital secteurs n'entre pas dans S.positions / S.closed ni dans le livre ETF
+    if(saved.cmdtLocal&&typeof saved.cmdtLocal==='object')S.cmdtLocal=saved.cmdtLocal;
+    migrateCmdt(S);       // v19.10 : marqueur local ; le capital matières n'entre pas dans S.positions / S.closed ni dans les livres ETF / secteurs
     S.migratedFrom=from!==STORE_KEY?from:'';
   }catch(x){S=freshState();}
   purgeState();
@@ -3407,7 +3435,9 @@ const STRAT_CARD_DEF=[
   {id:'etf',title:'Rotation ETF',desc:'Momentum 12-1 · top 5 · mensuel',pause:()=>etfData&&etfData.on===false,go:()=>showTab('etf'),
     ico:'<svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16l4-5 3 3 5-7"/></svg>'},
   {id:'sectrs',title:'Secteurs ETF',desc:'Force relative · top 2 · mensuel',pause:()=>sectrsData&&sectrsData.on===false,go:()=>showTab('sectrs'),
-    ico:'<svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M10 19V9"/><path d="M16 19V7"/><path d="M22 19V3"/></svg>'}
+    ico:'<svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M10 19V9"/><path d="M16 19V7"/><path d="M22 19V3"/></svg>'},
+  {id:'cmdt',title:'Matières ETF',desc:'Momentum 126 j · GLD SLV USO',pause:()=>cmdtData&&cmdtData.on===false,go:()=>showTab('cmdt'),
+    ico:'<svg viewBox="0 0 24 24"><path d="M12 3l7 4v6c0 4.4-3 8.4-7 9.5C8 21.4 5 17.4 5 13V7l7-4z"/></svg>'}
 ];
 let stratGridSig='',stratHot={};
 function pulseStratCard(id){if(!id)return;stratHot[id]=Date.now();stratGridSig='';renderStratGrid();}
@@ -3421,12 +3451,14 @@ function renderStratGrid(){
   if(etfData){etfP=etfData.pnl;etfN=(etfData.stats&&etfData.stats.closed)||0;}
   let sectrsP=null,sectrsN=null;
   if(sectrsData){sectrsP=sectrsData.pnl;sectrsN=(sectrsData.stats&&sectrsData.stats.closed)||0;}
+  let cmdtP=null,cmdtN=null;
+  if(cmdtData){cmdtP=cmdtData.pnl;cmdtN=(cmdtData.stats&&cmdtData.stats.closed)||0;}
   const now=Date.now();
-  const sig=S.closed.length+'|'+(S.closed[0]&&S.closed[0].id)+'|'+copyP+'|'+copyN+'|'+etfP+'|'+etfN+'|'+(etfData&&etfData.on)+'|'+sectrsP+'|'+sectrsN+'|'+(sectrsData&&sectrsData.on)+'|'+pauseNewOf(S.pauseNew).agents+pauseNewOf(S.pauseNew).lev5+pauseNewOf(S.pauseNew).copy+'|'+(now-(stratHot.daily||0)<4000)+'|'+(now-(stratHot.agents||0)<4000)+'|'+(now-(stratHot.lev5||0)<4000)+'|'+(now-(stratHot.copy||0)<4000);
+  const sig=S.closed.length+'|'+(S.closed[0]&&S.closed[0].id)+'|'+copyP+'|'+copyN+'|'+etfP+'|'+etfN+'|'+(etfData&&etfData.on)+'|'+sectrsP+'|'+sectrsN+'|'+(sectrsData&&sectrsData.on)+'|'+cmdtP+'|'+cmdtN+'|'+(cmdtData&&cmdtData.on)+'|'+pauseNewOf(S.pauseNew).agents+pauseNewOf(S.pauseNew).lev5+pauseNewOf(S.pauseNew).copy+'|'+(now-(stratHot.daily||0)<4000)+'|'+(now-(stratHot.agents||0)<4000)+'|'+(now-(stratHot.lev5||0)<4000)+'|'+(now-(stratHot.copy||0)<4000);
   if(sig===stratGridSig&&box.childElementCount)return;stratGridSig=sig;
   box.innerHTML=STRAT_CARD_DEF.map(d=>{
     const paused=!!d.pause();
-    const st=d.id==='copy'?{pnl:copyP,n:copyN}:d.id==='etf'?{pnl:etfP,n:etfN}:d.id==='sectrs'?{pnl:sectrsP,n:sectrsN}:acc[d.id];
+    const st=d.id==='copy'?{pnl:copyP,n:copyN}:d.id==='etf'?{pnl:etfP,n:etfN}:d.id==='sectrs'?{pnl:sectrsP,n:sectrsN}:d.id==='cmdt'?{pnl:cmdtP,n:cmdtN}:acc[d.id];
     const has=st&&st.n!=null&&st.pnl!=null;
     const pnlCls=has?(st.pnl<0?'neg':''):'na';
     const hot=now-(stratHot[d.id]||0)<4000;
@@ -3464,7 +3496,7 @@ function openSessionSummary(kind,extra){
   const profit=trades.reduce((a,c)=>a+(+c.pnl||0),0),wins=trades.filter(c=>c.pnl>0).length,n=trades.length;
   const eq=equity(),start=kind==='stop'&&sessionEq0?sessionEq0:S.start;
   $('sessKicker').textContent=kind==='away'?'Pendant ton absence':'Résumé de session';
-  $('sessSub').textContent=kind==='away'&&extra&&extra.dur?('STMA Bot · GrokBot V19.9 · '+extra.dur):'STMA Bot · GrokBot V19.9';
+  $('sessSub').textContent=kind==='away'&&extra&&extra.dur?('STMA Bot · GrokBot V19.10 · '+extra.dur):'STMA Bot · GrokBot V19.10';
   const sp=$('sessProfit');sp.textContent=signedMoney(profit);sp.className='sess-profit'+(profit<0?' neg':'');
   setText($('sessPath'),money(start)+' → '+money(eq)+' · '+(eq/start).toFixed(2)+'x');
   setText($('sessTrades'),String(n));
@@ -3720,7 +3752,7 @@ function exportCSV(){
   toast('Export CSV téléchargé','info');
 }
 function showTab(name){
-  ['bot','inst','analyse','agents','copy','etf','sectrs','trades','backtest','settings'].forEach(t=>{
+  ['bot','inst','analyse','agents','copy','etf','sectrs','cmdt','trades','backtest','settings'].forEach(t=>{
     const el=$('tab-'+t);if(!el)return;
     el.classList.toggle('hidden-tab',t!==name);
     if(t===name){el.classList.remove('tab-fade');void el.offsetWidth;el.classList.add('tab-fade');}
@@ -3734,6 +3766,7 @@ function showTab(name){
   if(name==='copy'){renderCopy();cpFetch(true);}
   if(name==='etf'){renderEtf();etfFetch(true);}
   if(name==='sectrs'){renderSectrs();sectrsFetch(true);}
+  if(name==='cmdt'){renderCmdt();cmdtFetch(true);}
   if(name==='backtest')btBuildUI();
   scheduleRender();
 }
@@ -4128,6 +4161,48 @@ async function sectrsSetOn(on){
   catch(x){toast('Serveur : '+(x.message||x),'info');}
 }
 
+/* ═══════════ v19.10 · MATIÈRES ETF (CMDT_L126, serveur ; capital papier séparé) ═══════════ */
+let cmdtData=null,cmdtErr='',cmdtLastFetch=0,cmdtBusy=false,cmdtTimer=0,cmdtSig='';
+async function cmdtFetch(force){
+  if(!srvOn()||document.hidden||cmdtBusy)return;
+  const onTab=document.querySelector('.tab-btn.on')?.dataset.tab==='cmdt';
+  if(!force&&Date.now()-cmdtLastFetch<(onTab?8000:25000))return;
+  cmdtBusy=true;cmdtLastFetch=Date.now();
+  try{cmdtData=await srvFetch('/api/cmdt',{timeout:8000});cmdtErr='';}
+  catch(x){cmdtErr=x.status===401?'jeton refusé':x.status===404?'serveur pas encore à jour (v19.10)':String(x.message||x);}
+  finally{cmdtBusy=false;}
+  renderStratGrid();
+  if(document.querySelector('.tab-btn.on')?.dataset.tab==='cmdt')renderCmdt();
+}
+function renderCmdt(){
+  const st=$('cmdtStatus'),eq=$('cmdtEq');if(!eq)return;
+  if(!cmdtData){if(st)st.textContent=cmdtErr?'Serveur : '+cmdtErr:(srvOn()?'Chargement…':'Connecte le serveur dans Réglages pour faire tourner les matières même appli fermée.');return;}
+  const d=cmdtData,sig=JSON.stringify([d.equity,d.on,d.lastFillT,d.pending,d.stats,cmdtErr]);
+  const onEl=$('cmdtOn');if(onEl)onEl.checked=d.on!==false;
+  if(st){
+    if(!d.on)st.textContent='À l\'arrêt · les positions éventuelles sont vendues à la prochaine ouverture US · réversible';
+    else if(d.pending)st.textContent=(d.pending.kind==='flatten'?'Vente programmée':'Rééquilibrage programmé')+' · '+(d.pending.top&&d.pending.top.length?d.pending.top.join(', '):'')+' · '+etfParis(d.nextRebalance);
+    else if(!d.positions.length)st.textContent='En attente du premier rééquilibrage · '+etfParis(d.nextRebalance);
+    else st.textContent='En place · prochain rééquilibrage '+etfParis(d.nextRebalance);
+  }
+  if(sig===cmdtSig)return;cmdtSig=sig;
+  eq.textContent=money(d.equity);
+  const pn=$('cmdtPnl');if(pn){pn.textContent=signedMoney(d.pnl)+' · '+(d.pnlPct>=0?'+':'')+(+d.pnlPct).toFixed(2)+' %';pn.className='text-[14px] font-extrabold num '+(d.pnl>=0?'green':'red');}
+  const wn=$('cmdtWin');if(wn)wn.textContent=(d.stats&&d.stats.closed)?((d.wr!=null?Math.round(d.wr)+' % gagnants':'')+' · '+d.stats.closed+' trade'+(d.stats.closed>1?'s':'')):'aucun trade encore';
+  setText($('cmdtN'),d.stats&&d.stats.closed!=null?String(d.stats.closed):'0');
+  setText($('cmdtDd'),d.maxDD!=null?((d.maxDD*100).toFixed(2)+' %'):'—');
+  setText($('cmdtNext'),etfParis(d.nextRebalance));
+  const pos=$('cmdtPos');
+  if(pos)pos.innerHTML=d.positions&&d.positions.length?d.positions.map(p=>`<div class="flex justify-between py-1 border-b border-white/5"><span class="font-extrabold text-zinc-200">${escH(p.sym)}</span><span class="num text-zinc-400">${(+p.qty).toFixed(4)} · ${money(p.val)} · <b class="${p.pnl>=0?'green':'red'}">${signedMoney(p.pnl)}</b></span></div>`).join(''):'<div class="text-zinc-500">Aucune position (cash en attente du rééquilibrage).</div>';
+  const tr=$('cmdtTrades');
+  if(tr)tr.innerHTML=d.trades&&d.trades.length?d.trades.map(c=>`<div class="flex justify-between py-1 border-b border-white/5"><div><b class="text-zinc-200">${escH(c.sym)}</b> <span class="text-zinc-500">${escH(c.reason||'')} · ${etfParis(c.t)}</span></div><span class="num ${c.pnl>=0?'green':'red'}">${signedMoney(c.pnl)}</span></div>`).join(''):'<div class="text-zinc-500">Aucun trade clôturé.</div>';
+}
+async function cmdtSetOn(on){
+  if(!srvOn()){toast('Connecte le serveur dans Réglages','info');const el=$('cmdtOn');if(el)el.checked=!on;return;}
+  try{await srvFetch('/api/cmdt/config',{method:'POST',body:{on:!!on}});toast(on?'Matières ETF allumés (papier, capital séparé)':'Matières ETF arrêtés · vente à la prochaine ouverture US','info');cmdtSig='';cmdtFetch(true);}
+  catch(x){toast('Serveur : '+(x.message||x),'info');}
+}
+
 /* ═══════════ v18.7 · COPIE MEMECOINS (serveur : webhook Helius → D1 ; appli : affichage + réglages) ═══════════
    L'appli ne fait qu'un petit appel réseau toutes les 5 s quand l'onglet est ouvert (20 s sinon, appli visible),
    et ne redessine que si les données ont changé : aucun calcul ajouté au bot. */
@@ -4229,6 +4304,9 @@ function cpInit(){
   clearInterval(sectrsTimer);sectrsTimer=setInterval(()=>sectrsFetch(false),20000);
   setTimeout(()=>sectrsFetch(true),3600);
   const sectrsOnEl=$('sectrsOn');if(sectrsOnEl)sectrsOnEl.onchange=()=>sectrsSetOn(sectrsOnEl.checked);
+  clearInterval(cmdtTimer);cmdtTimer=setInterval(()=>cmdtFetch(false),20000);
+  setTimeout(()=>cmdtFetch(true),3700);
+  const cmdtOnEl=$('cmdtOn');if(cmdtOnEl)cmdtOnEl.onchange=()=>cmdtSetOn(cmdtOnEl.checked);
   if(new URLSearchParams(location.search).get('tab')==='copy')showTab('copy');
 }
 function srvStratLabel(d){return (STRATS[d.stratMode]?STRATS[d.stratMode].label:'Agents 15 min')+' (code v'+(d.strategy&&d.strategy.appVersion)+')';}
